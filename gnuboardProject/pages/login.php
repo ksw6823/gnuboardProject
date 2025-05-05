@@ -1,6 +1,6 @@
 <?php
-session_start();
-require_once '../config/database.php';
+// session_start();
+require_once '../cuur/config/database.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];

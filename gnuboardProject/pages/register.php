@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/database.php';
+require_once '../cuur/config/database.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
         } catch(PDOException $e) {
-            $errors[] = "데이터베이스 오류가 발생했습니다.";
+            $errors[] = "데이터베이스 오류가 발생했습니다: " . $e->getMessage();
         }
     }
 }

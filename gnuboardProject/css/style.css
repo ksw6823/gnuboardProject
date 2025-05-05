@@ -9,10 +9,16 @@ body {
     font-family: 'Noto Sans KR', sans-serif;
     line-height: 1.6;
     color: #333;
+    background: #f7f8fa;
+}
+
+main.container {
+    padding-top: 120px;
+    padding-bottom: 80px;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -153,4 +159,188 @@ body {
     .hero h1 {
         font-size: 2rem;
     }
+}
+
+/* 메인 화면 커스텀 스타일 */
+.main-logo {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.main-search-bar {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 1.5rem auto;
+    padding: 1.1rem 1.2rem;
+    font-size: 1.15rem;
+    border: 2px solid #bbb;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+    display: block;
+    background: #fafbfc;
+}
+.main-search-bar:focus {
+    border: 2px solid #007bff;
+    box-shadow: 0 4px 12px rgba(0,123,255,0.10);
+    background: #fff;
+}
+.main-search-bar::placeholder {
+    color: #aaa;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+}
+
+.my-profile-btn {
+    display: inline-block;
+    margin-bottom: 2rem;
+    font-weight: 500;
+    float: right;
+}
+
+.user-card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem 2rem;
+    margin-top: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.user-card {
+    width: 170px;
+    height: 170px;
+    background: #b8c6d1;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+    .user-card-grid {
+        gap: 1.2rem 0.5rem;
+    }
+    .user-card {
+        width: 130px;
+        height: 130px;
+    }
+}
+
+@media (max-width: 600px) {
+    .user-card-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+    .user-card {
+        width: 90vw;
+        max-width: 300px;
+        height: 90vw;
+        max-height: 300px;
+    }
+}
+
+.portfolio-main {
+    padding-top: 120px;
+    padding-bottom: 80px;
+    background: transparent;
+    min-height: 100vh;
+}
+.portfolio-title {
+    text-align: center;
+    font-size: 2.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #222;
+}
+.portfolio-subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 1.1rem;
+    margin-bottom: 2.2rem;
+}
+.portfolio-search {
+    display: block;
+    width: 100%;
+    max-width: 540px;
+    margin: 0 auto 2.5rem auto;
+    padding: 1.1rem 1.2rem;
+    font-size: 1.13rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    background: #fff;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+.portfolio-search:focus {
+    border: 2px solid #007bff;
+    box-shadow: 0 4px 12px rgba(0,123,255,0.10);
+    background: #fff;
+}
+.portfolio-search::placeholder {
+    color: #bbb;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+}
+.portfolio-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+@media (max-width: 900px) {
+    .portfolio-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 600px) {
+    .portfolio-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.portfolio-card {
+    background: #f3f6fa;
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 240px;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.portfolio-card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    transform: translateY(-4px) scale(1.03);
+}
+.portfolio-card-thumb {
+    background: #e9eef3;
+    height: 90px;
+    width: 100%;
+}
+.portfolio-card-body {
+    padding: 1.2rem 1.3rem 1.1rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.portfolio-card-title {
+    font-size: 1.13rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #222;
+}
+.portfolio-card-desc {
+    font-size: 0.98rem;
+    color: #555;
+    margin-bottom: 1.2rem;
+}
+.portfolio-card-user {
+    font-size: 0.93rem;
+    color: #888;
+    font-weight: 500;
+    margin-top: auto;
 } 
