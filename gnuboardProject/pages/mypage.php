@@ -20,6 +20,11 @@ if (!$user) {
     header('Location: login.php');
     exit;
 }
+
+// 사용자의 포트폴리오 목록 불러오기
+$portfolio_stmt = $pdo->prepare('SELECT id, title, summary FROM portfolios WHERE user_id = ? ORDER BY created_at DESC');
+$portfolio_stmt->execute([$user_id]);
+$portfolios = $portfolio_stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -58,14 +63,19 @@ if (!$user) {
     <a href="myinfo_edit.php" class="mypage-edit-btn">내 정보 수정하기</a>
     <div class="mypage-portfolio-title">내 포트폴리오</div>
     <div class="mypage-card-grid">
-        <div class="mypage-card">
-            <div class="mypage-card-title">웹 개발자 포트폴리오</div>
-            <div class="mypage-card-desc">React와 Node.js를 활용한 풀스택 개발 프로젝트 모음입니다.</div>
-        </div>
-        <div class="mypage-card">
-            <div class="mypage-card-title">데이터 사이언스 포트폴리오</div>
-            <div class="mypage-card-desc">머신러닝과 데이터 분석 프로젝트 모음입니다.</div>
-        </div>
+        <?php if (empty($portfolios)): ?>
+            <div class="mypage-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                <div class="mypage-card-desc">아직 작성한 포트폴리오가 없습니다.</div>
+                <a href="create_portfolio.php" style="display: inline-block; margin-top: 1rem; padding: 0.7rem 1.5rem; background: #007bff; color: #fff; border-radius: 8px; text-decoration: none;">포트폴리오 작성하기</a>
+            </div>
+        <?php else: ?>
+            <?php foreach ($portfolios as $portfolio): ?>
+                <a href="view_portfolio.php?id=<?php echo $portfolio['id']; ?>" class="mypage-card" style="text-decoration: none; color: inherit;">
+                    <div class="mypage-card-title"><?php echo htmlspecialchars($portfolio['title']); ?></div>
+                    <div class="mypage-card-desc"><?php echo htmlspecialchars($portfolio['summary']); ?></div>
+                </a>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
     <a href="../index.php" class="mypage-home-btn">홈으로 돌아가기</a>
 </main>
