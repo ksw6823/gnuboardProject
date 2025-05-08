@@ -104,7 +104,7 @@ $section_types = ['자기소개','기술스택','경력','프로젝트','자격�
     </div>
     <nav class="view-side-nav">
         <?php if ($is_owner): ?>
-        <a href="create_portfolio.php?id=<?php echo $portfolio_id; ?>" class="edit-portfolio-btn">✎ 수정하기</a>
+        <a href="edit_portfolio.php?id=<?php echo $portfolio_id; ?>" class="edit-portfolio-btn">✎ 수정하기</a>
         <?php endif; ?>
         <?php foreach ($section_types as $stype): ?>
             <button type="button" class="view-side-nav-btn" onclick="scrollToSection('<?php echo $stype; ?>')"><?php echo $stype; ?></button>

@@ -122,13 +122,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>포트폴리오 수정</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* create_portfolio.php의 스타일을 그대로 사용 */
         body { background: #f7f8fa; }
         .portfolio-create-wrap { display: flex; gap: 2rem; max-width: 1200px; margin: 0 auto; padding-top: 100px; padding-bottom: 60px; }
         .portfolio-create-main { flex: 1; }
         .portfolio-create-title { text-align: center; font-size: 2.3rem; font-weight: 700; margin-bottom: 2.5rem; }
         .portfolio-create-form { background: #e9eef6; border-radius: 16px; padding: 2.5rem 2.5rem 2rem 2.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
-        /* ... 나머지 스타일은 create_portfolio.php와 동일 ... */
+        .profile-photo-upload { display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; }
+        .profile-photo-box { width: 110px; height: 140px; background: url('https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg') center/cover #f3f3f3; border-radius: 10px; border: 2px dashed #bbb; display: flex; align-items: center; justify-content: center; color: #888; font-size: 1.05rem; margin-bottom: 0.7rem; cursor: pointer; position: relative; overflow: hidden; }
+        .profile-photo-box input { opacity: 0; position: absolute; width: 100%; height: 100%; left: 0; top: 0; cursor: pointer; }
+        .profile-photo-label { color: #888; font-size: 0.98rem; }
+        .profile-photo-preview { position: absolute; width: 100%; height: 100%; object-fit: cover; left: 0; top: 0; border-radius: 10px; z-index: 2; }
+        .info-form-row { display: flex; gap: 1rem; margin-bottom: 1.1rem; }
+        .info-form-row input, .info-form-row select { flex: 1; padding: 0.7rem; border-radius: 7px; border: 1px solid #bbb; font-size: 1rem; }
+        .info-form-row select { max-width: 80px; }
+        .info-form-label { font-weight: 600; margin-bottom: 0.3rem; display: block; color: #444; }
+        .info-form-group { margin-bottom: 1.1rem; }
+        .info-form-group input, .info-form-group textarea { width: 100%; padding: 0.7rem; border-radius: 7px; border: 1px solid #bbb; font-size: 1rem; }
+        .info-form-group textarea { min-height: 70px; resize: vertical; }
+        .keyword-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+        .keyword-item {
+            background: #fff;
+            border-radius: 16px;
+            padding: 0.4rem 1.1rem;
+            font-size: 0.98rem;
+            color: #555;
+            border: 1px solid #d0d0d0;
+            cursor:pointer;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.3rem;
+            white-space: nowrap;
+        }
+        .keyword-item .remove-keyword { margin-left: 0.5rem; color: #dc3545; font-weight: bold; cursor:pointer; }
+        .keyword-add-btn { background: #fff; border: 1px dashed #bbb; border-radius: 16px; padding: 0.4rem 1.1rem; color: #888; font-size: 1.1rem; cursor: pointer; }
+        .info-add-box { background: #f3f6fa; border-radius: 14px; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #bbb; font-size: 1.1rem; margin-bottom: 1.5rem; margin-top: 1.2rem; text-align: center; }
+        .info-section-block { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 1.1rem; margin: 0.7rem 0; width: 100%; }
+        .info-section-block .section-type { font-weight: 600; color: #007bff; margin-bottom: 0.5rem; }
+        .info-section-block textarea { width: 100%; min-height: 50px; border-radius: 7px; border: 1px solid #bbb; padding: 0.5rem; }
+        .remove-section-btn { color: #dc3545; font-size: 0.95rem; margin-top: 0.3rem; cursor:pointer; background:none; border:none; }
+        .portfolio-create-side { 
+            width: 260px; 
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        .side-theme { font-weight: 600; color: #444; margin-bottom: 1rem; }
+        .side-tag-box { background: #fff; border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+        .side-tag-title { font-weight: 600; color: #444; margin-bottom: 0.8rem; }
+        .side-tag-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .side-tag-item { background: none; border: none; color: #555; font-size: 1rem; padding: 0.5rem 0; text-align: left; cursor: pointer; }
+        .side-tag-item:hover { color: #007bff; }
+        .side-tag-add { background: none; border: none; color: #888; font-size: 1.1rem; padding: 0.5rem 0; text-align: left; cursor: pointer; }
+        .side-btns { display: flex; flex-direction: column; gap: 0.8rem; }
+        .side-btns button, .side-btns a { 
+            background: #007bff; 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 0.9rem 0; 
+            font-size: 1.05rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            text-align: center;
+            text-decoration: none;
+        }
+        .side-btns button:hover, .side-btns a:hover { 
+            background: #0056b3; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .side-btns a:last-child { 
+            background: #6c757d; 
+        }
+        .side-btns a:last-child:hover { 
+            background: #5a6268; 
+        }
     </style>
 </head>
 <body>

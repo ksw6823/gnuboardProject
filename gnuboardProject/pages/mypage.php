@@ -1,5 +1,5 @@
 <?php
-// session_start();
+session_start();
 require_once '../cuur/config/database.php';
 
 // 로그인 체크
@@ -21,8 +21,8 @@ if (!$user) {
     exit;
 }
 
-// 사용자의 포트폴리오 목록 불러오기
-$portfolio_stmt = $pdo->prepare('SELECT id, title, summary FROM portfolios WHERE user_id = ? ORDER BY created_at DESC');
+// 사용자의 포트폴리오 목록 불러오기 (is_private 컬럼 추가)
+$portfolio_stmt = $pdo->prepare('SELECT id, title, summary, is_private FROM portfolios WHERE user_id = ? ORDER BY created_at DESC');
 $portfolio_stmt->execute([$user_id]);
 $portfolios = $portfolio_stmt->fetchAll();
 ?>
@@ -49,6 +49,69 @@ $portfolios = $portfolio_stmt->fetchAll();
         .mypage-edit-btn { display: block; margin: 1rem auto 0 auto; padding: 0.7rem 2.2rem; border-radius: 8px; background: #6c757d; color: #fff; font-weight: 600; border: none; font-size: 1.05rem; transition: background 0.2s; text-align: center; text-decoration: none; }
         .mypage-edit-btn:hover { background: #5a6268; }
         @media (max-width: 600px) { .mypage-main { padding: 90px 10px 60px 10px; } .mypage-card-grid { grid-template-columns: 1fr; } }
+        
+        /* 비공개 토글 스타일 */
+        .private-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+        
+        .private-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .private-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .private-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .private-slider {
+            background-color: #007bff;
+        }
+        
+        input:checked + .private-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .private-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-left: 5px;
+        }
+        
+        .portfolio-actions {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .mypage-card {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -70,15 +133,72 @@ $portfolios = $portfolio_stmt->fetchAll();
             </div>
         <?php else: ?>
             <?php foreach ($portfolios as $portfolio): ?>
-                <a href="view_portfolio.php?id=<?php echo $portfolio['id']; ?>" class="mypage-card" style="text-decoration: none; color: inherit;">
+                <div class="mypage-card">
                     <div class="mypage-card-title"><?php echo htmlspecialchars($portfolio['title']); ?></div>
                     <div class="mypage-card-desc"><?php echo htmlspecialchars($portfolio['summary']); ?></div>
-                </a>
+                    <div class="portfolio-actions">
+                        <label class="private-toggle">
+                            <input type="checkbox" 
+                                   class="private-toggle-input" 
+                                   data-portfolio-id="<?php echo $portfolio['id']; ?>"
+                                   <?php echo $portfolio['is_private'] ? 'checked' : ''; ?>>
+                            <span class="private-slider"></span>
+                        </label>
+                        <span class="private-label"><?php echo $portfolio['is_private'] ? '비공개' : '공개'; ?></span>
+                        <a href="view_portfolio.php?id=<?php echo $portfolio['id']; ?>" style="margin-left: auto; color: #007bff; text-decoration: none;">보기</a>
+                    </div>
+                </div>
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
     <a href="../index.php" class="mypage-home-btn">홈으로 돌아가기</a>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggles = document.querySelectorAll('.private-toggle-input');
+    
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const portfolioId = this.dataset.portfolioId;
+            const isPrivate = this.checked;
+            const labelElement = this.closest('.portfolio-actions').querySelector('.private-label');
+            
+            // AJAX 요청으로 비공개 상태 업데이트
+            fetch('update_portfolio_visibility.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    portfolio_id: portfolioId,
+                    is_private: isPrivate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 성공 시 라벨 텍스트 변경
+                    labelElement.textContent = isPrivate ? '비공개' : '공개';
+                    // 성공 시 알림
+                    const message = isPrivate ? '포트폴리오가 비공개로 설정되었습니다.' : '포트폴리오가 공개로 설정되었습니다.';
+                    alert(message);
+                } else {
+                    // 실패 시 체크박스 상태 되돌리기
+                    this.checked = !isPrivate;
+                    labelElement.textContent = !isPrivate ? '비공개' : '공개';
+                    alert('설정 변경에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.checked = !isPrivate;
+                labelElement.textContent = !isPrivate ? '비공개' : '공개';
+                alert('오류가 발생했습니다.');
+            });
+        });
+    });
+});
+</script>
 <?php include '../includes/footer.php'; ?>
 </body>
 </html> 
