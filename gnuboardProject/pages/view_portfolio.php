@@ -2,6 +2,16 @@
 require_once '../cuur/config/database.php';
 $portfolio_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if (!$portfolio_id) { echo '잘못된 접근입니다.'; exit; }
+
+// 현재 로그인한 사용자 확인
+$is_owner = false;
+if (isset($_SESSION['user_id'])) {
+    $stmt = $pdo->prepare('SELECT user_id FROM portfolios WHERE id = ?');
+    $stmt->execute([$portfolio_id]);
+    $portfolio_owner = $stmt->fetch();
+    $is_owner = $portfolio_owner && $portfolio_owner['user_id'] == $_SESSION['user_id'];
+}
+
 // 포트폴리오 기본 정보
 $stmt = $pdo->prepare('SELECT p.*, u.name as user_name, u.profile_image FROM portfolios p JOIN users u ON p.user_id = u.id WHERE p.id = ?');
 $stmt->execute([$portfolio_id]);
@@ -44,6 +54,28 @@ $section_types = ['자기소개','기술스택','경력','프로젝트','자격�
         .view-side-nav-btn:last-child { border-bottom: none; }
         .view-side-nav-btn:hover, .view-side-nav-btn.active { background: #cfd8e6; color: #007bff; }
         @media (max-width: 1000px) { .view-wrap { flex-direction: column; } .view-side-nav { width: 100%; margin-bottom: 2rem; position: static; } }
+        
+        .edit-portfolio-btn {
+            width: 100%;
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.9rem 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .edit-portfolio-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -71,11 +103,15 @@ $section_types = ['자기소개','기술스택','경력','프로젝트','자격�
         <?php endforeach; ?>
     </div>
     <nav class="view-side-nav">
+        <?php if ($is_owner): ?>
+        <a href="edit_portfolio.php?id=<?php echo $portfolio_id; ?>" class="edit-portfolio-btn">✎ 수정하기</a>
+        <?php endif; ?>
         <?php foreach ($section_types as $stype): ?>
             <button type="button" class="view-side-nav-btn" onclick="scrollToSection('<?php echo $stype; ?>')"><?php echo $stype; ?></button>
         <?php endforeach; ?>
     </nav>
 </div>
+
 <script>
 function scrollToSection(type) {
     const el = document.getElementById('section-' + type);

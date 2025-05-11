@@ -1,5 +1,5 @@
 <?php
-session_start(); // 이미 login.php에서 호출되었으므로 제거
+// session_start() 제거 - database.php에서 처리됨
 ?>
 <header class="main-header">
     <nav class="nav-container">

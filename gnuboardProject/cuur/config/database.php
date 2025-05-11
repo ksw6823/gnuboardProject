@@ -2,7 +2,7 @@
 $host = 'localhost';
 $dbname = 'sns_db';
 $username = 'root';
-$password = '';
+$password = '1234';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
@@ -12,8 +12,10 @@ try {
     die();
 }
 
-// 세션 시작
-session_start();
+// 세션 시작 (이미 시작되지 않은 경우에만)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // 파일 업로드 설정
 $upload_dir = "uploads/";

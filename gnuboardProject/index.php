@@ -5,6 +5,7 @@ $stmt = $pdo->prepare('SELECT p.id, p.title, p.summary, p.photo, GROUP_CONCAT(DI
     FROM portfolios p
     LEFT JOIN portfolio_skills ps ON p.id = ps.portfolio_id
     LEFT JOIN skills s ON ps.skill_id = s.id
+    WHERE p.is_private = 0
     GROUP BY p.id
     ORDER BY p.created_at DESC LIMIT 30');
 $stmt->execute();

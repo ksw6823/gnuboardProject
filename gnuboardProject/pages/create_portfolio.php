@@ -1,12 +1,59 @@
 <?php
-// session_start();
+session_start();
 require_once '../cuur/config/database.php';
 // 로그인 체크
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit;
 }
 $user_id = $_SESSION['user_id'];
+$portfolio_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$is_edit = false;
+$portfolio = null;
+$keywords = [];
+$skills = [];
+$sections = [];
+
+// 수정 모드일 경우 기존 포트폴리오 데이터 불러오기
+if ($portfolio_id) {
+    $stmt = $pdo->prepare('SELECT * FROM portfolios WHERE id = ? AND user_id = ?');
+    $stmt->execute([$portfolio_id, $user_id]);
+    $portfolio = $stmt->fetch();
+    
+    if ($portfolio) {
+        $is_edit = true;
+        
+        // 키워드 불러오기
+        $stmt = $pdo->prepare('SELECT k.* FROM keywords k 
+            JOIN portfolio_keywords pk ON k.id = pk.keyword_id 
+            WHERE pk.portfolio_id = ?');
+        $stmt->execute([$portfolio_id]);
+        $keywords = $stmt->fetchAll();
+        
+        // 기술스택 불러오기
+        $stmt = $pdo->prepare('SELECT s.* FROM skills s 
+            JOIN portfolio_skills ps ON s.id = ps.skill_id 
+            WHERE ps.portfolio_id = ?');
+        $stmt->execute([$portfolio_id]);
+        $skills = $stmt->fetchAll();
+        
+        // 섹션 불러오기
+        $stmt = $pdo->prepare('SELECT * FROM portfolio_sections 
+            WHERE portfolio_id = ? ORDER BY sort_order ASC');
+        $stmt->execute([$portfolio_id]);
+        $sections = $stmt->fetchAll();
+    }
+}
+
+// 사용자 존재 여부 확인
+$user_check = $pdo->prepare('SELECT id FROM users WHERE id = ?');
+$user_check->execute([$user_id]);
+if (!$user_check->fetch()) {
+    // 사용자가 존재하지 않으면 세션 삭제하고 로그인 페이지로 리다이렉트
+    session_destroy();
+    header('Location: login.php');
+    exit;
+}
 
 // 저장 처리
 $save_success = false;
@@ -83,7 +130,7 @@ if (!$user) { $user = ['name'=>'', 'email'=>'', 'phone'=>'']; }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>포트폴리오 작성</title>
+    <title><?php echo $is_edit ? '포트폴리오 수정' : '포트폴리오 작성'; ?></title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         body { background: #f7f8fa; }
@@ -124,7 +171,12 @@ if (!$user) { $user = ['name'=>'', 'email'=>'', 'phone'=>'']; }
         .info-section-block .section-type { font-weight: 600; color: #007bff; margin-bottom: 0.5rem; }
         .info-section-block textarea { width: 100%; min-height: 50px; border-radius: 7px; border: 1px solid #bbb; padding: 0.5rem; }
         .remove-section-btn { color: #dc3545; font-size: 0.95rem; margin-top: 0.3rem; cursor:pointer; background:none; border:none; }
-        .portfolio-create-side { width: 260px; }
+        .portfolio-create-side { 
+            width: 260px; 
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
         .side-theme { background: #e9eef6; border-radius: 8px; padding: 1rem; margin-bottom: 1.2rem; text-align: center; font-weight: 600; }
         .side-tag-box { background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 1.2rem; }
         .side-tag-title { font-weight: 600; margin-bottom: 0.7rem; }
@@ -223,10 +275,13 @@ if (!$user) { $user = ['name'=>'', 'email'=>'', 'phone'=>'']; }
             <div style="background:#f8d7da; color:#842029; border-radius:8px; padding:1rem 1.5rem; margin-bottom:1.5rem; text-align:center;">저장 오류: <?php echo htmlspecialchars($save_error); ?></div>
         <?php endif; ?>
         <form class="portfolio-create-form" id="portfolioForm" enctype="multipart/form-data" autocomplete="off" method="post">
+            <?php if ($is_edit): ?>
+            <input type="hidden" name="portfolio_id" value="<?php echo $portfolio_id; ?>">
+            <?php endif; ?>
             <div class="profile-photo-upload">
                 <label class="profile-photo-box" id="photoBox">
                     <span id="photoBoxText">사진 추가</span>
-                    <input type="file" name="photo" id="photoInput" accept="image/*">
+                    <input type="file" name="photo" id="photoInput" accept="image/*" <?php echo $is_edit ? '' : 'required'; ?>>
                     <img id="photoPreview" class="profile-photo-preview" style="display:none;" alt="미리보기">
                 </label>
                 <div class="profile-photo-label">사진 추가</div>
@@ -249,11 +304,11 @@ if (!$user) { $user = ['name'=>'', 'email'=>'', 'phone'=>'']; }
             </div>
             <div class="info-form-group">
                 <label class="info-form-label">포트폴리오 제목</label>
-                <input type="text" name="title" id="inputTitle" placeholder="포트폴리오 제목을 입력하세요" required>
+                <input type="text" name="title" id="inputTitle" placeholder="포트폴리오 제목을 입력하세요" required value="<?php echo $is_edit ? htmlspecialchars($portfolio['title']) : ''; ?>">
             </div>
             <div class="info-form-group">
                 <label class="info-form-label">한줄 소개</label>
-                <textarea name="summary" placeholder="한줄 소개를 입력하세요"></textarea>
+                <textarea name="summary" placeholder="한줄 소개를 입력하세요" required><?php echo $is_edit ? htmlspecialchars($portfolio['summary']) : ''; ?></textarea>
             </div>
             <div class="info-form-group">
                 <label class="info-form-label">나의 키워드</label>
@@ -531,6 +586,23 @@ addSelectedSkills.addEventListener('click', function() {
 });
 renderSkills();
 };
+
+// 수정 모드일 경우 기존 데이터로 폼 초기화
+<?php if ($is_edit): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    // 키워드 초기화
+    keywords = <?php echo json_encode($keywords); ?>;
+    renderKeywords();
+    
+    // 기술스택 초기화
+    skills = <?php echo json_encode($skills); ?>;
+    renderSkills();
+    
+    // 섹션 초기화
+    sections = <?php echo json_encode($sections); ?>;
+    renderSections();
+});
+<?php endif; ?>
 </script>
 <?php include '../includes/footer.php'; ?>
 </body>
