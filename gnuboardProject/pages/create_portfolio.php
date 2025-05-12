@@ -65,25 +65,188 @@ $all_skills = $skill_stmt->fetchAll();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $summary = trim($_POST['summary'] ?? '');
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    
+    // 키워드 처리
     $keywords = $_POST['keywords'] ?? [];
+    if (is_string($keywords)) {
+        $keywords = array_filter(explode(',', $keywords));
+    }
+    
+    // 기술스택 처리
     $skills = $_POST['skills'] ?? [];
     if (is_string($skills)) {
         $skills = array_filter(explode(',', $skills));
     }
+    
+    // 섹션 처리
     $sections = $_POST['sections'] ?? [];
-    $photo_path = '';
-    // 사진 업로드
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-        $photo_path = 'uploads/portfolio_' . uniqid() . '.' . $ext;
-        move_uploaded_file($_FILES['photo']['tmp_name'], '../' . $photo_path);
+    if (is_string($sections)) {
+        $sections = json_decode($sections, true) ?? [];
     }
+    
+    $username = $_SESSION['username'];
+    
     try {
-        // 1. portfolios 저장
-        $stmt = $pdo->prepare('INSERT INTO portfolios (user_id, title, summary, photo) VALUES (?, ?, ?, ?)');
-        $stmt->execute([$user_id, $title, $summary, $photo_path]);
+        // 1. 포트폴리오 생성
+        $stmt = $pdo->prepare('INSERT INTO portfolios (user_id, title, summary) VALUES (?, ?, ?)');
+        $stmt->execute([$_SESSION['user_id'], $title, $summary]);
         $portfolio_id = $pdo->lastInsertId();
-        // 2. 키워드 저장
+        
+        // 2. 포트폴리오 업로드 디렉토리 생성
+        $portfolioDir = createPortfolioUploadDir($username, $portfolio_id);
+        $portfolio_path = $username . '/portfolios/' . $portfolio_id;
+        
+        // 3. 템플릿 파일 복사
+        $template_path = __DIR__ . '/template/portfolio_template.html';
+        if (file_exists($template_path)) {
+            if (!copy($template_path, $portfolioDir . '/portfolio_template.html')) {
+                throw new Exception('템플릿 파일 복사에 실패했습니다.');
+            }
+        }
+        
+        // 4. HTML 파일 내용 수정
+        $html_content = file_get_contents($portfolioDir . '/portfolio_template.html');
+        
+        // 기본 정보 수정
+        $html_content = str_replace('김민준', htmlspecialchars($name), $html_content);
+        $html_content = str_replace('프론트엔드 개발자', htmlspecialchars($title), $html_content);
+        $html_content = str_replace('minjun.kim@email.com', htmlspecialchars($email), $html_content);
+        $html_content = str_replace('010-1234-5678', htmlspecialchars($phone), $html_content);
+        
+        // 섹션 내용 수정
+        if (is_array($sections)) {
+            foreach ($sections as $section) {
+                if (!isset($section['type']) || !isset($section['content'])) {
+                    continue;
+                }
+                $type = $section['type'];
+                $content = $section['content'];
+                
+                // 섹션 타입에 따라 해당 내용을 HTML에 삽입
+                switch ($type) {
+                    case '자기소개':
+                        $html_content = str_replace('<p></p>', '<p>' . htmlspecialchars($content) . '</p>', $html_content);
+                        break;
+                    case '기술스택':
+                        // 기술스택 목록 생성
+                        $skill_list = '';
+                        if (is_array($skills)) {
+                            foreach ($skills as $skill_id) {
+                                // 기술스택 이름 가져오기
+                                $stmt = $pdo->prepare('SELECT name FROM skills WHERE id = ?');
+                                $stmt->execute([$skill_id]);
+                                $skill = $stmt->fetch();
+                                if ($skill) {
+                                    $skill_list .= '<span class="skill-item">' . htmlspecialchars($skill['name']) . '</span>';
+                                }
+                            }
+                        }
+                        $html_content = str_replace('<span class="skill-item"></span>', $skill_list, $html_content);
+                        break;
+                    case '경력':
+                        $timeline_html = '';
+                        if (is_array($content)) {
+                            foreach ($content as $exp) {
+                                $timeline_html .= '<div class="timeline-item">
+                                    <div class="timeline-date">' . htmlspecialchars($exp['date']) . '</div>
+                                    <div class="timeline-title">' . htmlspecialchars($exp['title']) . '</div>
+                                    <div class="timeline-desc">' . htmlspecialchars($exp['description']) . '</div>
+                                </div>';
+                            }
+                        }
+                        $html_content = str_replace('<div class="timeline-item">
+                    <div class="timeline-date"></div>
+                    <div class="timeline-title"></div>
+                    <div class="timeline-desc"></div>
+                </div>', $timeline_html, $html_content);
+                        break;
+                    case '프로젝트':
+                        $project_html = '';
+                        if (is_array($content)) {
+                            foreach ($content as $project) {
+                                $project_html .= '<div class="project-card">
+                                    <div class="project-title">' . htmlspecialchars($project['title']) . '</div>
+                                    <div class="project-desc">' . htmlspecialchars($project['description']) . '</div>
+                                </div>';
+                            }
+                        }
+                        $html_content = str_replace('<div class="project-card">
+            <div class="project-title"></div>
+            <div class="project-desc"></div>
+        </div>', $project_html, $html_content);
+                        break;
+                    case '자격증':
+                        $cert_html = '';
+                        if (is_array($content)) {
+                            foreach ($content as $cert) {
+                                $cert_html .= '<div class="cert-item">
+                                    <div class="cert-name">' . htmlspecialchars($cert['name']) . '</div>
+                                    <div class="cert-date">' . htmlspecialchars($cert['date']) . '</div>
+                                </div>';
+                            }
+                        }
+                        $html_content = str_replace('<div class="cert-item">
+            <div class="cert-name"></div>
+            <div class="cert-date"></div>
+        </div>', $cert_html, $html_content);
+                        break;
+                    case '외국어':
+                        $lang_html = '';
+                        if (is_array($content)) {
+                            foreach ($content as $lang) {
+                                $lang_html .= '<div class="language-item">
+                                    <div class="language-name">' . htmlspecialchars($lang['name']) . '</div>
+                                    <div class="language-level">' . htmlspecialchars($lang['level']) . '</div>
+                                </div>';
+                            }
+                        }
+                        $html_content = str_replace('<div class="language-item">
+            <div class="language-name"></div>
+            <div class="language-level"></div>
+        </div>', $lang_html, $html_content);
+                        break;
+                    case '대외활동':
+                        $activity_html = '';
+                        if (is_array($content)) {
+                            foreach ($content as $activity) {
+                                $activity_html .= '<div class="activity-item">
+                                    <div class="activity-title">' . htmlspecialchars($activity['title']) . '</div>
+                                    <div class="activity-desc">' . htmlspecialchars($activity['description']) . '</div>
+                                </div>';
+                            }
+                        }
+                        $html_content = str_replace('<div class="activity-item">
+            <div class="activity-title"></div>
+            <div class="activity-desc"></div>
+        </div>', $activity_html, $html_content);
+                        break;
+                }
+            }
+        }
+        
+        // 수정된 내용 저장
+        file_put_contents($portfolioDir . '/index.html', $html_content);
+        
+        // 5. 썸네일 저장
+        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'bmp'])) {
+                throw new Exception('이미지는 JPG, PNG 또는 BMP 형식만 가능합니다.');
+            }
+            $thumbnail_path = $portfolioDir . '/thumbnail.' . $ext;
+            if (!move_uploaded_file($_FILES['photo']['tmp_name'], $thumbnail_path)) {
+                throw new Exception('이미지 업로드에 실패했습니다.');
+            }
+        }
+        
+        // 6. 포트폴리오 경로 업데이트
+        $stmt = $pdo->prepare('UPDATE portfolios SET path = ? WHERE id = ?');
+        $stmt->execute([$portfolio_path, $portfolio_id]);
+        
+        // 7. 키워드 저장
         foreach ($keywords as $kw) {
             $kw = trim($kw);
             if ($kw === '') continue;
@@ -102,19 +265,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('INSERT INTO portfolio_keywords (portfolio_id, keyword_id) VALUES (?, ?)');
             $stmt->execute([$portfolio_id, $kw_id]);
         }
-        // 2-1. 기술스택 저장
+        
+        // 8. 기술스택 저장
         foreach ($skills as $skill_id) {
             $stmt = $pdo->prepare('INSERT INTO portfolio_skills (portfolio_id, skill_id) VALUES (?, ?)');
             $stmt->execute([$portfolio_id, $skill_id]);
         }
-        // 3. sections 저장
+        
+        // 9. 섹션 저장
         foreach ($sections as $i => $section) {
             $type = $section['type'] ?? '';
             $content = $section['content'] ?? '';
             $stmt = $pdo->prepare('INSERT INTO portfolio_sections (portfolio_id, type, content, sort_order) VALUES (?, ?, ?, ?)');
             $stmt->execute([$portfolio_id, $type, json_encode($content, JSON_UNESCAPED_UNICODE), $i]);
         }
+        
         $save_success = true;
+        
+        // 저장 성공 후 홈으로 리다이렉트
+        header('Location: ../index.php');
+        exit;
+        
     } catch (PDOException $e) {
         $save_error = '저장 중 오류: ' . $e->getMessage();
     }

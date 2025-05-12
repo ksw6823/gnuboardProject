@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그라데이션 포트폴리오</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f7 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+        .profile-img {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin-bottom: 25px;
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .name {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .section {
+            background: white;
+            border-radius: 25px;
+            padding: 35px;
+            margin-bottom: 35px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        }
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #4b5563;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::before {
+            content: '';
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+        }
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .skill-item {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            color: #4b5563;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .timeline {
+            position: relative;
+            padding-left: 35px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 35px;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -35px;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -39px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+        .timeline-date {
+            font-weight: 600;
+            color: #6366f1;
+            margin-bottom: 8px;
+        }
+        .timeline-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .timeline-desc {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        .project-card {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border-radius: 20px;
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .project-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        .project-desc {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        .cert-list, .language-list, .activity-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .cert-item, .language-item, .activity-item {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 20px;
+            border-radius: 20px;
+            transition: transform 0.3s ease;
+        }
+        .cert-item:hover, .language-item:hover, .activity-item:hover {
+            transform: translateY(-3px);
+        }
+        .cert-name, .language-name, .activity-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .cert-date, .language-level, .activity-desc {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .name {
+                font-size: 2rem;
+            }
+            .section {
+                padding: 25px;
+            }
+            .contact-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 섹션 -->
+        <header class="header">
+            <img src="profile.jpg" alt="프로필 사진" class="profile-img">
+            <h1 class="name"></h1>
+            <p class="title"></p>
+            <div class="contact-info">
+                <div class="contact-item">📧 </div>
+                <div class="contact-item">📱 </div>
+                <div class="contact-item">📍 </div>
+            </div>
+        </header>
+
+        <!-- 자기소개 섹션 -->
+        <section class="section">
+            <h2 class="section-title">자기소개</h2>
+            <p></p>
+        </section>
+
+        <!-- 기술스택 섹션 -->
+        <section class="section">
+            <h2 class="section-title">기술스택</h2>
+            <div class="skill-list">
+                <span class="skill-item"></span>
+            </div>
+        </section>
+
+        <!-- 경력 섹션 -->
+        <section class="section">
+            <h2 class="section-title">경력</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date"></div>
+                    <div class="timeline-title"></div>
+                    <div class="timeline-desc"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 프로젝트 섹션 -->
+        <section class="section">
+            <h2 class="section-title">프로젝트</h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3 class="project-title"></h3>
+                    <p class="project-desc"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 자격증 섹션 -->
+        <section class="section">
+            <h2 class="section-title">자격증</h2>
+            <div class="cert-list">
+                <div class="cert-item">
+                    <div class="cert-name"></div>
+                    <div class="cert-date"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 외국어 섹션 -->
+        <section class="section">
+            <h2 class="section-title">외국어</h2>
+            <div class="language-list">
+                <div class="language-item">
+                    <div class="language-name"></div>
+                    <div class="language-level"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 대외활동 섹션 -->
+        <section class="section">
+            <h2 class="section-title">대외활동</h2>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <h3 class="activity-title"></h3>
+                    <p class="activity-desc"></p>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html> 

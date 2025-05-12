@@ -1,8 +1,9 @@
 <?php
 require_once 'cuur/config/database.php';
 // 포트폴리오 목록 불러오기 (기술스택 포함)
-$stmt = $pdo->prepare('SELECT p.id, p.title, p.summary, p.photo, GROUP_CONCAT(DISTINCT s.name) as skills
+$stmt = $pdo->prepare('SELECT p.id, p.title, p.summary, p.path, u.username, GROUP_CONCAT(DISTINCT s.name) as skills
     FROM portfolios p
+    JOIN users u ON p.user_id = u.id
     LEFT JOIN portfolio_skills ps ON p.id = ps.portfolio_id
     LEFT JOIN skills s ON ps.skill_id = s.id
     WHERE p.is_private = 0
@@ -10,6 +11,17 @@ $stmt = $pdo->prepare('SELECT p.id, p.title, p.summary, p.photo, GROUP_CONCAT(DI
     ORDER BY p.created_at DESC LIMIT 30');
 $stmt->execute();
 $portfolios = $stmt->fetchAll();
+
+// 디버깅을 위한 출력
+echo "<!-- Debug Info:\n";
+foreach ($portfolios as $p) {
+    echo "Portfolio ID: " . $p['id'] . "\n";
+    echo "Username: " . $p['username'] . "\n";
+    echo "Path: " . $p['path'] . "\n";
+    echo "---\n";
+}
+echo "-->";
+
 // 전체 기술스택 불러오기
 $skill_stmt = $pdo->prepare('SELECT id, name FROM skills ORDER BY name ASC');
 $skill_stmt->execute();
@@ -209,9 +221,9 @@ $all_skills = $skill_stmt->fetchAll();
             <a href="pages/view_portfolio.php?id=<?php echo $p['id']; ?>" class="portfolio-card-link portfolio-card-item" data-title="<?php echo htmlspecialchars($p['title']); ?>" data-skills="<?php echo htmlspecialchars($p['skills']); ?>">
                 <div class="portfolio-card">
                     <div class="portfolio-card-thumb">
-                        <?php if ($p['photo']): ?>
-                            <img src="<?php echo htmlspecialchars($p['photo']); ?>" alt="포트폴리오 이미지">
-                        <?php endif; ?>
+                        <img src="uploads/users/<?php echo htmlspecialchars($p['username']); ?>/portfolios/<?php echo $p['id']; ?>/thumbnail.jpg" 
+                             alt="썸네일"
+                             onerror="this.onerror=null; this.src='uploads/users/<?php echo htmlspecialchars($p['username']); ?>/portfolios/<?php echo $p['id']; ?>/thumbnail.png'; this.onerror=function(){this.src='uploads/users/<?php echo htmlspecialchars($p['username']); ?>/portfolios/<?php echo $p['id']; ?>/thumbnail.bmp'; this.onerror=function(){this.src='uploads/default.jpg';}}">
                     </div>
                     <div class="portfolio-card-body">
                         <div class="portfolio-card-title"><?php echo htmlspecialchars($p['title']); ?></div>

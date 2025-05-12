@@ -49,9 +49,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // 사용자 정보 저장
                     $stmt = $pdo->prepare("INSERT INTO users (username, password, email, name) VALUES (?, ?, ?, ?)");
                     if ($stmt->execute([$username, $hashed_password, $email, $name])) {
-                        $_SESSION['register_success'] = true;
-                        header("Location: login.php");
-                        exit();
+                        // 사용자 업로드 디렉토리 생성
+                        $userDir = createUserUploadDir($username);
+                        
+                        // 로그인 페이지로 리다이렉트
+                        header('Location: login.php');
+                        exit;
                     } else {
                         $errors[] = "회원가입 중 오류가 발생했습니다.";
                     }

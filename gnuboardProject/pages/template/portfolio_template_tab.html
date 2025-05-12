@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>탭형 포트폴리오</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            color: #2d3436;
+            background: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .profile-img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            margin-bottom: 25px;
+            object-fit: cover;
+            border: 4px solid #e9ecef;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .name {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #2d3436;
+        }
+        .title {
+            font-size: 1.2rem;
+            color: #636e72;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+        .tab-container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .tab-nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .tab-nav::-webkit-scrollbar {
+            display: none;
+        }
+        .tab-button {
+            padding: 20px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #636e72;
+            background: none;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+        .tab-button:hover {
+            color: #0984e3;
+        }
+        .tab-button.active {
+            color: #0984e3;
+            border-bottom: 3px solid #0984e3;
+        }
+        .tab-content {
+            padding: 40px;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 30px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: #0984e3;
+        }
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .skill-item {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2d3436;
+            border: 1px solid #e9ecef;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #e9ecef;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -34px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #0984e3;
+        }
+        .timeline-date {
+            font-weight: 600;
+            color: #0984e3;
+            margin-bottom: 8px;
+        }
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .timeline-desc {
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .project-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        .project-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .project-desc {
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+        .cert-list, .language-list, .activity-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .cert-item, .language-item, .activity-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+        }
+        .cert-name, .language-name, .activity-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .cert-date, .language-level, .activity-desc {
+            color: #636e72;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .profile-img {
+                width: 150px;
+                height: 150px;
+            }
+            .tab-button {
+                padding: 15px 20px;
+                font-size: 1rem;
+            }
+            .tab-content {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 섹션 -->
+        <header class="header">
+            <img src="profile.jpg" alt="프로필 사진" class="profile-img">
+            <h1 class="name"></h1>
+            <p class="title"></p>
+            <div class="contact-info">
+                <div class="contact-item">📧 </div>
+                <div class="contact-item">📱 </div>
+                <div class="contact-item">📍 </div>
+            </div>
+        </header>
+
+        <!-- 탭 컨테이너 -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-button active" data-tab="about">자기소개</button>
+                <button class="tab-button" data-tab="skills">기술스택</button>
+                <button class="tab-button" data-tab="experience">경력</button>
+                <button class="tab-button" data-tab="projects">프로젝트</button>
+                <button class="tab-button" data-tab="certificates">자격증</button>
+                <button class="tab-button" data-tab="languages">외국어</button>
+                <button class="tab-button" data-tab="activities">대외활동</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- 자기소개 탭 -->
+                <div class="tab-pane active" id="about">
+                    <h2 class="section-title">자기소개</h2>
+                    <p></p>
+                </div>
+
+                <!-- 기술스택 탭 -->
+                <div class="tab-pane" id="skills">
+                    <h2 class="section-title">기술스택</h2>
+                    <div class="skill-list">
+                        <span class="skill-item"></span>
+                    </div>
+                </div>
+
+                <!-- 경력 탭 -->
+                <div class="tab-pane" id="experience">
+                    <h2 class="section-title">경력</h2>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date"></div>
+                            <div class="timeline-title"></div>
+                            <div class="timeline-desc"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 프로젝트 탭 -->
+                <div class="tab-pane" id="projects">
+                    <h2 class="section-title">프로젝트</h2>
+                    <div class="project-grid">
+                        <div class="project-card">
+                            <h3 class="project-title"></h3>
+                            <p class="project-desc"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 자격증 탭 -->
+                <div class="tab-pane" id="certificates">
+                    <h2 class="section-title">자격증</h2>
+                    <div class="cert-list">
+                        <div class="cert-item">
+                            <div class="cert-name"></div>
+                            <div class="cert-date"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 외국어 탭 -->
+                <div class="tab-pane" id="languages">
+                    <h2 class="section-title">외국어</h2>
+                    <div class="language-list">
+                        <div class="language-item">
+                            <div class="language-name"></div>
+                            <div class="language-level"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 대외활동 탭 -->
+                <div class="tab-pane" id="activities">
+                    <h2 class="section-title">대외활동</h2>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <h3 class="activity-title"></h3>
+                            <p class="activity-desc"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 탭 기능 구현
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // 모든 탭 버튼에서 active 클래스 제거
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // 클릭된 탭 버튼에 active 클래스 추가
+                button.classList.add('active');
+
+                // 모든 탭 패널 숨기기
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                // 선택된 탭 패널 표시
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -56,21 +56,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $skills = array_filter(explode(',', $skills));
     }
     $sections = $_POST['sections'] ?? [];
-    $photo_path = $portfolio['photo'];
-
-    // 사진 업로드
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-        $photo_path = 'uploads/portfolio_' . uniqid() . '.' . $ext;
-        move_uploaded_file($_FILES['photo']['tmp_name'], '../' . $photo_path);
-    }
-
+    $username = $_SESSION['username'];
+    
     try {
-        // 1. portfolios 업데이트
-        $stmt = $pdo->prepare('UPDATE portfolios SET title = ?, summary = ?, photo = ? WHERE id = ? AND user_id = ?');
-        $stmt->execute([$title, $summary, $photo_path, $portfolio_id, $_SESSION['user_id']]);
-
-        // 2. 키워드 업데이트
+        // 1. 포트폴리오 업로드 디렉토리 생성
+        $portfolioDir = createPortfolioUploadDir($username, $portfolio_id);
+        $portfolio_path = $username . '/portfolios/' . $portfolio_id;
+        
+        // 2. 썸네일 저장
+        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'bmp'])) {
+                throw new Exception('이미지는 JPG, PNG 또는 BMP 형식만 가능합니다.');
+            }
+            $thumbnail_path = $portfolioDir . '/thumbnail.' . $ext;
+            if (!move_uploaded_file($_FILES['photo']['tmp_name'], $thumbnail_path)) {
+                throw new Exception('이미지 업로드에 실패했습니다.');
+            }
+        }
+        
+        // 3. 포트폴리오 정보 업데이트
+        $stmt = $pdo->prepare('UPDATE portfolios SET title = ?, summary = ?, path = ? WHERE id = ? AND user_id = ?');
+        $stmt->execute([$title, $summary, $portfolio_path, $portfolio_id, $_SESSION['user_id']]);
+        
+        // 4. 키워드 저장
         $stmt = $pdo->prepare('DELETE FROM portfolio_keywords WHERE portfolio_id = ?');
         $stmt->execute([$portfolio_id]);
         foreach ($keywords as $kw) {
@@ -90,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$portfolio_id, $kw_id]);
         }
 
-        // 3. 기술스택 업데이트
+        // 5. 기술스택 저장
         $stmt = $pdo->prepare('DELETE FROM portfolio_skills WHERE portfolio_id = ?');
         $stmt->execute([$portfolio_id]);
         foreach ($skills as $skill_id) {
@@ -98,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$portfolio_id, $skill_id]);
         }
 
-        // 4. 섹션 업데이트
+        // 6. 섹션 저장
         $stmt = $pdo->prepare('DELETE FROM portfolio_sections WHERE portfolio_id = ?');
         $stmt->execute([$portfolio_id]);
         foreach ($sections as $i => $section) {
@@ -213,9 +222,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form class="portfolio-create-form" id="portfolioForm" enctype="multipart/form-data" method="post">
             <div class="profile-photo-upload">
                 <label class="profile-photo-box" id="photoBox">
-                    <span id="photoBoxText" style="display:<?php echo $portfolio['photo'] ? 'none' : 'block'; ?>">사진 추가</span>
+                    <span id="photoBoxText" style="display:<?php echo $portfolio['path'] ? 'none' : 'block'; ?>">사진 추가</span>
                     <input type="file" name="photo" id="photoInput" accept="image/*">
-                    <img id="photoPreview" class="profile-photo-preview" src="<?php echo $portfolio['photo'] ? '../' . htmlspecialchars($portfolio['photo']) : ''; ?>" style="display:<?php echo $portfolio['photo'] ? 'block' : 'none'; ?>" alt="미리보기">
+                    <img id="photoPreview" class="profile-photo-preview" src="<?php echo $portfolio['path'] ? '../' . htmlspecialchars($portfolio['path']) : ''; ?>" style="display:<?php echo $portfolio['path'] ? 'block' : 'none'; ?>" alt="미리보기">
                 </label>
                 <div class="profile-photo-label">사진 수정</div>
             </div>

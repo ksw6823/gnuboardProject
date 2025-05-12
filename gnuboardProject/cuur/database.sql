@@ -26,12 +26,13 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE TABLE portfolios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    title VARCHAR(100),           -- 포트폴리오 제목(예: 웹 개발자 포트폴리오)
-    summary TEXT,                 -- 한줄 소개
-    photo VARCHAR(255),           -- 이력서/프로필 사진 경로
+    title VARCHAR(255) NOT NULL,
+    summary TEXT,
+    path VARCHAR(255),
+    is_private TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE keywords (

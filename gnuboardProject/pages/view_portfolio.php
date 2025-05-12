@@ -13,10 +13,16 @@ if (isset($_SESSION['user_id'])) {
 }
 
 // 포트폴리오 기본 정보
-$stmt = $pdo->prepare('SELECT p.*, u.name as user_name, u.profile_image FROM portfolios p JOIN users u ON p.user_id = u.id WHERE p.id = ?');
+$stmt = $pdo->prepare('SELECT p.*, u.name as user_name, u.username, u.profile_image FROM portfolios p JOIN users u ON p.user_id = u.id WHERE p.id = ?');
 $stmt->execute([$portfolio_id]);
 $portfolio = $stmt->fetch();
 if (!$portfolio) { echo '포트폴리오를 찾을 수 없습니다.'; exit; }
+
+// HTML 파일 경로 확인
+$html_path = '../uploads/users/' . $portfolio['username'] . '/portfolios/' . $portfolio_id . '/index.html';
+// HTML 파일 존재 여부만 확인하고 직접 출력하지 않음
+$has_html = file_exists($html_path);
+
 // 키워드
 $stmt = $pdo->prepare('SELECT k.name FROM portfolio_keywords pk JOIN keywords k ON pk.keyword_id = k.id WHERE pk.portfolio_id = ?');
 $stmt->execute([$portfolio_id]);
@@ -83,7 +89,10 @@ $section_types = ['자기소개','기술스택','경력','프로젝트','자격�
 <div class="view-wrap">
     <div class="view-main">
         <div class="view-header">
-            <img src="../<?php echo htmlspecialchars($portfolio['photo'] ?: ($portfolio['profile_image'] ?? 'uploads/default.jpg')); ?>" class="view-profile-img" alt="프로필 사진">
+            <img src="../uploads/users/<?php echo htmlspecialchars($portfolio['username']); ?>/portfolios/<?php echo $portfolio_id; ?>/thumbnail.jpg" 
+                 class="view-profile-img" 
+                 alt="프로필 사진"
+                 onerror="this.onerror=null; this.src='../uploads/users/<?php echo htmlspecialchars($portfolio['username']); ?>/portfolios/<?php echo $portfolio_id; ?>/thumbnail.png'; this.onerror=function(){this.src='../uploads/users/<?php echo htmlspecialchars($portfolio['username']); ?>/portfolios/<?php echo $portfolio_id; ?>/thumbnail.bmp'; this.onerror=function(){this.src='../uploads/default.jpg';}}">
             <div class="view-header-info">
                 <div class="view-header-name"><?php echo htmlspecialchars($portfolio['user_name']); ?></div>
                 <div class="view-header-keywords">
@@ -95,12 +104,13 @@ $section_types = ['자기소개','기술스택','경력','프로젝트','자격�
         </div>
         <div class="view-title"><?php echo htmlspecialchars($portfolio['title']); ?></div>
         <div class="view-summary"><?php echo nl2br(htmlspecialchars($portfolio['summary'])); ?></div>
-        <?php foreach ($sections as $sec): $content = json_decode($sec['content'], true); $type = htmlspecialchars($sec['type']); ?>
-            <div class="view-section" id="section-<?php echo $type; ?>">
-                <div class="view-section-type"><?php echo $type; ?></div>
-                <div class="view-section-content"><?php echo isset($content) ? (is_array($content) ? htmlspecialchars(print_r($content, true)) : htmlspecialchars($content)) : ''; ?></div>
+        <?php if ($has_html): ?>
+            <div class="view-section" style="background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.04); padding:0; overflow:hidden;">
+                <iframe id="portfolioIframe" src="../uploads/users/<?php echo $portfolio['username']; ?>/portfolios/<?php echo $portfolio_id; ?>/index.html" width="100%" height="900px" frameborder="0" style="border-radius:12px; min-height:600px; background:#fff;"></iframe>
             </div>
-        <?php endforeach; ?>
+        <?php else: ?>
+            <div class="view-section">포트폴리오 미리보기를 불러올 수 없습니다.</div>
+        <?php endif; ?>
     </div>
     <nav class="view-side-nav">
         <?php if ($is_owner): ?>
