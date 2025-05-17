@@ -15,6 +15,9 @@ export class CommentsController {
     @Request() req,
     @Body() createCommentDto: CreateCommentDto,
   ) {
+    console.log('User from request:', req.user);
+    console.log('PortfolioId:', portfolioId);
+    console.log('Comment data:', createCommentDto);
     return this.commentsService.create(+portfolioId, req.user.id, createCommentDto);
   }
 
