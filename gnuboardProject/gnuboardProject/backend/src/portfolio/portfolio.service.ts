@@ -26,6 +26,7 @@ export class PortfolioService {
   async findAll(): Promise<Portfolio[]> {
     return this.portfolioRepository.find({
       relations: ['user', 'skills', 'keywords', 'sections'],
+      order: { id: 'DESC' },
     });
   }
 
