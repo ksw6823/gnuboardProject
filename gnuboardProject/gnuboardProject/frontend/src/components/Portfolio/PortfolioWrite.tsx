@@ -7,6 +7,18 @@ import { useAuth } from '../../contexts/AuthContext';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { v4 as uuidv4 } from 'uuid';
+import styled from 'styled-components';
+import { PortfolioData } from '../../types/portfolio';
+import DefaultTemplate from './templates/DefaultTemplate';
+import CardTemplate from './templates/CardTemplate';
+import SplitTemplate from './templates/SplitTemplate';
+import DarkTemplate from './templates/DarkTemplate';
+import TabTemplate from './templates/TabTemplate';
+import ArtTemplate from './templates/ArtTemplate';
+import ClassicTemplate from './templates/ClassicTemplate';
+import BrutalTemplate from './templates/BrutalTemplate';
+import GradientTemplate from './templates/GradientTemplate';
+import MinimalTemplate from './templates/MinimalTemplate';
 
 // 드래그&드롭용 태그 카테고리
 const TAG_CATEGORIES = [
@@ -22,6 +34,23 @@ const TAG_CATEGORIES = [
 interface Skill { id: number; name: string; }
 interface Keyword { id: number; name: string; }
 interface Section { id: string; type: string; title: string; content: string; order: number; }
+
+const TemplateSelector = styled.select`
+  padding: 8px 16px;
+  margin: 1rem 0;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  background-color: white;
+`;
+
+const TemplateContainer = styled.div`
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+`;
 
 const PortfolioWrite: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +77,7 @@ const PortfolioWrite: React.FC = () => {
   const [showSkillModal, setShowSkillModal] = useState(false);
   const [tempKeyword, setTempKeyword] = useState<number[]>([]);
   const [tempSkill, setTempSkill] = useState<number[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('default');
 
   // 내 정보 불러오기
   const loadProfile = () => {
@@ -153,6 +183,103 @@ const PortfolioWrite: React.FC = () => {
       alert('저장 실패');
     }
   };
+
+  // 템플릿 데이터 변환 함수
+  const convertToTemplateData = (): PortfolioData => {
+    return {
+      personalInfo: {
+        name,
+        title,
+        email,
+        phone,
+        location: '', // 위치 정보가 없는 경우 빈 문자열로 설정
+        introduction: summary,
+        profileImage: profileImg ? URL.createObjectURL(profileImg) : '',
+      },
+      skills: skills
+        .filter(skill => selectedSkills.includes(skill.id))
+        .map(skill => ({
+          name: skill.name,
+          level: '',
+        })),
+      experiences: sections
+        .filter(section => section.type === 'experience')
+        .map(section => {
+          const content = JSON.parse(section.content);
+          return {
+            title: content.title,
+            company: content.company,
+            date: content.period,
+            description: content.description,
+          };
+        }),
+      education: sections
+        .filter(section => section.type === 'education')
+        .map(section => {
+          const content = JSON.parse(section.content);
+          return {
+            school: content.school,
+            degree: content.degree,
+            date: content.period,
+            description: content.description,
+          };
+        }),
+      projects: sections
+        .filter(section => section.type === 'project')
+        .map(section => {
+          const content = JSON.parse(section.content);
+          return {
+            title: content.title,
+            description: content.description,
+            technologies: content.technologies || [],
+            link: content.link || '',
+          };
+        }),
+      certificates: sections
+        .filter(section => section.type === 'certificate')
+        .map(section => {
+          const content = JSON.parse(section.content);
+          return {
+            name: content.name,
+            issuer: content.issuer,
+            date: content.date,
+          };
+        }),
+      languages: sections
+        .filter(section => section.type === 'language')
+        .map(section => {
+          const content = JSON.parse(section.content);
+          return {
+            name: content.name,
+            level: content.level,
+          };
+        }),
+      activities: sections
+        .filter(section => section.type === 'activity')
+        .map(section => {
+          const content = JSON.parse(section.content);
+          return {
+            title: content.title,
+            description: content.description,
+          };
+        }),
+    };
+  };
+
+  const templates = {
+    default: DefaultTemplate,
+    dark: DarkTemplate,
+    gradient: GradientTemplate,
+    minimal: MinimalTemplate,
+    art: ArtTemplate,
+    brutal: BrutalTemplate,
+    tab: TabTemplate,
+    split: SplitTemplate,
+    card: CardTemplate,
+    classic: ClassicTemplate,
+  };
+
+  const SelectedTemplate = templates[selectedTemplate as keyof typeof templates];
 
   return (
     <>
@@ -286,6 +413,26 @@ const PortfolioWrite: React.FC = () => {
           </div>
         </div>
       )}
+      {/* 템플릿 미리보기 섹션 */}
+      <TemplateContainer>
+        <h2 style={{ marginBottom: '1rem' }}>템플릿 미리보기</h2>
+        <TemplateSelector
+          value={selectedTemplate}
+          onChange={(e) => setSelectedTemplate(e.target.value)}
+        >
+          <option value="default">기본 템플릿</option>
+          <option value="dark">다크 템플릿</option>
+          <option value="gradient">그라데이션 템플릿</option>
+          <option value="minimal">미니멀 템플릿</option>
+          <option value="art">아트 템플릿</option>
+          <option value="brutal">브루탈 템플릿</option>
+          <option value="tab">탭 템플릿</option>
+          <option value="split">스플릿 템플릿</option>
+          <option value="card">카드 템플릿</option>
+          <option value="classic">클래식 템플릿</option>
+        </TemplateSelector>
+        <SelectedTemplate data={convertToTemplateData()} />
+      </TemplateContainer>
       <Footer />
     </>
   );
