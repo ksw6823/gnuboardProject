@@ -29,8 +29,73 @@ interface Portfolio {
   skills: { id: number; name: string }[];
   keywords: { id: number; name: string }[];
   sections: Section[];
+  template: string;
   user?: { id: number; username: string; name: string };
 }
+
+// 템플릿별 스타일 컴포넌트
+const ModernTemplate = styled.div`
+  .section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    h4 {
+      color: #2c3e50;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+  }
+`;
+
+const MinimalTemplate = styled.div`
+  .section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid #e0e0e0;
+    
+    h4 {
+      color: #424242;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+  }
+`;
+
+const CreativeTemplate = styled.div`
+  .section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, #ff6b6b, #4ecdc4);
+    }
+
+    h4 {
+      color: #2d3436;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+  }
+`;
 
 const PortfolioDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -151,12 +216,35 @@ const PortfolioDetail: React.FC = () => {
         </div>
         <div style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>섹션</h3>
-          {portfolio.sections.sort((a, b) => a.order - b.order).map(section => (
-            <div key={section.id} style={{ marginBottom: '1rem' }}>
-              <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{section.title}</h4>
-              <div style={{ whiteSpace: 'pre-line', color: '#444' }}>{section.content}</div>
+          {portfolio.template && (
+            <div style={{ color: '#666', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              템플릿: {portfolio.template.charAt(0).toUpperCase() + portfolio.template.slice(1)}
             </div>
-          ))}
+          )}
+          {(() => {
+            const sortedSections = portfolio.sections.sort((a, b) => a.order - b.order);
+            const renderSections = (Template: React.ComponentType<any>) => (
+              <Template>
+                {sortedSections.map(section => (
+                  <div key={section.id} className="section">
+                    <h4>{section.title}</h4>
+                    <div style={{ whiteSpace: 'pre-line', color: '#444' }}>{section.content}</div>
+                  </div>
+                ))}
+              </Template>
+            );
+
+            switch (portfolio.template) {
+              case 'modern':
+                return renderSections(ModernTemplate);
+              case 'minimal':
+                return renderSections(MinimalTemplate);
+              case 'creative':
+                return renderSections(CreativeTemplate);
+              default:
+                return renderSections(ModernTemplate); // 기본값으로 modern 템플릿 사용
+            }
+          })()}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
           <button
