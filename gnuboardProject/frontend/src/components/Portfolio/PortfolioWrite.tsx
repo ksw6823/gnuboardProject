@@ -486,19 +486,59 @@ const PortfolioWrite: React.FC = () => {
       }
 
       const portfolioData = {
-        ...formData,
-        name: formData.personalInfo.name,
         title: formData.personalInfo.title,
-        email: formData.personalInfo.email,
-        phone: formData.personalInfo.phone,
-        location: formData.personalInfo.location,
-        introduction: formData.personalInfo.introduction,
-        profileImage: formData.personalInfo.profileImage,
+        summary: formData.personalInfo.introduction,
+        content: JSON.stringify({
+          personalInfo: formData.personalInfo,
+          education: formData.education,
+          experiences: formData.experiences,
+          projects: formData.projects,
+          certificates: formData.certificates,
+          languages: formData.languages,
+          activities: formData.activities
+        }),
+        skills: JSON.stringify(formData.skills.map(skill => skill.name)),
+        keywords: JSON.stringify([]),
+        sections: JSON.stringify([
+          ...formData.education.map((edu, index) => ({
+            title: '학력',
+            content: JSON.stringify(edu),
+            order: index
+          })),
+          ...formData.experiences.map((exp, index) => ({
+            title: '경력',
+            content: JSON.stringify(exp),
+            order: index + formData.education.length
+          })),
+          ...formData.projects.map((proj, index) => ({
+            title: '프로젝트',
+            content: JSON.stringify(proj),
+            order: index + formData.education.length + formData.experiences.length
+          })),
+          ...formData.certificates.map((cert, index) => ({
+            title: '자격증',
+            content: JSON.stringify(cert),
+            order: index + formData.education.length + formData.experiences.length + formData.projects.length
+          })),
+          ...formData.languages.map((lang, index) => ({
+            title: '어학',
+            content: JSON.stringify(lang),
+            order: index + formData.education.length + formData.experiences.length + formData.projects.length + formData.certificates.length
+          })),
+          ...formData.activities.map((act, index) => ({
+            title: '활동',
+            content: JSON.stringify(act),
+            order: index + formData.education.length + formData.experiences.length + formData.projects.length + formData.certificates.length + formData.languages.length
+          }))
+        ]),
+        isPrivate: 'false'
       };
 
-      formDataToSend.append('data', JSON.stringify(portfolioData));
+      Object.entries(portfolioData).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
 
-      const endpoint = id ? `/api/portfolios/${id}` : '/api/portfolios';
+      const endpoint = id ? `/portfolios/${id}` : '/portfolios';
       const method = id ? 'put' : 'post';
 
       const response = await axios({
@@ -507,14 +547,13 @@ const PortfolioWrite: React.FC = () => {
         data: formDataToSend,
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
       });
 
       if (response.status === 200 || response.status === 201) {
         alert('포트폴리오가 성공적으로 저장되었습니다.');
         navigate('/portfolios');
-      } else {
-        throw new Error('저장에 실패했습니다.');
       }
     } catch (error) {
       console.error('Error saving portfolio:', error);
