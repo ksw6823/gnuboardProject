@@ -1,0 +1,334 @@
+import React from 'react';
+import styled from 'styled-components';
+import { PortfolioData } from '../../../types/portfolio';
+
+const Container = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #fff;
+`;
+
+const Header = styled.header`
+  text-align: center;
+  margin-bottom: 60px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const HeaderContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const Name = styled.h1`
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  background: linear-gradient(to right, #fff, #e0e0e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const Title = styled.p`
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+`;
+
+const ContactInfo = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+`;
+
+const MainContent = styled.main`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+`;
+
+const Section = styled.section`
+  margin-bottom: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 30px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+`;
+
+const Content = styled.div`
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+`;
+
+const SkillList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+`;
+
+const SkillItem = styled.span`
+  font-size: 1.1rem;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  color: #fff;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+`;
+
+const Timeline = styled.div`
+  position: relative;
+`;
+
+const TimelineItem = styled.div`
+  margin-bottom: 30px;
+  padding-left: 30px;
+  position: relative;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 12px;
+    width: 2px;
+    height: calc(100% + 18px);
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &:last-child::after {
+    display: none;
+  }
+`;
+
+const TimelineDate = styled.div`
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
+`;
+
+const TimelineTitle = styled.div`
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #fff;
+`;
+
+const TimelineDesc = styled.div`
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+`;
+
+const ProjectGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+`;
+
+const ProjectItem = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+  }
+`;
+
+const ProjectTitle = styled.h3`
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #fff;
+`;
+
+const ProjectDesc = styled.p`
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+`;
+
+const CertList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+`;
+
+const CertItem = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+  }
+`;
+
+const CertName = styled.div`
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #fff;
+`;
+
+const CertDate = styled.div`
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.7);
+`;
+
+const LanguageList = styled(CertList)``;
+const ActivityList = styled(CertList)``;
+
+const LanguageItem = styled(CertItem)``;
+const ActivityItem = styled(CertItem)``;
+
+const LanguageName = styled(CertName)``;
+const ActivityTitle = styled(CertName)``;
+
+const LanguageLevel = styled(CertDate)``;
+const ActivityDesc = styled(CertDate)``;
+
+interface GradientTemplateProps {
+  data: PortfolioData;
+}
+
+const GradientTemplate: React.FC<GradientTemplateProps> = ({ data }) => {
+  return (
+    <Container>
+      <Header>
+        <HeaderContent>
+          <Name>{data.personalInfo.name}</Name>
+          <Title>{data.personalInfo.title}</Title>
+          <ContactInfo>
+            <span>📧 {data.personalInfo.email}</span>
+            <span>📱 {data.personalInfo.phone}</span>
+            <span>📍 {data.personalInfo.location}</span>
+          </ContactInfo>
+        </HeaderContent>
+      </Header>
+
+      <MainContent>
+        <Section>
+          <SectionTitle>자기소개</SectionTitle>
+          <Content>
+            <p>{data.personalInfo.introduction}</p>
+          </Content>
+        </Section>
+
+        <Section>
+          <SectionTitle>기술스택</SectionTitle>
+          <SkillList>
+            {data.skills.map((skill: { name: string }, index: number) => (
+              <SkillItem key={index}>{skill.name}</SkillItem>
+            ))}
+          </SkillList>
+        </Section>
+
+        <Section>
+          <SectionTitle>경력</SectionTitle>
+          <Timeline>
+            {data.experiences.map((exp: { title: string; company: string; date: string; description: string }, index: number) => (
+              <TimelineItem key={index}>
+                <TimelineDate>{exp.date}</TimelineDate>
+                <TimelineTitle>{exp.title}</TimelineTitle>
+                <TimelineDesc>{exp.description}</TimelineDesc>
+              </TimelineItem>
+            ))}
+          </Timeline>
+        </Section>
+
+        <Section>
+          <SectionTitle>프로젝트</SectionTitle>
+          <ProjectGrid>
+            {data.projects.map((project: { title: string; description: string; technologies: string[] }, index: number) => (
+              <ProjectItem key={index}>
+                <ProjectTitle>{project.title}</ProjectTitle>
+                <ProjectDesc>{project.description}</ProjectDesc>
+              </ProjectItem>
+            ))}
+          </ProjectGrid>
+        </Section>
+
+        <Section>
+          <SectionTitle>자격증</SectionTitle>
+          <CertList>
+            {data.certificates.map((cert: { name: string; issuer: string; date: string }, index: number) => (
+              <CertItem key={index}>
+                <CertName>{cert.name}</CertName>
+                <CertDate>{cert.date}</CertDate>
+              </CertItem>
+            ))}
+          </CertList>
+        </Section>
+
+        <Section>
+          <SectionTitle>외국어</SectionTitle>
+          <LanguageList>
+            {data.languages.map((lang: { name: string; level: string }, index: number) => (
+              <LanguageItem key={index}>
+                <LanguageName>{lang.name}</LanguageName>
+                <LanguageLevel>{lang.level}</LanguageLevel>
+              </LanguageItem>
+            ))}
+          </LanguageList>
+        </Section>
+
+        <Section>
+          <SectionTitle>대외활동</SectionTitle>
+          <ActivityList>
+            {data.activities.map((activity: { title: string; description: string }, index: number) => (
+              <ActivityItem key={index}>
+                <ActivityTitle>{activity.title}</ActivityTitle>
+                <ActivityDesc>{activity.description}</ActivityDesc>
+              </ActivityItem>
+            ))}
+          </ActivityList>
+        </Section>
+      </MainContent>
+    </Container>
+  );
+};
+
+export default GradientTemplate; 
