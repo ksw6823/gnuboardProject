@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미니멀 포트폴리오</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Serif KR', serif;
+            line-height: 1.8;
+            color: #1a1a1a;
+            background: #fafafa;
+            padding: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 60px;
+            box-shadow: 0 0 0 1px #e0e0e0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 1px;
+            background: #1a1a1a;
+        }
+        .name {
+            font-size: 2.8rem;
+            font-weight: 400;
+            margin-bottom: 15px;
+            letter-spacing: -0.02em;
+        }
+        .title {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .section {
+            margin-bottom: 60px;
+        }
+        .section:last-child {
+            margin-bottom: 0;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .content {
+            font-size: 1rem;
+            color: #333;
+            line-height: 1.8;
+        }
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .skill-item {
+            font-size: 0.9rem;
+            color: #666;
+            position: relative;
+            padding-left: 15px;
+        }
+        .skill-item::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+        }
+        .timeline {
+            position: relative;
+        }
+        .timeline-item {
+            margin-bottom: 30px;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .timeline-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .timeline-desc {
+            font-size: 0.95rem;
+            color: #666;
+        }
+        .project-list {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .project-item {
+            position: relative;
+            padding-left: 20px;
+        }
+        .project-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 8px;
+            height: 1px;
+            background: #1a1a1a;
+        }
+        .project-title {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .project-desc {
+            font-size: 0.95rem;
+            color: #666;
+        }
+        .cert-list, .language-list, .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .cert-item, .language-item, .activity-item {
+            position: relative;
+            padding-left: 20px;
+        }
+        .cert-item::before, .language-item::before, .activity-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 8px;
+            height: 1px;
+            background: #1a1a1a;
+        }
+        .cert-name, .language-name, .activity-title {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        .cert-date, .language-level, .activity-desc {
+            font-size: 0.95rem;
+            color: #666;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            .container {
+                padding: 30px;
+            }
+            .name {
+                font-size: 2.2rem;
+            }
+            .contact-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="name"></h1>
+            <p class="title"></p>
+            <div class="contact-info">
+                <div class="contact-item">📧 </div>
+                <div class="contact-item">📱 </div>
+                <div class="contact-item">📍 </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- 자기소개 섹션 -->
+            <section class="section">
+                <h2 class="section-title">자기소개</h2>
+                <div class="content">
+                    <p></p>
+                </div>
+            </section>
+
+            <!-- 기술스택 섹션 -->
+            <section class="section">
+                <h2 class="section-title">기술스택</h2>
+                <div class="skill-list">
+                    <span class="skill-item"></span>
+                </div>
+            </section>
+
+            <!-- 경력 섹션 -->
+            <section class="section">
+                <h2 class="section-title">경력</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date"></div>
+                        <div class="timeline-title"></div>
+                        <div class="timeline-desc"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 프로젝트 섹션 -->
+            <section class="section">
+                <h2 class="section-title">프로젝트</h2>
+                <div class="project-list">
+                    <div class="project-item">
+                        <h3 class="project-title"></h3>
+                        <p class="project-desc"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 자격증 섹션 -->
+            <section class="section">
+                <h2 class="section-title">자격증</h2>
+                <div class="cert-list">
+                    <div class="cert-item">
+                        <div class="cert-name"></div>
+                        <div class="cert-date"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 외국어 섹션 -->
+            <section class="section">
+                <h2 class="section-title">외국어</h2>
+                <div class="language-list">
+                    <div class="language-item">
+                        <div class="language-name"></div>
+                        <div class="language-level"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 대외활동 섹션 -->
+            <section class="section">
+                <h2 class="section-title">대외활동</h2>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <h3 class="activity-title"></h3>
+                        <p class="activity-desc"></p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html> 
