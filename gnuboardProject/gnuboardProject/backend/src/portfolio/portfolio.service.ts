@@ -46,20 +46,20 @@ export class PortfolioService {
     data: {
       title: string;
       summary: string;
-      content: string;
       photo?: Express.Multer.File;
       skills: number[];
       keywords: number[];
       sections: { title: string; content: string; order: number }[];
       isPrivate: boolean;
+      template: string;
     },
   ): Promise<Portfolio> {
     const portfolio = new Portfolio();
     portfolio.title = data.title;
     portfolio.summary = data.summary;
-    portfolio.content = data.content;
     portfolio.is_private = data.isPrivate;
     portfolio.user = { id: userId } as any;
+    portfolio.template = data.template;
 
     // 기술스택 처리
     if (data.skills && data.skills.length > 0) {
@@ -72,13 +72,17 @@ export class PortfolioService {
 
     // 섹션 처리
     if (data.sections && data.sections.length > 0) {
-      portfolio.sections = data.sections.map(sectionData => {
+      const savedPortfolio = await this.portfolioRepository.save(portfolio);
+      const sections = data.sections.map(sectionData => {
         const section = new PortfolioSection();
         section.title = sectionData.title;
         section.content = sectionData.content;
         section.order = sectionData.order;
+        section.portfolio = savedPortfolio;
         return section;
       });
+      await this.sectionRepository.save(sections);
+      portfolio.sections = sections;
     }
 
     // 썸네일 처리
@@ -101,12 +105,12 @@ export class PortfolioService {
     data: {
       title?: string;
       summary?: string;
-      content?: string;
       photo?: Express.Multer.File;
       skills?: number[];
       keywords?: number[];
       sections?: { title: string; content: string; order: number }[];
       isPrivate?: boolean;
+      template?: string;
     },
   ): Promise<Portfolio> {
     const portfolio = await this.portfolioRepository.findOne({
@@ -120,8 +124,8 @@ export class PortfolioService {
 
     if (data.title) portfolio.title = data.title;
     if (data.summary) portfolio.summary = data.summary;
-    if (data.content) portfolio.content = data.content;
     if (typeof data.isPrivate === 'boolean') portfolio.is_private = data.isPrivate;
+    if (data.template) portfolio.template = data.template;
 
     // 기술스택 업데이트
     if (data.skills) {
@@ -142,6 +146,7 @@ export class PortfolioService {
         section.title = sectionData.title;
         section.content = sectionData.content;
         section.order = sectionData.order;
+        section.portfolio = portfolio;
         return section;
       });
     }

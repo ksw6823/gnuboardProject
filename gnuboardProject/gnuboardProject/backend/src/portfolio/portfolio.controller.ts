@@ -26,22 +26,28 @@ export class PortfolioController {
     @Body() data: {
       title: string;
       summary: string;
-      content: string;
       skills: string;
       keywords: string;
       sections: string;
       isPrivate: string;
+      template: string;
     },
     @UploadedFile() photo?: Express.Multer.File,
   ) {
-    return this.portfolioService.create(req.user.id, {
+    try {
+      const parsedData = {
       ...data,
-      skills: JSON.parse(data.skills),
-      keywords: JSON.parse(data.keywords),
-      sections: JSON.parse(data.sections),
+        skills: JSON.parse(data.skills || '[]'),
+        keywords: JSON.parse(data.keywords || '[]'),
+        sections: JSON.parse(data.sections || '[]'),
       isPrivate: data.isPrivate === 'true',
+      template: data.template,
       photo,
-    });
+      };
+      return this.portfolioService.create(req.user.id, parsedData);
+    } catch (error) {
+      throw new Error('데이터 파싱 중 오류가 발생했습니다: ' + error.message);
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -53,11 +59,11 @@ export class PortfolioController {
     @Body() data: {
       title?: string;
       summary?: string;
-      content?: string;
       skills?: string;
       keywords?: string;
       sections?: string;
       isPrivate?: string;
+      template?: string;
     },
     @UploadedFile() photo?: Express.Multer.File,
   ) {
@@ -67,6 +73,7 @@ export class PortfolioController {
       keywords: data.keywords ? JSON.parse(data.keywords) : undefined,
       sections: data.sections ? JSON.parse(data.sections) : undefined,
       isPrivate: data.isPrivate ? data.isPrivate === 'true' : undefined,
+      template: data.template,
       photo,
     });
   }
