@@ -72,8 +72,8 @@ export class PortfolioService {
 
     // 섹션 처리
     if (data.sections && data.sections.length > 0) {
-      const savedPortfolio = await this.portfolioRepository.save(portfolio);
-      const sections = data.sections.map(sectionData => {
+        const savedPortfolio = await this.portfolioRepository.save(portfolio);
+        const sections = data.sections.map(sectionData => {
         const section = new PortfolioSection();
         section.title = sectionData.title;
         section.content = sectionData.content;
