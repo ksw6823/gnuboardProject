@@ -27,10 +27,13 @@ export class Portfolio {
   @Column({ default: false })
   is_private: boolean;
 
+  @Column({ type: 'varchar', default: 'default' })
+  template: string;
+
   @ManyToOne(() => User, user => user.portfolios)
   user: User;
 
-  @OneToMany(() => PortfolioSection, section => section.portfolio)
+  @OneToMany(() => PortfolioSection, section => section.portfolio, { cascade: true })
   sections: PortfolioSection[];
 
   @ManyToMany(() => Skill)
