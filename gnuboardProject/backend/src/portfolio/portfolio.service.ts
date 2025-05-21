@@ -49,7 +49,7 @@ export class PortfolioService {
       photo?: Express.Multer.File;
       skills: number[];
       keywords: number[];
-      sections: { title: string; content: string; order: number }[];
+      sections: { title: string; content: string; order: number; type: string }[];
       isPrivate: boolean;
       template: string;
     },
@@ -78,6 +78,7 @@ export class PortfolioService {
         section.title = sectionData.title;
         section.content = sectionData.content;
         section.order = sectionData.order;
+        section.type = sectionData.type;
         section.portfolio = savedPortfolio;
         return section;
       });
@@ -108,7 +109,7 @@ export class PortfolioService {
       photo?: Express.Multer.File;
       skills?: number[];
       keywords?: number[];
-      sections?: { title: string; content: string; order: number }[];
+      sections?: { title: string; content: string; order: number; type: string }[];
       isPrivate?: boolean;
       template?: string;
     },
@@ -146,6 +147,7 @@ export class PortfolioService {
         section.title = sectionData.title;
         section.content = sectionData.content;
         section.order = sectionData.order;
+        section.type = sectionData.type;
         section.portfolio = portfolio;
         return section;
       });

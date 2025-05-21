@@ -28,7 +28,7 @@ export class PortfolioController {
       summary: string;
       skills: number[];
       keywords: number[];
-      sections: { title: string; content: string; order: number }[];
+      sections: { title: string; content: string; order: number; type: string }[];
       isPrivate: boolean;
       template: string;
     },
@@ -61,7 +61,12 @@ export class PortfolioController {
       ...data,
       skills: data.skills ? JSON.parse(data.skills) : undefined,
       keywords: data.keywords ? JSON.parse(data.keywords) : undefined,
-      sections: data.sections ? JSON.parse(data.sections) : undefined,
+      sections: data.sections ? JSON.parse(data.sections).map((section: any) => ({
+        title: section.title,
+        content: section.content,
+        order: section.order,
+        type: section.type,
+      })) : undefined,
       isPrivate: data.isPrivate ? data.isPrivate === 'true' : undefined,
       template: data.template,
       photo,

@@ -20,4 +20,7 @@ export class PortfolioSection {
 
   @Column({ type: 'int', default: 0 })
   order: number;
+
+  @Column({ type: 'varchar', length: 100 })
+  type: string;
 } 
