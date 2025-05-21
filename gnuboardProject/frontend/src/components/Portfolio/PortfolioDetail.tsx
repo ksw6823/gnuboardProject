@@ -31,6 +31,7 @@ interface Section {
   title: string;
   content: string;
   order: number;
+  type: string;
 }
 
 interface Portfolio {
@@ -235,7 +236,7 @@ const PortfolioDetail: React.FC = () => {
         level: '',
       })),
       experiences: portfolio.sections
-        .filter(section => section.title.toLowerCase().includes('경력') || section.title.toLowerCase().includes('experience'))
+        .filter(section => section.type === 'exp')
         .map(section => ({
           title: section.title,
           company: '',
@@ -243,7 +244,7 @@ const PortfolioDetail: React.FC = () => {
           description: section.content,
         })),
       education: portfolio.sections
-        .filter(section => section.title.toLowerCase().includes('학력') || section.title.toLowerCase().includes('education'))
+        .filter(section => section.type === 'career')
         .map(section => ({
           school: section.title,
           degree: '',
@@ -251,7 +252,7 @@ const PortfolioDetail: React.FC = () => {
           description: section.content,
         })),
       projects: portfolio.sections
-        .filter(section => section.title.toLowerCase().includes('프로젝트') || section.title.toLowerCase().includes('project'))
+        .filter(section => section.type === 'project')
         .map(section => ({
           title: section.title,
           description: section.content,
@@ -259,20 +260,20 @@ const PortfolioDetail: React.FC = () => {
           link: '',
         })),
       certificates: portfolio.sections
-        .filter(section => section.title.toLowerCase().includes('자격증') || section.title.toLowerCase().includes('certificate'))
+        .filter(section => section.type === 'cert')
         .map(section => ({
           name: section.title,
           issuer: '',
           date: '',
         })),
       languages: portfolio.sections
-        .filter(section => section.title.toLowerCase().includes('언어') || section.title.toLowerCase().includes('language'))
+        .filter(section => section.type === 'lang')
         .map(section => ({
           name: section.title,
           level: section.content,
         })),
       activities: portfolio.sections
-        .filter(section => section.title.toLowerCase().includes('활동') || section.title.toLowerCase().includes('activity'))
+        .filter(section => section.type === 'activity')
         .map(section => ({
           title: section.title,
           description: section.content,
@@ -287,6 +288,33 @@ const PortfolioDetail: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 1200, margin: '2rem auto', padding: '0 1rem' }}>
+      {/* 기본 정보 섹션 */}
+      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', marginBottom: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+        {portfolio.photo && (
+          <img
+            src={`${process.env.REACT_APP_API_URL}/${portfolio.photo.replace('\\', '/')}`}
+            alt={portfolio.title}
+            style={{ width: '100%', maxHeight: 400, objectFit: 'cover', borderRadius: 8, marginBottom: '1.5rem' }}
+          />
+        )}
+        <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>{portfolio.title}</h1>
+        <div style={{ color: '#666', marginBottom: '1.5rem' }}>
+          작성자: {portfolio.user ? (portfolio.user.name || portfolio.user.username) : '알 수 없음'}
+        </div>
+        <div style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>{portfolio.summary}</div>
+        <div style={{ marginBottom: '1rem' }}>
+          {portfolio.skills && portfolio.skills.map(sk => (
+            <span key={sk.id} style={{ display: 'inline-block', background: '#f1f3f5', color: '#007bff', borderRadius: 8, padding: '0.2rem 0.7rem', fontSize: '0.92rem', marginRight: 6 }}># {sk.name}</span>
+          ))}
+        </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          {portfolio.keywords && portfolio.keywords.map(kw => (
+            <span key={kw.id} style={{ display: 'inline-block', background: '#e3f2fd', color: '#1976d2', borderRadius: 8, padding: '0.2rem 0.7rem', fontSize: '0.92rem', marginRight: 6 }}># {kw.name}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* 템플릿 섹션 */}
       {templateData && <SelectedTemplate data={templateData} />}
       
       {/* 댓글 섹션 */}

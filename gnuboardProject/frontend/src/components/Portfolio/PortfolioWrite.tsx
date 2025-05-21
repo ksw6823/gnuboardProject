@@ -361,7 +361,23 @@ const PortfolioWrite: React.FC = () => {
             <div style={{ fontWeight: 500, marginBottom: 8 }}>태그</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {TAG_CATEGORIES.map(tag => (
-                <div key={tag.id} draggable onDragStart={() => onDragStart(tag.id)} style={{ padding: '10px 0', borderRadius: 8, background: '#fff', border: '1px solid #bcd', textAlign: 'center', fontWeight: 500, cursor: 'grab', userSelect: 'none' }}>{tag.label}</div>
+                <div
+                  key={tag.id}
+                  draggable
+                  onDragStart={() => onDragStart(tag.id)}
+                  style={{
+                    padding: '10px 0',
+                    borderRadius: 8,
+                    background: '#fff',
+                    border: '1px solid #007bff',
+                    textAlign: 'center',
+                    fontWeight: 500,
+                    cursor: 'grab',
+                    userSelect: 'none',
+                  }}
+                >
+                  {tag.label}
+                </div>
               ))}
             </div>
           </div>
