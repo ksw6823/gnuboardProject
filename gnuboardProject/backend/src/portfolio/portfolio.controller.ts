@@ -26,28 +26,18 @@ export class PortfolioController {
     @Body() data: {
       title: string;
       summary: string;
-      skills: string;
-      keywords: string;
-      sections: string;
-      isPrivate: string;
+      skills: number[];
+      keywords: number[];
+      sections: { title: string; content: string; order: number }[];
+      isPrivate: boolean;
       template: string;
     },
     @UploadedFile() photo?: Express.Multer.File,
   ) {
-    try {
-      const parsedData = {
+    return this.portfolioService.create(req.user.id, {
       ...data,
-        skills: JSON.parse(data.skills || '[]'),
-        keywords: JSON.parse(data.keywords || '[]'),
-        sections: JSON.parse(data.sections || '[]'),
-      isPrivate: data.isPrivate === 'true',
-      template: data.template,
       photo,
-      };
-      return this.portfolioService.create(req.user.id, parsedData);
-    } catch (error) {
-      throw new Error('데이터 파싱 중 오류가 발생했습니다: ' + error.message);
-    }
+    });
   }
 
   @UseGuards(JwtAuthGuard)
