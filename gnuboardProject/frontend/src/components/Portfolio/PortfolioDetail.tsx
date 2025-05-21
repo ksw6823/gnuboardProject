@@ -3,6 +3,18 @@ import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import styled from 'styled-components';
+import { PortfolioData } from '../../types/portfolio';
+// 템플릿 컴포넌트들 import
+import DefaultTemplate from './templates/DefaultTemplate';
+import DarkTemplate from './templates/DarkTemplate';
+import GradientTemplate from './templates/GradientTemplate';
+import MinimalTemplate from './templates/MinimalTemplate';
+import ArtTemplate from './templates/ArtTemplate';
+import BrutalTemplate from './templates/BrutalTemplate';
+import TabTemplate from './templates/TabTemplate';
+import SplitTemplate from './templates/SplitTemplate';
+import CardTemplate from './templates/CardTemplate';
+import ClassicTemplate from './templates/ClassicTemplate';
 
 interface Comment {
   id: number;
@@ -53,20 +65,6 @@ const ModernTemplate = styled.div`
       margin-bottom: 1rem;
       border-bottom: 2px solid #3498db;
       padding-bottom: 0.5rem;
-    }
-  }
-`;
-
-const MinimalTemplate = styled.div`
-  .section {
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border-left: 4px solid #e0e0e0;
-    
-    h4 {
-      color: #424242;
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
     }
   }
 `;
@@ -187,128 +185,154 @@ const PortfolioDetail: React.FC = () => {
     }
   };
 
+  // 템플릿 컴포넌트 매핑
+  const templateComponents = {
+    default: DefaultTemplate,
+    dark: DarkTemplate,
+    gradient: GradientTemplate,
+    minimal: MinimalTemplate,
+    art: ArtTemplate,
+    brutal: BrutalTemplate,
+    tab: TabTemplate,
+    split: SplitTemplate,
+    card: CardTemplate,
+    classic: ClassicTemplate,
+  };
+
+  // 템플릿 데이터 변환 함수
+  const convertToTemplateData = (): PortfolioData => {
+    if (!portfolio) return {
+      personalInfo: {
+        name: '',
+        title: '',
+        email: '',
+        phone: '',
+        location: '',
+        introduction: '',
+        profileImage: '',
+      },
+      skills: [],
+      experiences: [],
+      education: [],
+      projects: [],
+      certificates: [],
+      languages: [],
+      activities: []
+    };
+    
+    return {
+      personalInfo: {
+        name: portfolio.user?.name || '',
+        title: portfolio.title,
+        email: '',
+        phone: '',
+        location: '',
+        introduction: portfolio.summary,
+        profileImage: portfolio.photo ? `${process.env.REACT_APP_API_URL}/${portfolio.photo.replace('\\', '/')}` : '',
+      },
+      skills: portfolio.skills.map(skill => ({
+        name: skill.name,
+        level: '',
+      })),
+      experiences: portfolio.sections
+        .filter(section => section.title.toLowerCase().includes('경력') || section.title.toLowerCase().includes('experience'))
+        .map(section => ({
+          title: section.title,
+          company: '',
+          date: '',
+          description: section.content,
+        })),
+      education: portfolio.sections
+        .filter(section => section.title.toLowerCase().includes('학력') || section.title.toLowerCase().includes('education'))
+        .map(section => ({
+          school: section.title,
+          degree: '',
+          date: '',
+          description: section.content,
+        })),
+      projects: portfolio.sections
+        .filter(section => section.title.toLowerCase().includes('프로젝트') || section.title.toLowerCase().includes('project'))
+        .map(section => ({
+          title: section.title,
+          description: section.content,
+          technologies: [],
+          link: '',
+        })),
+      certificates: portfolio.sections
+        .filter(section => section.title.toLowerCase().includes('자격증') || section.title.toLowerCase().includes('certificate'))
+        .map(section => ({
+          name: section.title,
+          issuer: '',
+          date: '',
+        })),
+      languages: portfolio.sections
+        .filter(section => section.title.toLowerCase().includes('언어') || section.title.toLowerCase().includes('language'))
+        .map(section => ({
+          name: section.title,
+          level: section.content,
+        })),
+      activities: portfolio.sections
+        .filter(section => section.title.toLowerCase().includes('활동') || section.title.toLowerCase().includes('activity'))
+        .map(section => ({
+          title: section.title,
+          description: section.content,
+        })),
+    };
+  };
+
   if (!portfolio) return <div>로딩 중...</div>;
 
-  return (
-    <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', marginBottom: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
-        {portfolio.photo && (
-          <img
-            src={`${process.env.REACT_APP_API_URL}/${portfolio.photo.replace('\\', '/')}`}
-            alt={portfolio.title}
-            style={{ width: '100%', maxHeight: 400, objectFit: 'cover', borderRadius: 8, marginBottom: '1.5rem' }}
-          />
-        )}
-        <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>{portfolio.title}</h1>
-        <div style={{ color: '#666', marginBottom: '1.5rem' }}>
-          작성자: {portfolio.user ? (portfolio.user.name || portfolio.user.username) : '알 수 없음'}
-        </div>
-        <div style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>{portfolio.summary}</div>
-        <div style={{ marginBottom: '1rem' }}>
-          {portfolio.skills && portfolio.skills.map(sk => (
-            <span key={sk.id} style={{ display: 'inline-block', background: '#f1f3f5', color: '#007bff', borderRadius: 8, padding: '0.2rem 0.7rem', fontSize: '0.92rem', marginRight: 6 }}># {sk.name}</span>
-          ))}
-        </div>
-        <div style={{ marginBottom: '1.5rem' }}>
-          {portfolio.keywords && portfolio.keywords.map(kw => (
-            <span key={kw.id} style={{ display: 'inline-block', background: '#e3f2fd', color: '#1976d2', borderRadius: 8, padding: '0.2rem 0.7rem', fontSize: '0.92rem', marginRight: 6 }}># {kw.name}</span>
-          ))}
-        </div>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>섹션</h3>
-          {portfolio.template && (
-            <div style={{ color: '#666', marginBottom: '1rem', fontSize: '0.9rem' }}>
-              템플릿: {portfolio.template.charAt(0).toUpperCase() + portfolio.template.slice(1)}
-            </div>
-          )}
-          {(() => {
-            const sortedSections = portfolio.sections.sort((a, b) => a.order - b.order);
-            const renderSections = (Template: React.ComponentType<any>) => (
-              <Template>
-                {sortedSections.map(section => (
-                  <div key={section.id} className="section">
-                    <h4>{section.title}</h4>
-                    <div style={{ whiteSpace: 'pre-line', color: '#444' }}>{section.content}</div>
-                  </div>
-                ))}
-              </Template>
-            );
+  const SelectedTemplate = templateComponents[portfolio.template as keyof typeof templateComponents] || DefaultTemplate;
+  const templateData = convertToTemplateData();
 
-            switch (portfolio.template) {
-              case 'modern':
-                return renderSections(ModernTemplate);
-              case 'minimal':
-                return renderSections(MinimalTemplate);
-              case 'creative':
-                return renderSections(CreativeTemplate);
-              default:
-                return renderSections(ModernTemplate); // 기본값으로 modern 템플릿 사용
-            }
-          })()}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+  return (
+    <div style={{ maxWidth: 1200, margin: '2rem auto', padding: '0 1rem' }}>
+      {templateData && <SelectedTemplate data={templateData} />}
+      
+      {/* 댓글 섹션 */}
+      <div style={{ marginTop: '2rem', background: '#fff', borderRadius: 12, padding: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>댓글</h3>
+        <form onSubmit={handleCommentSubmit} style={{ marginBottom: '1.5rem' }}>
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="댓글을 작성하세요..."
+            style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', borderRadius: 6, border: '1px solid #ddd' }}
+            rows={3}
+          />
           <button
-            onClick={handleLikeClick}
-            style={{
-              background: hasLiked ? '#dc3545' : '#6c757d',
-              color: '#fff',
-              border: 'none',
-              padding: '0.5rem 1rem',
-              borderRadius: 6,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
+            type="submit"
+            style={{ background: '#007bff', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}
           >
-            <span>❤️</span>
-            <span>{likeCount}</span>
+            댓글 작성
           </button>
-        </div>
-        <div>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>댓글</h3>
-          <form onSubmit={handleCommentSubmit} style={{ marginBottom: '1.5rem' }}>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="댓글을 작성하세요..."
-              style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', borderRadius: 6, border: '1px solid #ddd' }}
-              rows={3}
-            />
-            <button
-              type="submit"
-              style={{ background: '#007bff', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}
-            >
-              댓글 작성
-            </button>
-          </form>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {comments.map(comment => (
-              <div key={comment.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 'bold' }}>{comment.user ? comment.user.name : '알 수 없음'}</span>
-                  <span style={{ color: '#666', fontSize: '0.9rem' }}>
-                    {new Date(comment.created_at).toLocaleString('ko-KR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-                <p style={{ marginBottom: '0.5rem' }}>{comment.content}</p>
-                {comment.user && portfolio.user && comment.user.id === portfolio.user.id && (
-                  <button
-                    onClick={() => handleCommentDelete(comment.id)}
-                    style={{ color: '#dc3545', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                  >
-                    삭제
-                  </button>
-                )}
+        </form>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {comments.map(comment => (
+            <div key={comment.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold' }}>{comment.user ? comment.user.name : '알 수 없음'}</span>
+                <span style={{ color: '#666', fontSize: '0.9rem' }}>
+                  {new Date(comment.created_at).toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
               </div>
-            ))}
-          </div>
+              <p style={{ marginBottom: '0.5rem' }}>{comment.content}</p>
+              {comment.user && portfolio.user && comment.user.id === portfolio.user.id && (
+                <button
+                  onClick={() => handleCommentDelete(comment.id)}
+                  style={{ color: '#dc3545', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  삭제
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

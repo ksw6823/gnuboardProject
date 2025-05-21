@@ -157,29 +157,26 @@ const PortfolioWrite: React.FC = () => {
 
   // 저장 함수 추가
   const handleSave = async () => {
-    const formData = new FormData();
-    // 기본 정보
-    formData.append('name', name);
-    formData.append('phone', phone);
-    formData.append('email', email);
-    formData.append('summary', summary);
-    formData.append('title', title);
-    // 프로필 이미지
-    if (profileImg) {
-      formData.append('profileImg', profileImg);
-    }
-    // 키워드/기술스택/섹션
-    formData.append('keywords', JSON.stringify(selectedKeywords));
-    formData.append('skills', JSON.stringify(selectedSkills));
-    formData.append('sections', JSON.stringify(sections));
+    const data = {
+      title,
+      summary,
+      template: selectedTemplate,
+      skills: selectedSkills,
+      keywords: selectedKeywords,
+      sections,
+      isPrivate: false
+    };
 
     try {
-      await axios.post('/portfolios', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      alert('저장되었습니다.');
-      navigate('/');
+      const response = await axios.post('/portfolios', data);
+      if (response.data) {
+        alert('저장되었습니다.');
+        navigate('/');
+      } else {
+        throw new Error('저장 실패');
+      }
     } catch (err) {
+      console.error('저장 실패:', err);
       alert('저장 실패');
     }
   };
