@@ -25,6 +25,7 @@ import { Like } from './likes/entities/like.entity';
 import { Skill } from './skill/entities/skill.entity';
 import { Keyword as KeywordEntity } from './keyword/entities/keyword.entity';
 import { Job } from './job/entities/job.entity';
+import { JobModule } from './job/job.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { Job } from './job/entities/job.entity';
     CommentsModule,
     LikesModule,
     AdminModule,
+    JobModule,
   ],
 })
 export class AppModule {}
