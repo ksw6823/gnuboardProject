@@ -24,6 +24,7 @@ interface Portfolio {
     role: string;
   };
   skills: Skill[];
+  keywords: { id: number; name: string }[];
 }
 
 type FilterType = '직무' | '기술스택' | '키워드' | '정렬기준';
