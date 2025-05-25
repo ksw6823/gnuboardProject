@@ -156,7 +156,6 @@ const Register: React.FC = () => {
   const [birthYear, setBirthYear] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
-  const [country, setCountry] = useState('');
   const [emailId, setEmailId] = useState('');
   const [emailDomain, setEmailDomain] = useState('');
   const [customDomain, setCustomDomain] = useState('');
@@ -204,15 +203,15 @@ const Register: React.FC = () => {
     }
     try {
       const formData = new FormData();
-      formData.append('email', email);
+      formData.append('userId', userId);
       formData.append('password', password);
       formData.append('name', name);
       formData.append('gender', gender);
       formData.append('birthYear', birthYear);
       formData.append('birthMonth', birthMonth);
       formData.append('birthDay', birthDay);
-      formData.append('country', country);
       formData.append('phone', phone);
+      formData.append('email', email);
       if (profileImg) {
         formData.append('profileImg', profileImg);
       }
