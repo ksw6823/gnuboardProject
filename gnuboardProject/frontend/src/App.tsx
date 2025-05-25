@@ -7,7 +7,7 @@ import PortfolioForm from './components/Portfolio/PortfolioForm';
 import Profile from './components/Profile/Profile';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import { useAuth } from './contexts/AuthContext';
-import PortfolioWrite from './components/Portfolio/PortfolioWrite';
+import PortfolioCreate from './components/Portfolio/PortfolioCreate';
 import Main from './components/Portfolio/Main';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,14 +28,7 @@ const App: React.FC = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Main />} />
         <Route path="/portfolios/:id" element={<PortfolioDetail />} />
-        <Route
-          path="/portfolios/new"
-          element={
-            <PrivateRoute>
-              <PortfolioWrite />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/portfolio/create" element={<PortfolioCreate />} />
         <Route
           path="/portfolios/:id/edit"
           element={
