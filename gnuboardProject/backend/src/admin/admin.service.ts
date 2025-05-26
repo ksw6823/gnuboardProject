@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { Portfolio } from '../entities/portfolio.entity';
+import { Portfolio } from '../portfolio/entities/portfolio.entity';
 import { Comment } from '../comments/entities/comment.entity';
 
 @Injectable()

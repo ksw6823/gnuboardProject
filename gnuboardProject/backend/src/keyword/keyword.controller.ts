@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { KeywordService } from './keyword.service';
-import { Keyword } from '../entities/keyword.entity';
+import { Keyword } from './entities/keyword.entity';
 import { User } from '../users/entities/user.entity';
 
 @Controller('keywords')

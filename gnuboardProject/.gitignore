@@ -119,4 +119,8 @@ build
 .pnp.*
 
 #보안관련해서..
-package-lock.json
+**/package-lock.json
+
+# 이미지 파일 제외
+**/uploads/*
+!**/uploads/.gitkeep

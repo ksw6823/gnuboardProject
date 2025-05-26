@@ -1,6 +1,7 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import axios from '../../api/axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
 interface Section {
   id?: number;
@@ -18,6 +19,91 @@ interface Keyword {
   name: string;
 }
 
+const TemplatePreview = styled.div<{ template: string }>`
+  .section {
+    ${props => props.template === 'modern' && `
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+
+      h4 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 0.5rem;
+      }
+    `}
+
+    ${props => props.template === 'minimal' && `
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #e0e0e0;
+      
+      h4 {
+        color: #424242;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+      }
+    `}
+
+    ${props => props.template === 'creative' && `
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #ff6b6b, #4ecdc4);
+      }
+
+      h4 {
+        color: #2d3436;
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+      }
+    `}
+  }
+`;
+
+const TemplateOption = styled.div<{ selected: boolean }>`
+  border: 2px solid ${props => props.selected ? '#007bff' : '#ddd'};
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #007bff;
+  }
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+  }
+
+  p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+`;
+
 const PortfolioForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,6 +116,7 @@ const PortfolioForm: React.FC = () => {
   const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
   const [selectedKeywords, setSelectedKeywords] = useState<number[]>([]);
   const [sections, setSections] = useState<Section[]>([{ title: '', content: '', order: 0 }]);
+  const [template, setTemplate] = useState('modern');
 
   useEffect(() => {
     axios.get('/skills').then(res => setSkills(res.data));
@@ -43,6 +130,7 @@ const PortfolioForm: React.FC = () => {
         setSelectedSkills(p.skills.map((s: Skill) => s.id));
         setSelectedKeywords(p.keywords.map((k: Keyword) => k.id));
         setSections(p.sections.length ? p.sections : [{ title: '', content: '', order: 0 }]);
+        setTemplate(p.template || 'modern');
       });
     }
   }, [id]);
@@ -73,6 +161,7 @@ const PortfolioForm: React.FC = () => {
     const data = {
       title,
       summary,
+      template,
       skills: selectedSkills.map(id => ({ id })),
       keywords: selectedKeywords.map(id => ({ id })),
       sections: sections.map((s, i) => ({ ...s, order: i })),
@@ -99,6 +188,23 @@ const PortfolioForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} style={{maxWidth:700,margin:'2rem auto',background:'#fff',borderRadius:12,boxShadow:'0 2px 8px rgba(0,0,0,0.07)',padding:'2rem'}}>
       <h2 style={{fontSize:'1.5rem',fontWeight:700,marginBottom:'1.5rem'}}>{id ? '포트폴리오 수정' : '포트폴리오 작성'}</h2>
+      <div style={{marginBottom:'2rem'}}>
+        <label style={{display:'block',marginBottom:'1rem',fontWeight:600}}>템플릿 선택</label>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1rem'}}>
+          <TemplateOption selected={template === 'modern'} onClick={() => setTemplate('modern')}>
+            <h3>Modern</h3>
+            <p>깔끔하고 현대적인 디자인</p>
+          </TemplateOption>
+          <TemplateOption selected={template === 'minimal'} onClick={() => setTemplate('minimal')}>
+            <h3>Minimal</h3>
+            <p>심플하고 미니멀한 디자인</p>
+          </TemplateOption>
+          <TemplateOption selected={template === 'creative'} onClick={() => setTemplate('creative')}>
+            <h3>Creative</h3>
+            <p>창의적이고 독특한 디자인</p>
+          </TemplateOption>
+        </div>
+      </div>
       <div style={{marginBottom:'1rem'}}>
         <label>제목</label>
         <input value={title} onChange={e=>setTitle(e.target.value)} required style={{width:'100%',padding:'0.7rem',border:'1px solid #ddd',borderRadius:8}} />
@@ -130,13 +236,15 @@ const PortfolioForm: React.FC = () => {
       </div>
       <div style={{marginBottom:'1.5rem'}}>
         <label>섹션</label>
-        {sections.map((section, idx) => (
-          <div key={idx} style={{border:'1px solid #eee',borderRadius:8,padding:'1rem',marginBottom:'1rem'}}>
-            <input value={section.title} onChange={e=>handleSectionChange(idx,'title',e.target.value)} placeholder="섹션 제목" style={{width:'100%',marginBottom:8,padding:'0.5rem',border:'1px solid #ddd',borderRadius:6}} />
-            <textarea value={section.content} onChange={e=>handleSectionChange(idx,'content',e.target.value)} placeholder="섹션 내용" style={{width:'100%',padding:'0.5rem',border:'1px solid #ddd',borderRadius:6}} />
-            {sections.length > 1 && <button type="button" onClick={()=>removeSection(idx)} style={{marginTop:8,color:'#dc3545',background:'none',border:'none',cursor:'pointer'}}>삭제</button>}
-          </div>
-        ))}
+        <TemplatePreview template={template}>
+          {sections.map((section, idx) => (
+            <div key={idx} className="section">
+              <input value={section.title} onChange={e=>handleSectionChange(idx,'title',e.target.value)} placeholder="섹션 제목" style={{width:'100%',marginBottom:8,padding:'0.5rem',border:'1px solid #ddd',borderRadius:6}} />
+              <textarea value={section.content} onChange={e=>handleSectionChange(idx,'content',e.target.value)} placeholder="섹션 내용" style={{width:'100%',padding:'0.5rem',border:'1px solid #ddd',borderRadius:6}} />
+              {sections.length > 1 && <button type="button" onClick={()=>removeSection(idx)} style={{marginTop:8,color:'#dc3545',background:'none',border:'none',cursor:'pointer'}}>삭제</button>}
+            </div>
+          ))}
+        </TemplatePreview>
         <button type="button" onClick={addSection} style={{background:'#007bff',color:'#fff',border:'none',borderRadius:6,padding:'0.5rem 1rem',cursor:'pointer'}}>섹션 추가</button>
       </div>
       <button type="submit" style={{background:'#007bff',color:'#fff',border:'none',borderRadius:8,padding:'0.8rem 2rem',fontWeight:600,fontSize:'1.1rem',cursor:'pointer'}}>저장</button>

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from '../../api/axios';
+import api from '../../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
+import styled from 'styled-components';
 
 interface Comment {
   id: number;
   content: string;
-  createdAt: string;
+  created_at: string;
   user: {
     id: number;
     name: string;
@@ -27,11 +29,77 @@ interface Portfolio {
   skills: { id: number; name: string }[];
   keywords: { id: number; name: string }[];
   sections: Section[];
+  template: string;
   user?: { id: number; username: string; name: string };
 }
 
+// 템플릿별 스타일 컴포넌트
+const ModernTemplate = styled.div`
+  .section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    h4 {
+      color: #2c3e50;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+  }
+`;
+
+const MinimalTemplate = styled.div`
+  .section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid #e0e0e0;
+    
+    h4 {
+      color: #424242;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+  }
+`;
+
+const CreativeTemplate = styled.div`
+  .section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, #ff6b6b, #4ecdc4);
+    }
+
+    h4 {
+      color: #2d3436;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+  }
+`;
+
 const PortfolioDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { isAuthenticated, user } = useAuth();
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -40,7 +108,7 @@ const PortfolioDetail: React.FC = () => {
 
   const fetchPortfolio = async () => {
     try {
-      const response = await axios.get(`/portfolios/${id}`);
+      const response = await api.get(`/portfolios/${id}`);
       setPortfolio(response.data);
     } catch (error) {
       console.error('포트폴리오를 불러오는데 실패했습니다:', error);
@@ -49,7 +117,7 @@ const PortfolioDetail: React.FC = () => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`/portfolios/${id}/comments`);
+      const response = await api.get(`/portfolios/${id}/comments`);
       setComments(response.data);
     } catch (error) {
       console.error('댓글을 불러오는데 실패했습니다:', error);
@@ -59,8 +127,8 @@ const PortfolioDetail: React.FC = () => {
   const fetchLikeStatus = async () => {
     try {
       const [countResponse, statusResponse] = await Promise.all([
-        axios.get(`/portfolios/${id}/likes/count`),
-        axios.get(`/portfolios/${id}/likes/status`),
+        api.get(`/portfolios/${id}/likes/count`),
+        api.get(`/portfolios/${id}/likes/status`),
       ]);
       setLikeCount(countResponse.data);
       setHasLiked(statusResponse.data);
@@ -78,9 +146,14 @@ const PortfolioDetail: React.FC = () => {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+    
+    if (!isAuthenticated || !user) {
+      alert('댓글을 작성하려면 로그인이 필요합니다.');
+      return;
+    }
 
     try {
-      const response = await axios.post(`/portfolios/${id}/comments`, {
+      const response = await api.post(`/portfolios/${id}/comments`, {
         content: newComment,
       });
       setComments([response.data, ...comments]);
@@ -93,7 +166,7 @@ const PortfolioDetail: React.FC = () => {
 
   const handleLikeClick = async () => {
     try {
-      const response = await axios.post(`/portfolios/${id}/likes`);
+      const response = await api.post(`/portfolios/${id}/likes`);
       setHasLiked(response.data.liked);
       setLikeCount(prev => response.data.liked ? prev + 1 : prev - 1);
     } catch (error) {
@@ -106,7 +179,7 @@ const PortfolioDetail: React.FC = () => {
     if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
 
     try {
-      await axios.delete(`/portfolios/${id}/comments/${commentId}`);
+      await api.delete(`/portfolios/${id}/comments/${commentId}`);
       setComments(comments.filter(comment => comment.id !== commentId));
     } catch (error) {
       console.error('댓글 삭제에 실패했습니다:', error);
@@ -127,7 +200,9 @@ const PortfolioDetail: React.FC = () => {
           />
         )}
         <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>{portfolio.title}</h1>
-        <div style={{ color: '#666', marginBottom: '1.5rem' }}>작성자: {portfolio.user?.name || portfolio.user?.username}</div>
+        <div style={{ color: '#666', marginBottom: '1.5rem' }}>
+          작성자: {portfolio.user ? (portfolio.user.name || portfolio.user.username) : '알 수 없음'}
+        </div>
         <div style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>{portfolio.summary}</div>
         <div style={{ marginBottom: '1rem' }}>
           {portfolio.skills && portfolio.skills.map(sk => (
@@ -141,12 +216,35 @@ const PortfolioDetail: React.FC = () => {
         </div>
         <div style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>섹션</h3>
-          {portfolio.sections.sort((a, b) => a.order - b.order).map(section => (
-            <div key={section.id} style={{ marginBottom: '1rem' }}>
-              <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{section.title}</h4>
-              <div style={{ whiteSpace: 'pre-line', color: '#444' }}>{section.content}</div>
+          {portfolio.template && (
+            <div style={{ color: '#666', marginBottom: '1rem', fontSize: '0.9rem' }}>
+              템플릿: {portfolio.template.charAt(0).toUpperCase() + portfolio.template.slice(1)}
             </div>
-          ))}
+          )}
+          {(() => {
+            const sortedSections = portfolio.sections.sort((a, b) => a.order - b.order);
+            const renderSections = (Template: React.ComponentType<any>) => (
+              <Template>
+                {sortedSections.map(section => (
+                  <div key={section.id} className="section">
+                    <h4>{section.title}</h4>
+                    <div style={{ whiteSpace: 'pre-line', color: '#444' }}>{section.content}</div>
+                  </div>
+                ))}
+              </Template>
+            );
+
+            switch (portfolio.template) {
+              case 'modern':
+                return renderSections(ModernTemplate);
+              case 'minimal':
+                return renderSections(MinimalTemplate);
+              case 'creative':
+                return renderSections(CreativeTemplate);
+              default:
+                return renderSections(ModernTemplate); // 기본값으로 modern 템플릿 사용
+            }
+          })()}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
           <button
@@ -188,13 +286,19 @@ const PortfolioDetail: React.FC = () => {
             {comments.map(comment => (
               <div key={comment.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 'bold' }}>{comment.user.name}</span>
+                  <span style={{ fontWeight: 'bold' }}>{comment.user ? comment.user.name : '알 수 없음'}</span>
                   <span style={{ color: '#666', fontSize: '0.9rem' }}>
-                    {new Date(comment.createdAt).toLocaleDateString()}
+                    {new Date(comment.created_at).toLocaleString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </span>
                 </div>
                 <p style={{ marginBottom: '0.5rem' }}>{comment.content}</p>
-                {comment.user.id === portfolio.user?.id && (
+                {comment.user && portfolio.user && comment.user.id === portfolio.user.id && (
                   <button
                     onClick={() => handleCommentDelete(comment.id)}
                     style={{ color: '#dc3545', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
