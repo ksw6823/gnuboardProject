@@ -52,7 +52,7 @@ const TemplateContainer = styled.div`
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 `;
 
-const PortfolioWrite: React.FC = () => {
+const PortfolioCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   // 프로필/기본정보
@@ -438,4 +438,4 @@ const PortfolioWrite: React.FC = () => {
   );
 };
 
-export default PortfolioWrite; 
+export default PortfolioCreate; 

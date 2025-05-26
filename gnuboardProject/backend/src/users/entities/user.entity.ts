@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Portfolio } from '../../entities/portfolio.entity';
+import { Portfolio } from '../../portfolio/entities/portfolio.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Like } from '../../likes/entities/like.entity';
 
@@ -17,14 +17,23 @@ export class User {
   @Column()
   name!: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   email!: string;
 
+  @Column({ type: 'date', nullable: true })
+  birth?: Date;
+
+  @Column({ type: 'enum', enum: ['Male', 'Female'], nullable: false })
+  gender!: 'Male' | 'Female';
+
   @Column({ nullable: true })
-  profileImage!: string;
+  profileImage?: string;
 
   @Column({ default: false })
   isAdmin!: boolean;
+
+  @Column({ nullable: false })
+  phone!: string;
 
   @CreateDateColumn()
   created_at!: Date;

@@ -1,8 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 
 @Entity()
-export class Keyword {
+export class Skill {
   @PrimaryGeneratedColumn()
   id: number;
 
