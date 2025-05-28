@@ -38,7 +38,6 @@ export interface PortfolioData {
     name: string;
     level: string;
   }>;
-  keywords?: Array<{ name: string }>;
   activities: Array<{
     title: string;
     description: string;
