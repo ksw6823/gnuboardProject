@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,10 @@ async function bootstrap() {
     origin: configService.get('FRONTEND_URL'),
     credentials: true,
   });
+
+  // 정적 파일 서빙 설정
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use('/uploads', require('express').static(join(__dirname, '..', 'uploads')));
 
   // Swagger 설정
   const config = new DocumentBuilder()

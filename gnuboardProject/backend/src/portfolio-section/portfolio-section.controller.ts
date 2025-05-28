@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { PortfolioSectionService } from './portfolio-section.service';
-import { PortfolioSection } from '../entities/portfolio-section.entity';
+import { PortfolioSection } from '../portfolio/entities/portfolio-section.entity';
 import { User } from '../users/entities/user.entity';
+import { CreatePortfolioSectionDto } from './dto/create-portfolio-section.dto';
+import { UpdatePortfolioSectionDto } from './dto/update-portfolio-section.dto';
 
 @Controller('portfolio-sections')
 export class PortfolioSectionController {
@@ -18,12 +20,12 @@ export class PortfolioSectionController {
   }
 
   @Post()
-  create(@Body() data: Partial<PortfolioSection>): Promise<PortfolioSection> {
+  create(@Body() data: CreatePortfolioSectionDto): Promise<PortfolioSection> {
     return this.sectionService.create(data);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() data: Partial<PortfolioSection>): Promise<PortfolioSection | null> {
+  update(@Param('id') id: string, @Body() data: UpdatePortfolioSectionDto): Promise<PortfolioSection | null> {
     return this.sectionService.update(Number(id), data);
   }
 
