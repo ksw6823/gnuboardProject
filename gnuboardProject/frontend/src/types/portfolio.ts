@@ -15,13 +15,16 @@ export interface PortfolioData {
   experiences: Array<{
     title: string;
     company: string;
-    date: string;
+    start_date: string;
+    end_date: string;
     description: string;
   }>;
   projects: Array<{
     title: string;
     description: string;
     technologies: string[];
+    start_date: string;
+    end_date: string;
   }>;
   certificates: Array<{
     name: string;
@@ -34,6 +37,8 @@ export interface PortfolioData {
   }>;
   activities: Array<{
     title: string;
+    start_date: string;
+    end_date: string;
     description: string;
   }>;
   education: Array<{
