@@ -206,7 +206,8 @@ const PortfolioWrite: React.FC = () => {
           return {
             title: content.title,
             company: content.company,
-            date: content.period,
+            start_date: content.start_date,
+            end_date: content.end_date,
             description: content.description,
           };
         }),
@@ -229,7 +230,8 @@ const PortfolioWrite: React.FC = () => {
             title: content.title,
             description: content.description,
             technologies: content.technologies || [],
-            link: content.link || '',
+            start_date: content.start_date,
+            end_date: content.end_date,
           };
         }),
       certificates: sections
@@ -257,6 +259,8 @@ const PortfolioWrite: React.FC = () => {
           const content = JSON.parse(section.content);
           return {
             title: content.title,
+            start_date: content.start_date,
+            end_date: content.end_date,
             description: content.description,
           };
         }),

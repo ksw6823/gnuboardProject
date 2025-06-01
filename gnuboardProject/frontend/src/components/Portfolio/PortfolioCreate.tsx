@@ -644,8 +644,11 @@ const PortfolioCreate: React.FC = () => {
               <div key={idx} style={{ background: '#bfc5ce', borderRadius: 10, padding: 16, marginBottom: 8 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input value={exp.company} onChange={e => handleExperienceChange(idx, 'company', e.target.value)} placeholder="기관명" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                  <input type="date" value={exp.start_date} onChange={e => handleExperienceChange(idx, 'start_date', e.target.value)} placeholder="시작일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                  <input type="date" value={exp.end_date} onChange={e => handleExperienceChange(idx, 'end_date', e.target.value)} placeholder="종료일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                    <input type="date" value={exp.start_date} onChange={e => handleExperienceChange(idx, 'start_date', e.target.value)} placeholder="시작일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                    <span style={{ margin: '0 4px', color: '#555', fontWeight: 600 }}>~</span>
+                    <input type="date" value={exp.end_date} onChange={e => handleExperienceChange(idx, 'end_date', e.target.value)} placeholder="종료일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                  </div>
                 </div>
                 <textarea value={exp.description} onChange={e => handleExperienceChange(idx, 'description', e.target.value)} placeholder="직무 및 특기 작성사항" style={{ width: '100%', minHeight: 60, borderRadius: 6, border: '1px solid #ccc', padding: 8 }} />
               </div>
@@ -660,8 +663,11 @@ const PortfolioCreate: React.FC = () => {
               <div key={idx} style={{ background: '#bfc5ce', borderRadius: 10, padding: 16, marginBottom: 8 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input value={p.title} onChange={e => handleProjectChange(idx, 'title', e.target.value)} placeholder="프로젝트 명" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                  <input type="date" value={p.start_date} onChange={e => handleProjectChange(idx, 'start_date', e.target.value)} placeholder="시작일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                  <input type="date" value={p.end_date} onChange={e => handleProjectChange(idx, 'end_date', e.target.value)} placeholder="종료일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                    <input type="date" value={p.start_date} onChange={e => handleProjectChange(idx, 'start_date', e.target.value)} placeholder="시작일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                    <span style={{ margin: '0 4px', color: '#555', fontWeight: 600 }}>~</span>
+                    <input type="date" value={p.end_date} onChange={e => handleProjectChange(idx, 'end_date', e.target.value)} placeholder="종료일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                  </div>
                 </div>
                 <textarea value={p.description} onChange={e => handleProjectChange(idx, 'description', e.target.value)} placeholder="프로젝트 내용" style={{ width: '100%', minHeight: 60, borderRadius: 6, border: '1px solid #ccc', padding: 8 }} />
               </div>
@@ -705,8 +711,11 @@ const PortfolioCreate: React.FC = () => {
               <div key={idx} style={{ background: '#bfc5ce', borderRadius: 10, padding: 16, marginBottom: 8 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input value={a.title} onChange={e => handleActivityChange(idx, 'title', e.target.value)} placeholder="활동명" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                  <input type="date" value={a.start_date} onChange={e => handleActivityChange(idx, 'start_date', e.target.value)} placeholder="시작일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                  <input type="date" value={a.end_date} onChange={e => handleActivityChange(idx, 'end_date', e.target.value)} placeholder="종료일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                    <input type="date" value={a.start_date} onChange={e => handleActivityChange(idx, 'start_date', e.target.value)} placeholder="시작일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                    <span style={{ margin: '0 4px', color: '#555', fontWeight: 600 }}>~</span>
+                    <input type="date" value={a.end_date} onChange={e => handleActivityChange(idx, 'end_date', e.target.value)} placeholder="종료일" style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                  </div>
                 </div>
                 <textarea value={a.description} onChange={e => handleActivityChange(idx, 'description', e.target.value)} placeholder="활동 설명" style={{ width: '100%', minHeight: 60, borderRadius: 6, border: '1px solid #ccc', padding: 8 }} />
               </div>

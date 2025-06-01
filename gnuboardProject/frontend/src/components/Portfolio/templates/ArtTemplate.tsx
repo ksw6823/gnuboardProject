@@ -292,9 +292,12 @@ const ArtTemplate: React.FC<ArtTemplateProps> = ({ data }) => {
         <Section>
           <SectionTitle>경력</SectionTitle>
           <Timeline>
-            {data.experiences.map((exp, index) => (
+            {data.experiences.map((exp: { title: string; company: string; start_date: string; end_date: string; description: string }, index: number) => (
               <TimelineItem key={index}>
-                <TimelineDate>{exp.date}</TimelineDate>
+                <TimelineDate>
+                  {exp.start_date}
+                  {exp.end_date ? ` ~ ${exp.end_date}` : ' ~ 현재'}
+                </TimelineDate>
                 <TimelineTitle>{exp.title}</TimelineTitle>
                 <TimelineDesc>{exp.description}</TimelineDesc>
               </TimelineItem>
