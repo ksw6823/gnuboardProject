@@ -75,24 +75,33 @@ export class UsersService {
       name?: string;
       email?: string;
       profileImage?: string;
+      gender?: 'Male' | 'Female';
+      phone?: string;
       currentPassword?: string;
       newPassword?: string;
-    },
+    } = {},
   ): Promise<User> {
+    // data가 undefined나 null인 경우 빈 객체로 초기화
+    const safeData = data || {};
+    
     const user = await this.findOne(id);
-    if (data.newPassword) {
-      if (!data.currentPassword) {
-        throw new BadRequestException('현재 비밀번호를 입력해주세요.');
-      }
-      const isPasswordValid = await bcrypt.compare(data.currentPassword, user.password);
+
+    // 비밀번호 변경 로직
+    if (safeData.newPassword && safeData.currentPassword) {
+      const isPasswordValid = await bcrypt.compare(safeData.currentPassword, user.password);
       if (!isPasswordValid) {
         throw new BadRequestException('현재 비밀번호가 일치하지 않습니다.');
       }
-      user.password = await bcrypt.hash(data.newPassword, 10);
+      user.password = await bcrypt.hash(safeData.newPassword, 10);
     }
-    if (data.name) user.name = data.name;
-    if (data.email) user.email = data.email;
-    if (data.profileImage) user.profileImage = data.profileImage;
+
+    // 다른 필드 업데이트
+    if (safeData.name) user.name = safeData.name;
+    if (safeData.email) user.email = safeData.email;
+    if (safeData.profileImage) user.profileImage = safeData.profileImage;
+    if (safeData.gender) user.gender = safeData.gender as 'Male' | 'Female';
+    if (safeData.phone) user.phone = safeData.phone;
+
     return this.usersRepository.save(user);
   }
 

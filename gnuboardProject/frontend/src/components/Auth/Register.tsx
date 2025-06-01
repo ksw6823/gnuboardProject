@@ -3,6 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from 'axios';
 
+const Background = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #E5E5E5;
+  padding: 1rem;
+`;
+
+const LogoContainer = styled.div`
+  text-align: center;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+`;
+
+const Logo = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4B89DC;
+  display: inline-block;
+  padding: 1rem;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
 const RegisterContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -259,179 +288,188 @@ const Register: React.FC = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   return (
-    <RegisterContainer>
-      <Title>회원가입</Title>
-      <FormBox>
-        <Form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem' }}>
-            <Label style={{ alignSelf: 'center', marginBottom: '0.5rem' }}>프로필 사진</Label>
-            <ProfileImgLabel htmlFor="profileImg">
-              {profilePreview ? (
-                <>
-                  <ProfileImgPreview src={profilePreview} alt="프로필 미리보기" />
-                  <RemoveImgButton type="button" onClick={handleRemoveImg} title="이미지 삭제">×</RemoveImgButton>
-                </>
-              ) : (
-                <span style={{ color: '#aaa', fontSize: 14 }}>(이미지 삽입)</span>
-              )}
-              <input id="profileImg" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImgChange} />
-            </ProfileImgLabel>
-          </div>
-          <InputGroup>
-            <Label htmlFor="userId">아이디 <span style={{ color: 'red' }}>*</span></Label>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <Input
-                id="userId"
-                type="text"
-                placeholder="아이디를 입력하세요"
-                value={userId}
-                onChange={e => {
-                  setUserId(e.target.value);
-                  setIsIdChecked(false);
-                  setIdCheckMsg('');
-                  setIdAvailable(null);
-                }}
-                required
-                style={{ flex: 2 }}
-              />
-              <Button
-                type="button"
-                onClick={handleCheckId}
-                style={{
-                  backgroundColor: idAvailable === true ? '#007bff' : '#6c757d',
-                  minWidth: 90,
-                  padding: '0.5rem 1rem',
-                  fontSize: 14,
-                }}
-              >
-                중복확인
-              </Button>
+    <Background>
+      <LogoContainer onClick={handleLogoClick}>
+        <Logo>산학협력</Logo>
+      </LogoContainer>
+      <RegisterContainer>
+        <Title>회원가입</Title>
+        <FormBox>
+          <Form onSubmit={handleSubmit}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem' }}>
+              <Label style={{ alignSelf: 'center', marginBottom: '0.5rem' }}>프로필 사진</Label>
+              <ProfileImgLabel htmlFor="profileImg">
+                {profilePreview ? (
+                  <>
+                    <ProfileImgPreview src={profilePreview} alt="프로필 미리보기" />
+                    <RemoveImgButton type="button" onClick={handleRemoveImg} title="이미지 삭제">×</RemoveImgButton>
+                  </>
+                ) : (
+                  <span style={{ color: '#aaa', fontSize: 14 }}>(이미지 삽입)</span>
+                )}
+                <input id="profileImg" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImgChange} />
+              </ProfileImgLabel>
             </div>
-            {idCheckMsg && (
-              <div style={{ color: idAvailable ? '#007bff' : 'red', fontSize: 13, marginTop: 4 }}>{idCheckMsg}</div>
-            )}
-          </InputGroup>
-          <InputGroup>
-            <Label htmlFor="password">비밀번호 <span style={{ color: 'red' }}>*</span></Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="8자 이상 입력해주세요"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-          </InputGroup>
-          <InputGroup>
-            <Label htmlFor="passwordCheck">비밀번호 확인 <span style={{ color: 'red' }}>*</span></Label>
-            <Input
-              id="passwordCheck"
-              type="password"
-              placeholder="비밀번호를 다시 입력하세요"
-              value={passwordCheck}
-              onChange={e => setPasswordCheck(e.target.value)}
-              required
-            />
-          </InputGroup>
-          <InputGroup>
-            <Label htmlFor="name">이름 <span style={{ color: 'red' }}>*</span></Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="실명을 입력해주세요"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              required
-            />
-          </InputGroup>
-          <InputGroup>
-            <Label>성별 <span style={{ color: 'red' }}>*</span></Label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Button type="button" style={{ background: gender === 'male' ? '#007bff' : '#B5B4B4', color: gender === 'male' ? '#fff' : '#333', border: '1px solid #ddd' }} onClick={() => setGender('male')}>남자</Button>
-              <Button type="button" style={{ background: gender === 'female' ? '#007bff' : '#B5B4B4', color: gender === 'female' ? '#fff' : '#333', border: '1px solid #ddd' }} onClick={() => setGender('female')}>여자</Button>
-            </div>
-          </InputGroup>
-          <InputGroup>
-            <Label>생년월일 <span style={{ color: 'red' }}>*</span></Label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <Input
-                type="text"
-                placeholder="Year"
-                value={birthYear}
-                onChange={e => setBirthYear(e.target.value.replace(/[^0-9]/g, ''))}
-                maxLength={4}
-                style={{ width: 80 }}
-                required
-              />
-              <Input
-                type="text"
-                placeholder="month"
-                value={birthMonth}
-                onChange={e => setBirthMonth(e.target.value.replace(/[^0-9]/g, ''))}
-                maxLength={2}
-                style={{ width: 60 }}
-                required
-              />
-              <Input
-                type="text"
-                placeholder="day"
-                value={birthDay}
-                onChange={e => setBirthDay(e.target.value.replace(/[^0-9]/g, ''))}
-                maxLength={2}
-                style={{ width: 60 }}
-                required
-              />
-            </div>
-          </InputGroup>
-          <InputGroup>
-            <Label htmlFor="phone">전화번호 <span style={{ color: 'red' }}>*</span></Label>
-            <Input
-              id="phone"
-              type="text"
-              placeholder="010-1234-5678"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              maxLength={11}
-              required
-            />
-          </InputGroup>
-          <InputGroup>
-            <Label>이메일 <span style={{ color: 'red' }}>*</span></Label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <StyledInput
-                type="text"
-                placeholder="이메일 아이디"
-                value={emailId}
-                onChange={e => setEmailId(e.target.value)}
-                required
-              />
-              <span>@</span>
-              {emailDomain === '직접입력' ? (
-                <StyledInput
+            <InputGroup>
+              <Label htmlFor="userId">아이디 <span style={{ color: 'red' }}>*</span></Label>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <Input
+                  id="userId"
                   type="text"
-                  placeholder="도메인 입력"
-                  value={customDomain}
-                  onChange={e => setCustomDomain(e.target.value)}
+                  placeholder="아이디를 입력하세요"
+                  value={userId}
+                  onChange={e => {
+                    setUserId(e.target.value);
+                    setIsIdChecked(false);
+                    setIdCheckMsg('');
+                    setIdAvailable(null);
+                  }}
+                  required
+                  style={{ flex: 2 }}
+                />
+                <Button
+                  type="button"
+                  onClick={handleCheckId}
+                  style={{
+                    backgroundColor: idAvailable === true ? '#007bff' : '#6c757d',
+                    minWidth: 90,
+                    padding: '0.5rem 1rem',
+                    fontSize: 14,
+                  }}
+                >
+                  중복확인
+                </Button>
+              </div>
+              {idCheckMsg && (
+                <div style={{ color: idAvailable ? '#007bff' : 'red', fontSize: 13, marginTop: 4 }}>{idCheckMsg}</div>
+              )}
+            </InputGroup>
+            <InputGroup>
+              <Label htmlFor="password">비밀번호 <span style={{ color: 'red' }}>*</span></Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="8자 이상 입력해주세요"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </InputGroup>
+            <InputGroup>
+              <Label htmlFor="passwordCheck">비밀번호 확인 <span style={{ color: 'red' }}>*</span></Label>
+              <Input
+                id="passwordCheck"
+                type="password"
+                placeholder="비밀번호를 다시 입력하세요"
+                value={passwordCheck}
+                onChange={e => setPasswordCheck(e.target.value)}
+                required
+              />
+            </InputGroup>
+            <InputGroup>
+              <Label htmlFor="name">이름 <span style={{ color: 'red' }}>*</span></Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="실명을 입력해주세요"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
+            </InputGroup>
+            <InputGroup>
+              <Label>성별 <span style={{ color: 'red' }}>*</span></Label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <Button type="button" style={{ background: gender === 'male' ? '#007bff' : '#B5B4B4', color: gender === 'male' ? '#fff' : '#333', border: '1px solid #ddd' }} onClick={() => setGender('male')}>남자</Button>
+                <Button type="button" style={{ background: gender === 'female' ? '#007bff' : '#B5B4B4', color: gender === 'female' ? '#fff' : '#333', border: '1px solid #ddd' }} onClick={() => setGender('female')}>여자</Button>
+              </div>
+            </InputGroup>
+            <InputGroup>
+              <Label>생년월일 <span style={{ color: 'red' }}>*</span></Label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <Input
+                  type="text"
+                  placeholder="Year"
+                  value={birthYear}
+                  onChange={e => setBirthYear(e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={4}
+                  style={{ width: 80 }}
                   required
                 />
-              ) : (
-                <StyledSelect
-                  value={emailDomain}
-                  onChange={e => setEmailDomain(e.target.value)}
+                <Input
+                  type="text"
+                  placeholder="month"
+                  value={birthMonth}
+                  onChange={e => setBirthMonth(e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={2}
+                  style={{ width: 60 }}
                   required
-                >
-                  {domainOptions.map(opt => (
-                    <option key={opt} value={opt} disabled={opt === ''}>{opt === '' ? '도메인 선택' : opt}</option>
-                  ))}
-                </StyledSelect>
-              )}
-            </div>
-          </InputGroup>
-          <Button type="submit">회원가입</Button>
-        </Form>
-      </FormBox>
-    </RegisterContainer>
+                />
+                <Input
+                  type="text"
+                  placeholder="day"
+                  value={birthDay}
+                  onChange={e => setBirthDay(e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={2}
+                  style={{ width: 60 }}
+                  required
+                />
+              </div>
+            </InputGroup>
+            <InputGroup>
+              <Label htmlFor="phone">전화번호 <span style={{ color: 'red' }}>*</span></Label>
+              <Input
+                id="phone"
+                type="text"
+                placeholder="010-1234-5678"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                maxLength={11}
+                required
+              />
+            </InputGroup>
+            <InputGroup>
+              <Label>이메일 <span style={{ color: 'red' }}>*</span></Label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <StyledInput
+                  type="text"
+                  placeholder="이메일 아이디"
+                  value={emailId}
+                  onChange={e => setEmailId(e.target.value)}
+                  required
+                />
+                <span>@</span>
+                {emailDomain === '직접입력' ? (
+                  <StyledInput
+                    type="text"
+                    placeholder="도메인 입력"
+                    value={customDomain}
+                    onChange={e => setCustomDomain(e.target.value)}
+                    required
+                  />
+                ) : (
+                  <StyledSelect
+                    value={emailDomain}
+                    onChange={e => setEmailDomain(e.target.value)}
+                    required
+                  >
+                    {domainOptions.map(opt => (
+                      <option key={opt} value={opt} disabled={opt === ''}>{opt === '' ? '도메인 선택' : opt}</option>
+                    ))}
+                  </StyledSelect>
+                )}
+              </div>
+            </InputGroup>
+            <Button type="submit">회원가입</Button>
+          </Form>
+        </FormBox>
+      </RegisterContainer>
+    </Background>
   );
 };
 

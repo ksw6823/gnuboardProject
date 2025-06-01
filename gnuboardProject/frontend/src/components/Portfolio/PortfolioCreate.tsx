@@ -52,6 +52,37 @@ const TemplateContainer = styled.div`
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 `;
 
+const MainContainer = styled.div`
+  display: flex;
+  min-height: 100vh;
+  background: #f7f8fa;
+`;
+
+const FormContainer = styled.div`
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  height: calc(100vh - 64px); /* 헤더 높이를 제외한 높이 */
+`;
+
+const RightSidebar = styled.div`
+  width: 220px;
+  background: #eaf3fa;
+  border-left: 1px solid #e0e6ed;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: fixed;
+  right: 0;
+  top: 64px; /* 헤더 높이만큼 아래로 */
+  height: calc(100vh - 64px); /* 헤더 높이를 제외한 높이 */
+  overflow-y: auto;
+`;
+
 const PortfolioCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -80,11 +111,35 @@ const PortfolioCreate: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('default');
 
   // 내 정보 불러오기
-  const loadProfile = () => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      // phone 등 추가 정보 필요시 user에서 불러오기
+  const loadProfile = async () => {
+    try {
+      const response = await axios.get('/users/profile');
+      const userData = response.data;
+      
+      setName(userData.name || '');
+      setEmail(userData.email || '');
+      setPhone(userData.phone || '');
+      setSummary(userData.summary || '');
+      
+      // 프로필 이미지가 있는 경우
+      if (userData.profileImage) {
+        setProfilePreview(`${process.env.REACT_APP_API_URL}/${userData.profileImage}`);
+      }
+      
+      // 사용자의 기술 스택 불러오기
+      if (userData.skills) {
+        setSelectedSkills(userData.skills.map((skill: Skill) => skill.id));
+      }
+      
+      // 사용자의 키워드 불러오기
+      if (userData.keywords) {
+        setSelectedKeywords(userData.keywords.map((keyword: Keyword) => keyword.id));
+      }
+      
+      alert('프로필 정보가 성공적으로 불러와졌습니다.');
+    } catch (error) {
+      console.error('프로필 정보를 불러오는데 실패했습니다:', error);
+      alert('프로필 정보를 불러오는데 실패했습니다.');
     }
   };
 
@@ -281,12 +336,23 @@ const PortfolioCreate: React.FC = () => {
 
   const SelectedTemplate = templates[selectedTemplate as keyof typeof templates];
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/[^0-9]/g, '');
+    if (value.length < 4) {
+      setPhone(value);
+    } else if (value.length < 8) {
+      setPhone(value.slice(0, 3) + '-' + value.slice(3));
+    } else {
+      setPhone(value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11));
+    }
+  };
+
   return (
     <>
       <Header />
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f8fa' }}>
+      <MainContainer>
         {/* 중앙: 입력 폼 */}
-        <div style={{ flex: 1, padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <FormContainer>
           <div style={{ width: 520, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: 32 }}>
             {/* 제목 입력란 */}
             <div style={{ marginBottom: 16 }}>
@@ -310,7 +376,7 @@ const PortfolioCreate: React.FC = () => {
               <input type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6, marginBottom: 8 }} />
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                 <input type="text" placeholder="국가" value="" disabled style={{ width: 60, padding: 10, border: '1px solid #eee', borderRadius: 6, background: '#f5f5f5' }} />
-                <input type="text" placeholder="01012345678" value={phone} onChange={e => setPhone(e.target.value)} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="tel" placeholder="010-1234-5678" value={phone} onChange={handlePhoneChange} maxLength={13} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
               <input type="email" placeholder="이메일" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
             </div>
@@ -356,9 +422,9 @@ const PortfolioCreate: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </FormContainer>
         {/* 우측: 태그/테마/저장 등 */}
-        <div style={{ width: 220, background: '#eaf3fa', borderLeft: '1px solid #e0e6ed', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <RightSidebar>
           <button style={{ width: '100%', marginBottom: 16, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>테마 설정</button>
           <div style={{ width: '100%', marginBottom: 24 }}>
             <div style={{ fontWeight: 500, marginBottom: 8 }}>태그</div>
@@ -371,8 +437,8 @@ const PortfolioCreate: React.FC = () => {
           <button style={{ width: '100%', marginBottom: 8, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }} onClick={handleSave}>저장</button>
           <button style={{ width: '100%', marginBottom: 8, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>불러오기</button>
           <button style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>PDF / 프린트 인쇄</button>
-        </div>
-      </div>
+        </RightSidebar>
+      </MainContainer>
       {/* 키워드 모달 */}
       {showKeywordModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
