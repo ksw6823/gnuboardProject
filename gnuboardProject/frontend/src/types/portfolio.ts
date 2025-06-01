@@ -18,12 +18,6 @@ export interface PortfolioData {
     date: string;
     description: string;
   }>;
-  education: Array<{
-    school: string;
-    degree: string;
-    date: string;
-    description: string;
-  }>;
   projects: Array<{
     title: string;
     description: string;
@@ -40,6 +34,12 @@ export interface PortfolioData {
   }>;
   activities: Array<{
     title: string;
+    description: string;
+  }>;
+  education: Array<{
+    school: string;
+    degree: string;
+    date: string;
     description: string;
   }>;
 } 

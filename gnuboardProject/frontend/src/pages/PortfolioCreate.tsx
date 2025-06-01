@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, TextField, Box, Typography, Container, Paper, Grid, FormControlLabel, Switch } from '@mui/material';
+import { Button, TextField, Box, Typography, Container, Paper, FormControlLabel, Switch } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import SkillSection from '../components/portfolio/SkillSection';
-import JobSection from '../components/portfolio/JobSection';
-import ProjectSection from '../components/portfolio/ProjectSection';
+import { Theme } from '@mui/material/styles';
+import SkillSection from '../components/Portfolio/SkillSection';
+import JobSection from '../components/Portfolio/JobSection';
+import ProjectSection from '../components/Portfolio/ProjectSection';
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
+const StyledPaper = styled(Paper)(({ theme }: { theme: Theme }) => ({
   padding: theme.spacing(3),
   marginBottom: theme.spacing(3),
 }));
@@ -88,8 +89,8 @@ const PortfolioCreate = () => {
         </Typography>
         <form onSubmit={handleSubmit}>
           <StyledPaper>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box>
                 <TextField
                   fullWidth
                   label="제목"
@@ -98,8 +99,8 @@ const PortfolioCreate = () => {
                   onChange={handleChange}
                   required
                 />
-              </Grid>
-              <Grid item xs={12}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="요약"
@@ -110,8 +111,8 @@ const PortfolioCreate = () => {
                   multiline
                   rows={2}
                 />
-              </Grid>
-              <Grid item xs={12}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="내용"
@@ -121,8 +122,8 @@ const PortfolioCreate = () => {
                   multiline
                   rows={4}
                 />
-              </Grid>
-              <Grid item xs={12}>
+              </Box>
+              <Box>
                 <FormControlLabel
                   control={
                     <Switch
@@ -133,8 +134,8 @@ const PortfolioCreate = () => {
                   }
                   label="비공개"
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </StyledPaper>
 
           <StyledPaper>
