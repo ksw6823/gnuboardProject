@@ -518,7 +518,7 @@ const PortfolioList: React.FC = () => {
         </SearchFilterWrapper>
 
         <PortfolioGrid>
-          {sortedPortfolios.length > 0 ? (
+          {sortedPortfolios?.length > 0 ? (
             sortedPortfolios.map(portfolio => (
               <PortfolioCard key={portfolio.id}>
                 <CardHeader>
@@ -529,7 +529,7 @@ const PortfolioList: React.FC = () => {
                 <CardContent>
                   <CardDescription>{portfolio.summary}</CardDescription>
                   <CardTags>
-                    {portfolio.skills.map(skill => (
+                    {portfolio.skills?.map(skill => (
                       <CardTag key={skill.name}># {skill.name}</CardTag>
                     ))}
                   </CardTags>
