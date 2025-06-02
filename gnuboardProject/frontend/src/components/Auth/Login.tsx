@@ -93,7 +93,7 @@ const RegisterLink = styled.div`
     text-decoration: none;
     margin-left: 0.5rem;
 
-    &:hover {
+  &:hover {
       text-decoration: underline;
     }
   }

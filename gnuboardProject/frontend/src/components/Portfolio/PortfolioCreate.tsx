@@ -1,506 +1,1043 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from '../../api/axios';
-import Header from '../Common/Header';
-import Footer from '../Common/Footer';
-import { useAuth } from '../../contexts/AuthContext';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { PortfolioData } from '../../types/portfolio';
-import DefaultTemplate from './templates/DefaultTemplate';
-import CardTemplate from './templates/CardTemplate';
-import SplitTemplate from './templates/SplitTemplate';
-import DarkTemplate from './templates/DarkTemplate';
-import TabTemplate from './templates/TabTemplate';
-import ArtTemplate from './templates/ArtTemplate';
-import ClassicTemplate from './templates/ClassicTemplate';
-import BrutalTemplate from './templates/BrutalTemplate';
-import GradientTemplate from './templates/GradientTemplate';
-import MinimalTemplate from './templates/MinimalTemplate';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-// 드래그&드롭용 태그 카테고리
-const TAG_CATEGORIES = [
-  { id: 'basic', label: '기본 정보' },
-  { id: 'tech', label: '기술 스택' },
-  { id: 'exp', label: '수행경험' },
-  { id: 'career', label: '이력' },
-  { id: 'cert', label: '자격증' },
-  { id: 'intro', label: '자기소개서' },
-  { id: 'lang', label: '언어' },
-];
-
-interface Skill { id: number; name: string; }
-interface Keyword { id: number; name: string; }
-interface Section { id: string; type: string; title: string; content: string; order: number; }
-
-const TemplateSelector = styled.select`
-  padding: 8px 16px;
-  margin: 1rem 0;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  font-size: 1rem;
-  background-color: white;
-`;
-
-const TemplateContainer = styled.div`
-  margin-top: 2rem;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-`;
-
-const MainContainer = styled.div`
-  display: flex;
+const Bg = styled.div`
   min-height: 100vh;
-  background: #f7f8fa;
+  background: #f4f6fa;
+  overflow-x: hidden;
 `;
 
-const FormContainer = styled.div`
-  flex: 1;
-  padding: 40px;
+const TopBar = styled.div`
+  width: 100vw;
+  background: #90b8f8;
+  height: 70px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  overflow-y: auto;
-  height: calc(100vh - 64px); /* 헤더 높이를 제외한 높이 */
-`;
-
-const RightSidebar = styled.div`
-  width: 220px;
-  background: #eaf3fa;
-  border-left: 1px solid #e0e6ed;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: space-between;
+  padding: 0 3.5rem 0 3.5rem;
   position: fixed;
-  right: 0;
-  top: 64px; /* 헤더 높이만큼 아래로 */
-  height: calc(100vh - 64px); /* 헤더 높이를 제외한 높이 */
-  overflow-y: auto;
+  top: 0;
+  left: 0;
+  z-index: 10;
 `;
+
+const Logo = styled.div`
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+`;
+
+const TopMenu = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2.2rem;
+`;
+
+const TopBtnGroup = styled.div`
+  display: flex;
+  gap: 1.2rem;
+  margin-right: 0;
+`;
+
+const TopUserMenu = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2.2rem;
+  font-size: 1.18rem;
+`;
+
+const TopUserName = styled.span`
+  font-weight: 500;
+  color: #fff;
+  font-size: 1.18rem;
+`;
+
+const TopLink = styled.button`
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.18rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  transition: color 0.15s;
+  &:hover { color: #346bb3; }
+`;
+
+const MainContent = styled.div`
+  width: 100%;
+  max-width: 1400px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-top: 56px;
+`;
+
+const ProfileSection = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3.5rem;
+  margin-bottom: 1.5rem;
+  margin-left: 0;
+`;
+
+const ProfileDetail = styled.div`
+  font-size: 1.45rem;
+  color: #444;
+  margin-bottom: 0.18rem;
+`;
+
+const ProfileImgInner = styled.img`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+const ProfileImg = styled.div`
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: #adb5bd;
+`;
+
+const ProfileInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const ProfileName = styled.div`
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+`;
+
+const ProfileEmail = styled.div`
+  font-size: 1.2rem;
+  color: #868e96;
+`;
+
+const SectionLabel = styled.div`
+  font-size: 2rem;
+  font-weight: 600;
+  color: #346bb3;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+`;
+
+const BlueBar = styled.div`
+  width: 7px;
+  height: 32px;
+  background: #4B89DC;
+  display: inline-block;
+  margin-right: 0.7rem;
+  border-radius: 2px;
+  vertical-align: middle;
+`;
+
+const TagRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 1.5rem;
+`;
+
+const AddBtn = styled.button`
+  background: #f4f6fa;
+  color: #4B89DC;
+  border: 1.5px solid #4B89DC;
+  border-radius: 24px;
+  padding: 0.5rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover {
+    background: #e3eafc;
+  }
+`;
+
+const TagInput = styled.input`
+  width: 220px;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8fafd;
+`;
+
+const Select = styled.select`
+  width: 220px;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8fafd;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  min-height: 120px;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  background: #f8fafd;
+`;
+
+const SectionTitle = styled.div`
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #346bb3;
+  margin-bottom: 0.7rem;
+`;
+
+const Row = styled.div`
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+`;
+
+const Input = styled.input`
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8fafd;
+`;
+
+const AddButton = styled.button`
+  background: #4B89DC;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  width: 100%;
+  &:hover {
+    background: #346bb3;
+  }
+`;
+
+const CardSection = styled.div`
+  background: #f5f6fa;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 1.5rem 2.5rem 1.2rem 2.5rem;
+  margin-bottom: 0.3rem;
+  width: 100%;
+`;
+
+const CardAddButton = styled.button`
+  background: #3a5fc8;
+  color: #fff;
+  border: none;
+  border-radius: 0 0 8px 8px;
+  width: 100%;
+  padding: 0.6rem 0;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: #2b4fa2;
+  }
+`;
+
+const CardRow = styled.div`
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 0.7rem;
+  width: 100%;
+`;
+
+const CardInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #e9ecef;
+`;
+
+const CardTextArea = styled.textarea`
+  width: 100%;
+  min-height: 240px;
+  padding: 0.7rem 1.2rem;
+  padding-right: 2.4rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #e9ecef;
+  resize: vertical;
+  margin-right: 0;
+  box-sizing: border-box;
+`;
+
+const TallCardSection = styled(CardSection)`
+  min-height: 240px;
+`;
+
+const SmallCardSection = styled(CardSection)`
+  max-width: 730px;
+  margin-left: 0;
+  margin-right: auto;
+`;
+
+const RemoveTagBtn = styled.button`
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
+`;
+
+const Tag = styled.span`
+  background: #1976d2;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+`;
+
+const DropdownContainer = styled.div`
+  position: relative;
+`;
+
+const DropdownButton = styled.button`
+  width: 220px;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8fafd;
+  text-align: left;
+  cursor: pointer;
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 220px;
+  background: #fff;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  z-index: 100;
+  padding: 1rem 0;
+`;
+
+const DropdownOption = styled.label`
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  font-size: 1.3rem;
+  &:hover {
+    background: #f4f6fa;
+  }
+`;
+
+const TagList = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+`;
+
+const keywordOptions = ['책임감', '소통', '리더십', '창의성', '성실함'];
+const stackOptions = ['React', 'Node.js', 'Python', 'Java', 'TypeScript'];
+const jobOptions = ['프론트엔드', '백엔드', '풀스택', '디자이너', '기획자'];
+
+const CardButtonRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.7rem;
+`;
+
+const ConfirmButton = styled.button`
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  padding: 0.5rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover { background: #1251a3; }
+`;
+
+const DeleteButton = styled.button`
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  padding: 0.5rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 2px;
+  &:hover { background: #1769aa; }
+`;
+
+const TopButton = styled.button`
+  background: #4B89DC;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover {
+    background: #346bb3;
+  }
+`;
+
+const FixedSaveButton = styled.div`
+  position: fixed;
+  top: 90px;
+  right: 2.2rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+`;
+
+// 직무 직군, 기술 스택, 키워드 고정 리스트
+const JOB_LIST = [
+  'AI 엔지니어',
+  'DevOps 엔지니어',
+  '기획자',
+  '데이터 엔지니어',
+  '디자이너',
+  '모바일 개발자',
+  '백엔드 개발자',
+  '프론트엔드 개발자',
+];
+const STACK_LIST = [
+  'AWS',
+  'Django',
+  'Docker',
+  'JavaScript',
+  'Kubernetes',
+  'MongoDB',
+  'MySQL',
+  'NestJS',
+  'Node.js',
+  'Python',
+  'React',
+  'Spring Boot',
+  'TypeScript',
+  'Vue.js',
+];
+const KEYWORD_LIST = [
+  '리더십',
+  '문제해결',
+  '분석력',
+  '성실함',
+  '적응력',
+  '창의성',
+  '책임감',
+  '커뮤니케이션',
+  '팀워크',
+  '학습능력',
+];
 
 const PortfolioCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  // 프로필/기본정보
-  const [profileImg, setProfileImg] = useState<File | null>(null);
-  const [profilePreview, setProfilePreview] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [summary, setSummary] = useState('');
-  const [title, setTitle] = useState('');
-  // 키워드/기술스택
-  const [keywords, setKeywords] = useState<Keyword[]>([]);
-  const [selectedKeywords, setSelectedKeywords] = useState<number[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
-  // 섹션(드래그&드롭)
-  const [sections, setSections] = useState<Section[]>([]);
-  // 드래그 상태
-  const [draggedTag, setDraggedTag] = useState<string | null>(null);
-  // 모달 상태
-  const [showKeywordModal, setShowKeywordModal] = useState(false);
-  const [showSkillModal, setShowSkillModal] = useState(false);
-  const [tempKeyword, setTempKeyword] = useState<number[]>([]);
-  const [tempSkill, setTempSkill] = useState<number[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState('default');
 
-  // 내 정보 불러오기
-  const loadProfile = async () => {
-    try {
-      const response = await axios.get('/users/profile');
-      const userData = response.data;
-      
-      setName(userData.name || '');
-      setEmail(userData.email || '');
-      setPhone(userData.phone || '');
-      setSummary(userData.summary || '');
-      
-      // 프로필 이미지가 있는 경우
-      if (userData.profileImage) {
-        setProfilePreview(`${process.env.REACT_APP_API_URL}/${userData.profileImage}`);
-      }
-      
-      // 사용자의 기술 스택 불러오기
-      if (userData.skills) {
-        setSelectedSkills(userData.skills.map((skill: Skill) => skill.id));
-      }
-      
-      // 사용자의 키워드 불러오기
-      if (userData.keywords) {
-        setSelectedKeywords(userData.keywords.map((keyword: Keyword) => keyword.id));
-      }
-      
-      alert('프로필 정보가 성공적으로 불러와졌습니다.');
-    } catch (error) {
-      console.error('프로필 정보를 불러오는데 실패했습니다:', error);
-      alert('프로필 정보를 불러오는데 실패했습니다.');
-    }
-  };
+  // 멀티셀렉트 드롭다운 상태
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+  const [keywordOpen, setKeywordOpen] = useState(false);
+  const keywordRef = useRef<HTMLDivElement>(null);
 
-  // 기술스택/키워드 목록 불러오기
+  const [selectedStacks, setSelectedStacks] = useState<string[]>([]);
+  const [stackOpen, setStackOpen] = useState(false);
+  const stackRef = useRef<HTMLDivElement>(null);
+
+  // 직무/직군 상태
+  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const [jobOpen, setJobOpen] = useState(false);
+  const jobRef = useRef<HTMLDivElement>(null);
+
+  // 경력, 프로젝트, 자격증, 외국어, 대외활동 상태
+  const [experiences, setExperiences] = useState([
+    { company: '', position: '', period: '', description: '', isConfirmed: false }
+  ]);
+  const [projects, setProjects] = useState([
+    { name: '', period: '', description: '', isConfirmed: false }
+  ]);
+  const [certificates, setCertificates] = useState([
+    { name: '', level: '', issuer: '', isConfirmed: false }
+  ]);
+  const [languages, setLanguages] = useState([
+    { name: '', level: '', isConfirmed: false }
+  ]);
+  const [activities, setActivities] = useState([
+    { name: '', org: '', period: '', description: '', isConfirmed: false }
+  ]);
+
+  // 바깥 클릭 시 드롭다운 닫기
   useEffect(() => {
-    axios.get('/skills').then(res => setSkills(res.data));
-    axios.get('/keywords').then(res => setKeywords(res.data));
+    const handleClick = (e: MouseEvent) => {
+      if (keywordRef.current && !keywordRef.current.contains(e.target as Node)) setKeywordOpen(false);
+      if (stackRef.current && !stackRef.current.contains(e.target as Node)) setStackOpen(false);
+      if (jobRef.current && !jobRef.current.contains(e.target as Node)) setJobOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // 프로필 이미지 미리보기
-  const handleProfileImg = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfileImg(e.target.files[0]);
-      setProfilePreview(URL.createObjectURL(e.target.files[0]));
-    }
+  // 키워드 선택/해제
+  const handleKeywordChange = (option: string) => {
+    setSelectedKeywords(prev =>
+      prev.includes(option)
+        ? prev.filter(k => k !== option)
+        : [...prev, option]
+    );
+  };
+  // 키워드 개별 삭제
+  const handleRemoveKeyword = (option: string) => {
+    setSelectedKeywords(prev => prev.filter(k => k !== option));
   };
 
-  // 모달 오픈 시 임시 선택값 초기화
-  const openKeywordModal = () => {
-    setTempKeyword(selectedKeywords);
-    setShowKeywordModal(true);
+  // 스택 선택/해제
+  const handleStackChange = (option: string) => {
+    setSelectedStacks(prev =>
+      prev.includes(option)
+        ? prev.filter(s => s !== option)
+        : [...prev, option]
+    );
   };
-  const openSkillModal = () => {
-    setTempSkill(selectedSkills);
-    setShowSkillModal(true);
-  };
-
-  // 모달 체크박스 토글
-  const toggleTempKeyword = (id: number) => {
-    setTempKeyword(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id]);
-  };
-  const toggleTempSkill = (id: number) => {
-    setTempSkill(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  // 스택 개별 삭제
+  const handleRemoveStack = (option: string) => {
+    setSelectedStacks(prev => prev.filter(s => s !== option));
   };
 
-  // 모달에서 추가 버튼 클릭 시 반영
-  const applyKeyword = () => {
-    setSelectedKeywords(tempKeyword);
-    setShowKeywordModal(false);
+  // 직무/직군 선택/해제
+  const handleJobChange = (option: string) => {
+    setSelectedJobs(prev =>
+      prev.includes(option)
+        ? prev.filter(j => j !== option)
+        : [...prev, option]
+    );
   };
-  const applySkill = () => {
-    setSelectedSkills(tempSkill);
-    setShowSkillModal(false);
-  };
-
-  // 태그 드래그 시작
-  const onDragStart = (type: string) => setDraggedTag(type);
-  // 태그 드롭
-  const onDrop = () => {
-    if (draggedTag) {
-      setSections([...sections, {
-        id: uuidv4(),
-        type: draggedTag,
-        title: '',
-        content: '',
-        order: sections.length,
-      }]);
-      setDraggedTag(null);
-    }
+  // 직무/직군 개별 삭제
+  const handleRemoveJob = (option: string) => {
+    setSelectedJobs(prev => prev.filter(j => j !== option));
   };
 
-  // 섹션 내용 변경
-  const updateSection = (id: string, field: 'title' | 'content', value: string) => {
-    setSections(sections.map(section =>
-      section.id === id ? { ...section, [field]: value } : section
-    ));
+  // 추가 핸들러
+  const handleAddExperience = () => setExperiences([...experiences, { company: '', position: '', period: '', description: '', isConfirmed: false }]);
+  const handleAddProject = () => setProjects([...projects, { name: '', period: '', description: '', isConfirmed: false }]);
+  const handleAddCertificate = () => setCertificates([...certificates, { name: '', level: '', issuer: '', isConfirmed: false }]);
+  const handleAddLanguage = () => setLanguages([...languages, { name: '', level: '', isConfirmed: false }]);
+  const handleAddActivity = () => setActivities([...activities, { name: '', org: '', period: '', description: '', isConfirmed: false }]);
+
+  // 값 변경 핸들러
+  const handleExperienceChange = (idx: number, field: string, value: string) => {
+    setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
   };
-  // 섹션 삭제
-  const removeSection = (id: string) => setSections(sections.filter(s => s.id !== id));
-
-  // 저장 함수 추가
-  const handleSave = async () => {
-    const formData = new FormData();
-    // 기본 정보
-    formData.append('name', name);
-    formData.append('phone', phone);
-    formData.append('email', email);
-    formData.append('summary', summary);
-    formData.append('title', title);
-    // 프로필 이미지
-    if (profileImg) {
-      formData.append('profileImg', profileImg);
-    }
-    // 키워드/기술스택/섹션
-    formData.append('keywords', JSON.stringify(selectedKeywords));
-    formData.append('skills', JSON.stringify(selectedSkills));
-    formData.append('sections', JSON.stringify(sections));
-
-    try {
-      await axios.post('/portfolios', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      alert('저장되었습니다.');
-      navigate('/');
-    } catch (err) {
-      alert('저장 실패');
-    }
+  const handleProjectChange = (idx: number, field: string, value: string) => {
+    setProjects(projects.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  };
+  const handleCertificateChange = (idx: number, field: string, value: string) => {
+    setCertificates(certificates.map((c, i) => i === idx ? { ...c, [field]: value } : c));
+  };
+  const handleLanguageChange = (idx: number, field: string, value: string) => {
+    setLanguages(languages.map((l, i) => i === idx ? { ...l, [field]: value } : l));
+  };
+  const handleActivityChange = (idx: number, field: string, value: string) => {
+    setActivities(activities.map((a, i) => i === idx ? { ...a, [field]: value } : a));
   };
 
-  // 템플릿 데이터 변환 함수
-  const convertToTemplateData = (): PortfolioData => {
-    return {
-      personalInfo: {
-        name,
-        title,
-        email,
-        phone,
-        location: '', // 위치 정보가 없는 경우 빈 문자열로 설정
-        introduction: summary,
-        profileImage: profileImg ? URL.createObjectURL(profileImg) : '',
-      },
-      skills: skills
-        .filter(skill => selectedSkills.includes(skill.id))
-        .map(skill => ({
-          name: skill.name,
-          level: '',
-        })),
-      experiences: sections
-        .filter(section => section.type === 'experience')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            title: content.title,
-            company: content.company,
-            date: content.period,
-            description: content.description,
-          };
-        }),
-      education: sections
-        .filter(section => section.type === 'education')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            school: content.school,
-            degree: content.degree,
-            date: content.period,
-            description: content.description,
-          };
-        }),
-      projects: sections
-        .filter(section => section.type === 'project')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            title: content.title,
-            description: content.description,
-            technologies: content.technologies || [],
-            link: content.link || '',
-          };
-        }),
-      certificates: sections
-        .filter(section => section.type === 'certificate')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            name: content.name,
-            issuer: content.issuer,
-            date: content.date,
-          };
-        }),
-      languages: sections
-        .filter(section => section.type === 'language')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            name: content.name,
-            level: content.level,
-          };
-        }),
-      activities: sections
-        .filter(section => section.type === 'activity')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            title: content.title,
-            description: content.description,
-          };
-        }),
+  // 삭제 핸들러
+  const handleRemoveExperience = (idx: number) => {
+    setExperiences(experiences.filter((_, i) => i !== idx));
+  };
+  const handleRemoveProject = (idx: number) => {
+    setProjects(projects.filter((_, i) => i !== idx));
+  };
+  const handleRemoveCertificate = (idx: number) => {
+    setCertificates(certificates.filter((_, i) => i !== idx));
+  };
+  const handleRemoveLanguage = (idx: number) => {
+    setLanguages(languages.filter((_, i) => i !== idx));
+  };
+  const handleRemoveActivity = (idx: number) => {
+    setActivities(activities.filter((_, i) => i !== idx));
+  };
+
+  // 확인/수정 핸들러
+  const handleConfirmExperience = (idx: number) => {
+    setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: true } : exp));
+  };
+  const handleEditExperience = (idx: number) => {
+    setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: false } : exp));
+  };
+  const handleConfirmProject = (idx: number) => {
+    setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: true } : p));
+  };
+  const handleEditProject = (idx: number) => {
+    setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: false } : p));
+  };
+  const handleConfirmCertificate = (idx: number) => {
+    setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: true } : c));
+  };
+  const handleEditCertificate = (idx: number) => {
+    setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: false } : c));
+  };
+  const handleConfirmLanguage = (idx: number) => {
+    setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: true } : l));
+  };
+  const handleEditLanguage = (idx: number) => {
+    setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: false } : l));
+  };
+  const handleConfirmActivity = (idx: number) => {
+    setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: true } : a));
+  };
+  const handleEditActivity = (idx: number) => {
+    setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: false } : a));
+  };
+
+  // 프로필 정보 상태 (API 연동)
+  const [profile, setProfile] = useState({
+    name: '',
+    gender: '',
+    birth: '',
+    phone: '',
+    email: '',
+    image: null as string | null,
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const apiUrl = process.env.REACT_APP_API_URL || '';
+        const res = await axios.get(`${apiUrl}/users/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // 응답 필드명에 따라 매핑 필요
+        setProfile({
+          name: res.data.name,
+          gender: res.data.gender,
+          birth: res.data.birth,
+          phone: res.data.phone,
+          email: res.data.email,
+          image: res.data.profileImage || null,
+        });
+      } catch (e) {
+        // 에러 시 기본값 유지
+      }
     };
-  };
+    fetchProfile();
+  }, []);
 
-  const templates = {
-    default: DefaultTemplate,
-    dark: DarkTemplate,
-    gradient: GradientTemplate,
-    minimal: MinimalTemplate,
-    art: ArtTemplate,
-    brutal: BrutalTemplate,
-    tab: TabTemplate,
-    split: SplitTemplate,
-    card: CardTemplate,
-    classic: ClassicTemplate,
-  };
-
-  const SelectedTemplate = templates[selectedTemplate as keyof typeof templates];
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length < 4) {
-      setPhone(value);
-    } else if (value.length < 8) {
-      setPhone(value.slice(0, 3) + '-' + value.slice(3));
-    } else {
-      setPhone(value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11));
-    }
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   };
 
   return (
-    <>
-      <Header />
-      <MainContainer>
-        {/* 중앙: 입력 폼 */}
-        <FormContainer>
-          <div style={{ width: 520, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: 32 }}>
-            {/* 제목 입력란 */}
-            <div style={{ marginBottom: 16 }}>
-              <input type="text" placeholder="포트폴리오 제목" value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: 12, border: '1px solid #bbb', borderRadius: 8, fontSize: 18, fontWeight: 600 }} />
-            </div>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Logo</div>
-              <div>
-                <label htmlFor="profileImg" style={{ display: 'inline-block', width: 100, height: 100, border: '1px dashed #bbb', borderRadius: 12, background: '#fafbfc', cursor: 'pointer', overflow: 'hidden', marginBottom: 8 }}>
-                  {profilePreview ? (
-                    <img src={profilePreview} alt="프로필" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 14 }}>사진 추가</div>
+    <Bg>
+      <TopBar>
+        <Logo onClick={() => navigate('/')}>산학협력</Logo>
+        <TopUserMenu>
+          <TopLink onClick={() => navigate('/profile')}>내정보</TopLink>
+          <TopLink onClick={handleLogout}>로그아웃</TopLink>
+          <TopUserName>{profile.name ? `${profile.name} 님` : '- 님'}</TopUserName>
+        </TopUserMenu>
+      </TopBar>
+      <MainContent>
+        {/* 프로필 */}
+        <ProfileSection>
+          <ProfileImg>
+            {profile.image ? (
+              <ProfileImgInner src={profile.image.startsWith('http') ? profile.image : `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/$/, '') : ''}/${profile.image.replace(/^\//, '')}`}
+                alt="프로필" />
+            ) : null}
+          </ProfileImg>
+          <ProfileInfo>
+            <ProfileName>{profile.name}</ProfileName>
+            <ProfileDetail>{profile.gender}</ProfileDetail>
+            <ProfileDetail>{profile.birth}</ProfileDetail>
+            <ProfileDetail>{profile.phone}</ProfileDetail>
+            <ProfileDetail>{profile.email}</ProfileDetail>
+          </ProfileInfo>
+        </ProfileSection>
+
+        {/* 나의 키워드 */}
+        <div>
+          <SectionLabel><BlueBar />나의 키워드</SectionLabel>
+          <TagRow>
+            <TagList>
+              {selectedKeywords.map(option => (
+                <Tag key={option}>
+                  {option}
+                  <RemoveTagBtn onClick={() => handleRemoveKeyword(option)}>×</RemoveTagBtn>
+                </Tag>
+              ))}
+            </TagList>
+            <DropdownContainer ref={keywordRef}>
+              <AddBtn onClick={() => setKeywordOpen(v => !v)}>+</AddBtn>
+              {keywordOpen && (
+                <DropdownMenu>
+                  {KEYWORD_LIST.map(option => (
+                    <DropdownOption key={option}>
+                      <input
+                        type="checkbox"
+                        checked={selectedKeywords.includes(option)}
+                        onChange={() => handleKeywordChange(option)}
+                        style={{ marginRight: '0.6rem' }}
+                      />
+                      {option}
+                    </DropdownOption>
+                  ))}
+                </DropdownMenu>
+              )}
+            </DropdownContainer>
+          </TagRow>
+        </div>
+
+        {/* 직군/직무 */}
+        <div>
+          <SectionLabel><BlueBar />직군 / 직무</SectionLabel>
+          <TagRow>
+            <TagList>
+              {selectedJobs.map(option => (
+                <Tag key={option}>
+                  {option}
+                  <RemoveTagBtn onClick={() => handleRemoveJob(option)}>×</RemoveTagBtn>
+                </Tag>
+              ))}
+            </TagList>
+            <DropdownContainer ref={jobRef}>
+              <AddBtn onClick={() => setJobOpen(v => !v)}>+</AddBtn>
+              {jobOpen && (
+                <DropdownMenu>
+                  {JOB_LIST.map(option => (
+                    <DropdownOption key={option}>
+                      <input
+                        type="checkbox"
+                        checked={selectedJobs.includes(option)}
+                        onChange={() => handleJobChange(option)}
+                        style={{ marginRight: '0.6rem' }}
+                      />
+                      {option}
+                    </DropdownOption>
+                  ))}
+                </DropdownMenu>
+              )}
+            </DropdownContainer>
+          </TagRow>
+        </div>
+
+        {/* 기술 스택 */}
+        <div>
+          <SectionLabel><BlueBar />기술 스택</SectionLabel>
+          <TagRow>
+            <TagList>
+              {selectedStacks.map(option => (
+                <Tag key={option}>
+                  {option}
+                  <RemoveTagBtn onClick={() => handleRemoveStack(option)}>×</RemoveTagBtn>
+                </Tag>
+              ))}
+            </TagList>
+            <DropdownContainer ref={stackRef}>
+              <AddBtn onClick={() => setStackOpen(v => !v)}>+</AddBtn>
+              {stackOpen && (
+                <DropdownMenu>
+                  {STACK_LIST.map(option => (
+                    <DropdownOption key={option}>
+                      <input
+                        type="checkbox"
+                        checked={selectedStacks.includes(option)}
+                        onChange={() => handleStackChange(option)}
+                        style={{ marginRight: '0.6rem' }}
+                      />
+                      {option}
+                    </DropdownOption>
+                  ))}
+                </DropdownMenu>
+              )}
+            </DropdownContainer>
+          </TagRow>
+        </div>
+
+        {/* 나의 소개 */}
+        <div>
+          <SectionLabel><BlueBar />나의 소개</SectionLabel>
+          <TextArea placeholder="자기소개를 입력하세요" />
+        </div>
+
+        {/* 경력 */}
+        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '100%' }}><BlueBar />경력</SectionLabel>
+        {/* 리스트(확인된 항목) */}
+        {experiences.filter(exp => exp.isConfirmed).length > 0 && (
+          <TallCardSection style={{ marginBottom: '1.5rem' }}>
+            {experiences.filter(exp => exp.isConfirmed).map((exp, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>
+                  {exp.company}
+                  {exp.period && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{exp.period}</span>
                   )}
-                  <input id="profileImg" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleProfileImg} />
-                </label>
+                </div>
+                <div style={{ color: '#444', fontSize: '1.05rem', marginBottom: '0.1rem' }}>{exp.position}</div>
+                {exp.description && (
+                  <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{exp.description}</div>
+                )}
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditExperience(experiences.findIndex(e => e === exp))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveExperience(experiences.findIndex(e => e === exp))}>삭제</DeleteButton>
+                </div>
               </div>
-              <button type="button" onClick={loadProfile} style={{ fontSize: 13, color: '#007bff', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 8 }}>내 정보 불러오기</button>
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <input type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6, marginBottom: 8 }} />
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <input type="text" placeholder="국가" value="" disabled style={{ width: 60, padding: 10, border: '1px solid #eee', borderRadius: 6, background: '#f5f5f5' }} />
-                <input type="tel" placeholder="010-1234-5678" value={phone} onChange={handlePhoneChange} maxLength={13} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+            ))}
+          </TallCardSection>
+        )}
+        {/* 입력폼(확인 안 된 항목) */}
+        {experiences.filter(exp => !exp.isConfirmed).map((exp, idx) => {
+          // experiences에서 isConfirmed가 false인 항목의 실제 인덱스
+          const realIdx = experiences.findIndex((e, i) => !e.isConfirmed && experiences.slice(0, i+1).filter(x => !x.isConfirmed).length-1 === idx);
+          return (
+            <TallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={exp.company} onChange={e => handleExperienceChange(realIdx, 'company', e.target.value)} placeholder="기업명" />
+                <CardInput value={exp.position} onChange={e => handleExperienceChange(realIdx, 'position', e.target.value)} placeholder="직위/직급" />
+                <CardInput value={exp.period} onChange={e => handleExperienceChange(realIdx, 'period', e.target.value)} placeholder="재직기간" />
+              </CardRow>
+              <CardTextArea value={exp.description} onChange={e => handleExperienceChange(realIdx, 'description', e.target.value)} placeholder="주요 업무 및 성과(선택)" />
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmExperience(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveExperience(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+            </TallCardSection>
+          );
+        })}
+        <TallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
+          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddExperience}>+ 추가</CardAddButton>
+        </TallCardSection>
+
+        {/* 프로젝트 */}
+        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '100%' }}><BlueBar />프로젝트</SectionLabel>
+        {/* 리스트(확인된 항목) */}
+        {projects.filter(p => p.isConfirmed).length > 0 && (
+          <TallCardSection style={{ marginBottom: '1.5rem' }}>
+            {projects.filter(p => p.isConfirmed).map((p, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{p.name}
+                  {p.period && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{p.period}</span>
+                  )}
+                </div>
+                {p.description && (
+                  <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{p.description}</div>
+                )}
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditProject(projects.findIndex(x => x === p))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveProject(projects.findIndex(x => x === p))}>삭제</DeleteButton>
+                </div>
               </div>
-              <input type="email" placeholder="이메일" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <textarea placeholder="한줄 소개" value={summary} onChange={e => setSummary(e.target.value)} style={{ width: '100%', minHeight: 60, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-            </div>
-            {/* 키워드 선택 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontWeight: 500 }}>나의 키워드</div>
-                <button type="button" onClick={openKeywordModal} style={{ marginLeft: 8, fontSize: 13, padding: '2px 12px', borderRadius: 16, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>추가</button>
+            ))}
+          </TallCardSection>
+        )}
+        {/* 입력폼(확인 안 된 항목) */}
+        {projects.filter(p => !p.isConfirmed).map((p, idx) => {
+          const realIdx = projects.findIndex((x, i) => !x.isConfirmed && projects.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+            <TallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={p.name} onChange={e => handleProjectChange(realIdx, 'name', e.target.value)} placeholder="프로젝트명" />
+                <CardInput value={p.period} onChange={e => handleProjectChange(realIdx, 'period', e.target.value)} placeholder="프로젝트 기간" />
+              </CardRow>
+              <CardTextArea value={p.description} onChange={e => handleProjectChange(realIdx, 'description', e.target.value)} placeholder="프로젝트 내용" />
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmProject(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveProject(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+            </TallCardSection>
+          );
+        })}
+        <TallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
+          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddProject}>+ 추가</CardAddButton>
+        </TallCardSection>
+
+        {/* 자격증 */}
+        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '730px' }}><BlueBar />자격증</SectionLabel>
+        {certificates.filter(c => c.isConfirmed).length > 0 && (
+          <SmallCardSection style={{ marginBottom: '1.5rem' }}>
+            {certificates.filter(c => c.isConfirmed).map((c, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: '0.2rem' }}>{c.name}
+                  {c.level && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{c.level}</span>
+                  )}
+                  {c.issuer && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{c.issuer}</span>
+                  )}
+                </div>
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditCertificate(certificates.findIndex(x => x === c))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveCertificate(certificates.findIndex(x => x === c))}>삭제</DeleteButton>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {keywords.filter(k => selectedKeywords.includes(k.id)).map(k => (
-                  <span key={k.id} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #ddd', background: '#007bff', color: '#fff', fontSize: 14 }}>{k.name}</span>
-                ))}
+            ))}
+          </SmallCardSection>
+        )}
+        {certificates.filter(c => !c.isConfirmed).map((c, idx) => {
+          const realIdx = certificates.findIndex((x, i) => !x.isConfirmed && certificates.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+            <SmallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={c.name} onChange={e => handleCertificateChange(realIdx, 'name', e.target.value)} placeholder="자격증명" />
+                <CardInput value={c.level} onChange={e => handleCertificateChange(realIdx, 'level', e.target.value)} placeholder="급수" />
+                <CardInput value={c.issuer} onChange={e => handleCertificateChange(realIdx, 'issuer', e.target.value)} placeholder="발급기관" />
+              </CardRow>
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmCertificate(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveCertificate(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+            </SmallCardSection>
+          );
+        })}
+        <SmallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
+          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddCertificate}>+ 추가</CardAddButton>
+        </SmallCardSection>
+
+        {/* 외국어 */}
+        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '730px' }}><BlueBar />외국어</SectionLabel>
+        {languages.filter(l => l.isConfirmed).length > 0 && (
+          <SmallCardSection style={{ marginBottom: '1.5rem' }}>
+            {languages.filter(l => l.isConfirmed).map((l, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: '0.2rem' }}>{l.name}
+                  {l.level && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{l.level}</span>
+                  )}
+                </div>
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditLanguage(languages.findIndex(x => x === l))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveLanguage(languages.findIndex(x => x === l))}>삭제</DeleteButton>
+                </div>
               </div>
-            </div>
-            {/* 기술스택 선택 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontWeight: 500 }}>기술 스택</div>
-                <button type="button" onClick={openSkillModal} style={{ marginLeft: 8, fontSize: 13, padding: '2px 12px', borderRadius: 16, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>추가</button>
+            ))}
+          </SmallCardSection>
+        )}
+        {languages.filter(l => !l.isConfirmed).map((l, idx) => {
+          const realIdx = languages.findIndex((x, i) => !x.isConfirmed && languages.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+            <SmallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={l.name} onChange={e => handleLanguageChange(realIdx, 'name', e.target.value)} placeholder="언어명" />
+                <CardInput value={l.level} onChange={e => handleLanguageChange(realIdx, 'level', e.target.value)} placeholder="수준" />
+              </CardRow>
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmLanguage(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveLanguage(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+            </SmallCardSection>
+          );
+        })}
+        <SmallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
+          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddLanguage}>+ 추가</CardAddButton>
+        </SmallCardSection>
+
+        {/* 대외 활동 */}
+        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '100%' }}><BlueBar />대외 활동</SectionLabel>
+        {activities.filter(a => a.isConfirmed).length > 0 && (
+          <TallCardSection style={{ marginBottom: '1.5rem' }}>
+            {activities.filter(a => a.isConfirmed).map((a, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{a.name}
+                  {a.org && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{a.org}</span>
+                  )}
+                  {a.period && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{a.period}</span>
+                  )}
+                </div>
+                {a.description && (
+                  <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{a.description}</div>
+                )}
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditActivity(activities.findIndex(x => x === a))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveActivity(activities.findIndex(x => x === a))}>삭제</DeleteButton>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {skills.filter(s => selectedSkills.includes(s.id)).map(s => (
-                  <span key={s.id} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #ddd', background: '#007bff', color: '#fff', fontSize: 14 }}>{s.name}</span>
-                ))}
-              </div>
-            </div>
-            {/* 정보 추가(드래그&드롭) */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 500, marginBottom: 6 }}>정보 추가</div>
-              <div onDragOver={e => e.preventDefault()} onDrop={onDrop} style={{ minHeight: 80, border: '2px dashed #bbb', borderRadius: 8, background: '#f8f9fa', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-                {sections.length === 0 && <div style={{ color: '#bbb', fontSize: 14 }}>오른쪽 태그를 끌어와 작성</div>}
-                {sections.map(section => (
-                  <div key={section.id} style={{ width: '100%', background: '#f9f9fc', border: '1px solid #eee', borderRadius: 8, margin: '8px 0', padding: 12, position: 'relative' }}>
-                    <input type="text" placeholder="제목" value={section.title} onChange={e => updateSection(section.id, 'title', e.target.value)} style={{ width: '100%', marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
-                    <ReactQuill value={section.content} onChange={v => updateSection(section.id, 'content', v)} style={{ height: 120, marginBottom: 8 }} />
-                    <button type="button" onClick={() => removeSection(section.id)} style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', color: '#888', fontSize: 18, cursor: 'pointer' }}>×</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </FormContainer>
-        {/* 우측: 태그/테마/저장 등 */}
-        <RightSidebar>
-          <button style={{ width: '100%', marginBottom: 16, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>테마 설정</button>
-          <div style={{ width: '100%', marginBottom: 24 }}>
-            <div style={{ fontWeight: 500, marginBottom: 8 }}>태그</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {TAG_CATEGORIES.map(tag => (
-                <div key={tag.id} draggable onDragStart={() => onDragStart(tag.id)} style={{ padding: '10px 0', borderRadius: 8, background: '#fff', border: '1px solid #bcd', textAlign: 'center', fontWeight: 500, cursor: 'grab', userSelect: 'none' }}>{tag.label}</div>
-              ))}
-            </div>
-          </div>
-          <button style={{ width: '100%', marginBottom: 8, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }} onClick={handleSave}>저장</button>
-          <button style={{ width: '100%', marginBottom: 8, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>불러오기</button>
-          <button style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>PDF / 프린트 인쇄</button>
-        </RightSidebar>
-      </MainContainer>
-      {/* 키워드 모달 */}
-      {showKeywordModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 320 }}>
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>키워드 선택</div>
-            <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
-              {keywords.map(k => (
-                <label key={k.id} style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={tempKeyword.includes(k.id)} onChange={() => toggleTempKeyword(k.id)} style={{ marginRight: 8 }} />
-                  {k.name}
-                </label>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowKeywordModal(false)} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>취소</button>
-              <button onClick={applyKeyword} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #007bff', background: '#007bff', color: '#fff', cursor: 'pointer' }}>추가</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* 기술스택 모달 */}
-      {showSkillModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 320 }}>
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>기술 스택 선택</div>
-            <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
-              {skills.map(s => (
-                <label key={s.id} style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={tempSkill.includes(s.id)} onChange={() => toggleTempSkill(s.id)} style={{ marginRight: 8 }} />
-                  {s.name}
-                </label>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowSkillModal(false)} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>취소</button>
-              <button onClick={applySkill} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #007bff', background: '#007bff', color: '#fff', cursor: 'pointer' }}>추가</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* 템플릿 미리보기 섹션 */}
-      <TemplateContainer>
-        <h2 style={{ marginBottom: '1rem' }}>템플릿 미리보기</h2>
-        <TemplateSelector
-          value={selectedTemplate}
-          onChange={(e) => setSelectedTemplate(e.target.value)}
-        >
-          <option value="default">기본 템플릿</option>
-          <option value="dark">다크 템플릿</option>
-          <option value="gradient">그라데이션 템플릿</option>
-          <option value="minimal">미니멀 템플릿</option>
-          <option value="art">아트 템플릿</option>
-          <option value="brutal">브루탈 템플릿</option>
-          <option value="tab">탭 템플릿</option>
-          <option value="split">스플릿 템플릿</option>
-          <option value="card">카드 템플릿</option>
-          <option value="classic">클래식 템플릿</option>
-        </TemplateSelector>
-        <SelectedTemplate data={convertToTemplateData()} />
-      </TemplateContainer>
-      <Footer />
-    </>
+            ))}
+          </TallCardSection>
+        )}
+        {activities.filter(a => !a.isConfirmed).map((a, idx) => {
+          const realIdx = activities.findIndex((x, i) => !x.isConfirmed && activities.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+            <TallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={a.name} onChange={e => handleActivityChange(realIdx, 'name', e.target.value)} placeholder="활동명" />
+                <CardInput value={a.org} onChange={e => handleActivityChange(realIdx, 'org', e.target.value)} placeholder="활동기관" />
+                <CardInput value={a.period} onChange={e => handleActivityChange(realIdx, 'period', e.target.value)} placeholder="활동 기간" />
+              </CardRow>
+              <CardTextArea value={a.description} onChange={e => handleActivityChange(realIdx, 'description', e.target.value)} placeholder="활동 설명" />
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmActivity(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveActivity(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+            </TallCardSection>
+          );
+        })}
+        <TallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
+          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddActivity}>+ 추가</CardAddButton>
+        </TallCardSection>
+      </MainContent>
+      <FixedSaveButton>
+        <TopButton>저장</TopButton>
+      </FixedSaveButton>
+    </Bg>
   );
 };
 
