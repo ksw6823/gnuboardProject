@@ -12,7 +12,7 @@ const Header: React.FC = () => {
 
   return (
     <header style={{
-      background: 'transparent', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 1000
+      background: '#fff', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 1000
     }}>
       <nav style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -43,6 +43,11 @@ const Header: React.FC = () => {
                   로그아웃
                 </button>
               </li>
+              {user?.name && (
+                <li style={{ color: '#333', fontWeight: 500, fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
+                  {user.name} 님
+                </li>
+              )}
             </>
           )}
         </ul>

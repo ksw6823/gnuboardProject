@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const Bg = styled.div`
@@ -22,7 +22,7 @@ const TopBar = styled.div`
 const Logo = styled.div`
   font-size: 1.5rem;
   font-weight: 700;
-  color: #3a5fc8;
+  color: #fff !important;
   letter-spacing: -1px;
 `;
 
@@ -40,17 +40,35 @@ const TopButton = styled.button`
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  &:hover {
+      &:hover {
     background: #346bb3;
   }
 `;
 
 const MainContent = styled.div`
-  max-width: 700px;
-  margin: 2.5rem auto 2.5rem auto;
+  width: 100%;
+  min-height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2.5rem 0;
+`;
+
+const Card = styled.div`
+  background: #fff;
+  border-radius: 18px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+`;
+
+const Title = styled.div`
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #346bb3;
+  margin-bottom: 0;
 `;
 
 const ProfileSection = styled.div`
@@ -196,118 +214,186 @@ const AddButton = styled.button`
   }
 `;
 
+const DropdownContainer = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 0.5rem;
+  min-width: 200px;
+  z-index: 1000;
+`;
+
+const DropdownItem = styled.div`
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  &:hover {
+    background: #f8f9fa;
+  }
+`;
+
 const PortfolioCreate: React.FC = () => {
+  const keywordRef = useRef<HTMLDivElement>(null);
+  const [keywordOpen, setKeywordOpen] = useState(false);
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+
+  const keywords = [
+    '프론트엔드', '백엔드', '풀스택', '모바일', 'AI', '데이터',
+    '클라우드', '보안', 'DevOps', 'UI/UX'
+  ];
+
+  const handleKeywordSelect = (keyword: string) => {
+    if (!selectedKeywords.includes(keyword)) {
+      setSelectedKeywords([...selectedKeywords, keyword]);
+    }
+    setKeywordOpen(false);
+  };
+
   return (
     <Bg>
       <TopBar>
-        <Logo>PortFlow</Logo>
+        <Logo>산학협력</Logo>
         <TopBtnGroup>
           <TopButton>임시 저장</TopButton>
           <TopButton>작성 완료</TopButton>
         </TopBtnGroup>
       </TopBar>
       <MainContent>
-        {/* 프로필 */}
-        <ProfileSection>
-          <ProfileImg />
-          <ProfileInfo>
-            <ProfileName>홍길동</ProfileName>
-            <ProfileEmail>이메일 gkarkhsdn@gmail.com</ProfileEmail>
-          </ProfileInfo>
-        </ProfileSection>
+        <Card>
+          <Title>내정보 수정</Title>
+          {/* 프로필 */}
+          <ProfileSection>
+            <ProfileImg />
+            <ProfileInfo>
+              <ProfileName>홍길동</ProfileName>
+              <ProfileEmail>이메일 gkarkhsdn@gmail.com</ProfileEmail>
+            </ProfileInfo>
+          </ProfileSection>
 
-        {/* 나의 키워드 */}
-        <div>
-          <SectionLabel><BlueBar />나의 키워드</SectionLabel>
-          <TagRow>
-            <AddBtn>+</AddBtn>
-          </TagRow>
-        </div>
+          {/* 나의 키워드 */}
+          <div>
+            <SectionLabel><BlueBar />나의 키워드</SectionLabel>
+            <DropdownContainer ref={keywordRef}>
+              <AddBtn
+                onClick={e => {
+                  e.stopPropagation();
+                  setKeywordOpen(v => !v);
+                }}
+              >+</AddBtn>
+              {keywordOpen && (
+                <DropdownMenu>
+                  {keywords.map(keyword => (
+                    <DropdownItem
+                      key={keyword}
+                      onClick={() => handleKeywordSelect(keyword)}
+                    >
+                      {keyword}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              )}
+            </DropdownContainer>
+            <TagRow>
+              {selectedKeywords.map(keyword => (
+                <AddBtn key={keyword}>{keyword}</AddBtn>
+              ))}
+            </TagRow>
+          </div>
 
-        {/* 직군/직무 */}
-        <div>
-          <SectionLabel><BlueBar />직군 / 직무</SectionLabel>
-          <TagRow>
-            <AddBtn>+</AddBtn>
-          </TagRow>
-        </div>
+          {/* 직군/직무 */}
+          <div>
+            <SectionLabel><BlueBar />직군 / 직무</SectionLabel>
+            <TagRow>
+              <AddBtn>+</AddBtn>
+            </TagRow>
+          </div>
 
-        {/* 기술 스택 */}
-        <div>
-          <SectionLabel><BlueBar />기술 스택</SectionLabel>
-          <TagRow>
-            <AddBtn>+</AddBtn>
-          </TagRow>
-        </div>
+          {/* 기술 스택 */}
+          <div>
+            <SectionLabel><BlueBar />기술 스택</SectionLabel>
+            <TagRow>
+              <AddBtn>+</AddBtn>
+            </TagRow>
+          </div>
 
-        {/* 나의 소개 */}
-        <div>
-          <SectionLabel><BlueBar />나의 소개</SectionLabel>
-          <TextArea placeholder="자기소개를 입력하세요" />
-        </div>
+          {/* 나의 소개 */}
+          <div>
+            <SectionLabel><BlueBar />나의 소개</SectionLabel>
+            <TextArea placeholder="자기소개를 입력하세요" />
+          </div>
 
-        {/* 경력 */}
-        <div>
-          <SectionLabel><BlueBar />경력</SectionLabel>
-          <Row>
-            <Input placeholder="회사명" />
-            <Input placeholder="직위" />
-          </Row>
-          <Row>
-            <Input placeholder="기간" />
-          </Row>
-          <Row>
-            <Input placeholder="경력 내용" />
-          </Row>
-          <AddButton>+ 추가</AddButton>
-        </div>
+          {/* 경력 */}
+          <div>
+            <SectionLabel><BlueBar />경력</SectionLabel>
+            <Row>
+              <Input placeholder="회사명" />
+              <Input placeholder="직위" />
+            </Row>
+            <Row>
+              <Input placeholder="기간" />
+            </Row>
+            <Row>
+              <Input placeholder="경력 내용" />
+            </Row>
+            <AddButton>+ 추가</AddButton>
+          </div>
 
-        {/* 프로젝트 */}
-        <div>
-          <SectionLabel><BlueBar />프로젝트</SectionLabel>
-          <Row>
-            <Input placeholder="프로젝트명" />
-            <Input placeholder="프로젝트 기간" />
-          </Row>
-          <Row>
-            <Input placeholder="프로젝트 내용" />
-          </Row>
-          <AddButton>+ 추가</AddButton>
-        </div>
+          {/* 프로젝트 */}
+          <div>
+            <SectionLabel><BlueBar />프로젝트</SectionLabel>
+            <Row>
+              <Input placeholder="프로젝트명" />
+              <Input placeholder="프로젝트 기간" />
+            </Row>
+            <Row>
+              <Input placeholder="프로젝트 내용" />
+            </Row>
+            <AddButton>+ 추가</AddButton>
+          </div>
 
-        {/* 자격증 */}
-        <div>
-          <SectionLabel><BlueBar />자격증</SectionLabel>
-          <Row>
-            <Input placeholder="자격증명" />
-            <Input placeholder="발급기관" />
-            <Input placeholder="취득일" />
-          </Row>
-          <AddButton>+ 추가</AddButton>
-        </div>
+          {/* 자격증 */}
+          <div>
+            <SectionLabel><BlueBar />자격증</SectionLabel>
+            <Row>
+              <Input placeholder="자격증명" />
+              <Input placeholder="발급기관" />
+              <Input placeholder="취득일" />
+            </Row>
+            <AddButton>+ 추가</AddButton>
+          </div>
 
-        {/* 외국어 */}
-        <div>
-          <SectionLabel><BlueBar />외국어</SectionLabel>
-          <Row>
-            <Input placeholder="언어" />
-            <Input placeholder="수준" />
-          </Row>
-          <AddButton>+ 추가</AddButton>
-        </div>
+          {/* 외국어 */}
+          <div>
+            <SectionLabel><BlueBar />외국어</SectionLabel>
+            <Row>
+              <Input placeholder="언어" />
+              <Input placeholder="수준" />
+            </Row>
+            <AddButton>+ 추가</AddButton>
+          </div>
 
-        {/* 대외 활동 */}
-        <div>
-          <SectionLabel><BlueBar />대외 활동</SectionLabel>
-          <Row>
-            <Input placeholder="활동명" />
-            <Input placeholder="활동기관" />
-          </Row>
-          <Row>
-            <Input placeholder="활동 내용" />
-          </Row>
-          <AddButton>+ 추가</AddButton>
-        </div>
+          {/* 대외 활동 */}
+          <div>
+            <SectionLabel><BlueBar />대외 활동</SectionLabel>
+            <Row>
+              <Input placeholder="활동명" />
+              <Input placeholder="활동기관" />
+            </Row>
+            <Row>
+              <Input placeholder="활동 내용" />
+            </Row>
+            <AddButton>+ 추가</AddButton>
+          </div>
+        </Card>
       </MainContent>
     </Bg>
   );

@@ -26,7 +26,7 @@ const TopBar = styled.div`
 const Logo = styled.div`
   font-size: 1.7rem;
   font-weight: 700;
-  color: #fff;
+  color: #1976d2;
   letter-spacing: -1px;
   cursor: pointer;
   display: flex;
@@ -793,10 +793,10 @@ const PortfolioCreate: React.FC = () => {
               )}
             </DropdownContainer>
           </TagRow>
-        </div>
+            </div>
 
         {/* 나의 소개 */}
-        <div>
+              <div>
           <SectionLabel><BlueBar />나의 소개</SectionLabel>
           <TextArea placeholder="자기소개를 입력하세요" />
         </div>
@@ -813,7 +813,7 @@ const PortfolioCreate: React.FC = () => {
                   {exp.period && (
                     <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{exp.period}</span>
                   )}
-                </div>
+              </div>
                 <div style={{ color: '#444', fontSize: '1.05rem', marginBottom: '0.1rem' }}>{exp.position}</div>
                 {exp.description && (
                   <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{exp.description}</div>
@@ -821,7 +821,7 @@ const PortfolioCreate: React.FC = () => {
                 <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
                   <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditExperience(experiences.findIndex(e => e === exp))}>수정</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveExperience(experiences.findIndex(e => e === exp))}>삭제</DeleteButton>
-                </div>
+            </div>
               </div>
             ))}
           </TallCardSection>
@@ -863,14 +863,14 @@ const PortfolioCreate: React.FC = () => {
                   {p.period && (
                     <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{p.period}</span>
                   )}
-                </div>
+            </div>
                 {p.description && (
                   <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{p.description}</div>
                 )}
                 <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
                   <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditProject(projects.findIndex(x => x === p))}>수정</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveProject(projects.findIndex(x => x === p))}>삭제</DeleteButton>
-                </div>
+            </div>
               </div>
             ))}
           </TallCardSection>
@@ -912,11 +912,11 @@ const PortfolioCreate: React.FC = () => {
                   {c.issuer && (
                     <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{c.issuer}</span>
                   )}
-                </div>
+              </div>
                 <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
                   <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditCertificate(certificates.findIndex(x => x === c))}>수정</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveCertificate(certificates.findIndex(x => x === c))}>삭제</DeleteButton>
-                </div>
+            </div>
               </div>
             ))}
           </SmallCardSection>
@@ -935,7 +935,7 @@ const PortfolioCreate: React.FC = () => {
                 <div>
                   <ConfirmButton onClick={() => handleConfirmCertificate(realIdx)}>확인</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveCertificate(realIdx)}>삭제</DeleteButton>
-                </div>
+              </div>
               </CardButtonRow>
             </SmallCardSection>
           );
@@ -954,11 +954,11 @@ const PortfolioCreate: React.FC = () => {
                   {l.level && (
                     <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{l.level}</span>
                   )}
-                </div>
+            </div>
                 <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
                   <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditLanguage(languages.findIndex(x => x === l))}>수정</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveLanguage(languages.findIndex(x => x === l))}>삭제</DeleteButton>
-                </div>
+                  </div>
               </div>
             ))}
           </SmallCardSection>
@@ -976,7 +976,7 @@ const PortfolioCreate: React.FC = () => {
                 <div>
                   <ConfirmButton onClick={() => handleConfirmLanguage(realIdx)}>확인</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveLanguage(realIdx)}>삭제</DeleteButton>
-                </div>
+            </div>
               </CardButtonRow>
             </SmallCardSection>
           );
@@ -998,15 +998,15 @@ const PortfolioCreate: React.FC = () => {
                   {a.period && (
                     <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{a.period}</span>
                   )}
-                </div>
+          </div>
                 {a.description && (
                   <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{a.description}</div>
                 )}
                 <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
                   <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditActivity(activities.findIndex(x => x === a))}>수정</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveActivity(activities.findIndex(x => x === a))}>삭제</DeleteButton>
-                </div>
-              </div>
+        </div>
+      </div>
             ))}
           </TallCardSection>
         )}
@@ -1025,7 +1025,7 @@ const PortfolioCreate: React.FC = () => {
                 <div>
                   <ConfirmButton onClick={() => handleConfirmActivity(realIdx)}>확인</ConfirmButton>
                   <DeleteButton onClick={() => handleRemoveActivity(realIdx)}>삭제</DeleteButton>
-                </div>
+            </div>
               </CardButtonRow>
             </TallCardSection>
           );
