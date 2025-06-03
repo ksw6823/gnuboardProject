@@ -2,32 +2,24 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Header from '../Common/Header';
 
-const PageBg = styled.div`
-  min-height: 100vh;
-  background: #ededed;
-  padding: 0;
+const LogoContainer = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+  cursor: pointer;
 `;
 
-const CenteredContainer = styled.div`
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 32px 0 0 0;
-`;
+const Logo = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4B89DC;
+  display: inline-block;
+  padding: 1rem;
+  transition: transform 0.2s;
 
-const SectionTitle = styled.h3`
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin-bottom: 1.1rem;
-  margin-left: 16px;
-  color: #222;
-`;
-
-const Divider = styled.hr`
-  border: none;
-  border-top: 2px solid #7b8fa6;
-  margin: 48px 0 32px 0;
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const Container = styled.div`
@@ -101,10 +93,7 @@ const ErrorMessage = styled.div`
 `;
 
 const InfoCard = styled.div`
-  width: 480px;
-  height: 100px;
   background: #fff;
-<<<<<<< Updated upstream
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10);
   padding: 3rem 3.5rem;
@@ -112,42 +101,33 @@ const InfoCard = styled.div`
   max-width: 1000px;
   min-width: 320px;
   width: 100%;
-=======
-  border-radius: 10px;
-  box-shadow: 2px 4px 6px rgba(0,0,0,0.13);
-  padding: 0 0 0 24px;
->>>>>>> Stashed changes
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   position: relative;
-  border: 1.5px solid #d3dbe7;
 `;
 
 const EditButton = styled.button`
   position: absolute;
-  top: 1.1rem;
-  right: 1.2rem;
+  top: 1.5rem;
+  right: 1.5rem;
   background: none;
   border: none;
   color: #4B89DC;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
-  font-weight: 400;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.3rem;
 `;
 
-<<<<<<< Updated upstream
 const SectionTitle = styled.h3`
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 2.2rem;
 `;
 
-=======
->>>>>>> Stashed changes
 const PortfolioList = styled.ul`
   list-style: none;
   padding: 0;
@@ -161,24 +141,10 @@ const PortfolioItem = styled.li`
   font-size: 1rem;
 `;
 
-<<<<<<< Updated upstream
-=======
-const ProfileImg = styled.img`
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 24px;
-  background: #f0f0f0;
-  border: 1.5px solid #d3dbe7;
-`;
-
->>>>>>> Stashed changes
 const ProfileImgWrapper = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 0;
-<<<<<<< Updated upstream
 `;
 
 const ProfileImg = styled.img`
@@ -188,8 +154,6 @@ const ProfileImg = styled.img`
   object-fit: cover;
   margin-right: 2.5rem;
   background: #f0f0f0;
-=======
->>>>>>> Stashed changes
 `;
 
 const GenderSelect = styled.select`
@@ -198,25 +162,6 @@ const GenderSelect = styled.select`
   border-radius: 4px;
   font-size: 1rem;
   margin-bottom: 0.5rem;
-`;
-
-const EmptyPortfolioCard = styled.div`
-  width: 600px;
-  height: 160px;
-  background: #dbe7fa;
-  border-radius: 12px;
-  box-shadow: 2px 4px 6px rgba(0,0,0,0.13);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  color: #b0b8c1;
-  font-size: 1.2rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  opacity: 0.7;
-  border: none;
 `;
 
 type ProfileType = {
@@ -658,7 +603,6 @@ const Profile: React.FC = () => {
 
   return (
     <PageBg>
-<<<<<<< Updated upstream
       <LogoContainer onClick={() => navigate('/')}>
         <Logo>산학협력</Logo>
       </LogoContainer>
@@ -755,52 +699,6 @@ const Profile: React.FC = () => {
           </InfoCard>
         </div>
       </CardRow>
-=======
-      <Header />
-      <CenteredContainer>
-        <div style={{ height: 32 }} />
-        <SectionTitle style={{ marginBottom: 12, marginLeft: 0, textAlign: 'left' }}>나의 정보</SectionTitle>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', marginBottom: 56 }}>
-          <InfoCard>
-            <ProfileImgWrapper>
-              <ProfileImg
-                src={
-                  typeof profile.profileImage === 'string' && profile.profileImage
-                    ? (profile.profileImage.startsWith('http')
-                        ? profile.profileImage
-                        : `${(process.env.REACT_APP_API_URL ?? '').replace(/\/$/, '')}/${profile.profileImage.replace(/^\//, '')}`)
-                    : 'https://via.placeholder.com/80?text=No+Image'
-                }
-                alt="프로필 이미지"
-              />
-              <div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>{profile.name}</div>
-                <div style={{ margin: '0.3rem 0', fontSize: '0.98rem', color: '#666' }}>{profile.gender} {profile.birth}</div>
-                <div style={{ margin: '0.3rem 0', fontSize: '0.98rem', color: '#666' }}>{profile.phone}</div>
-                <div style={{ margin: '0.3rem 0', fontSize: '0.98rem', color: '#666' }}>{profile.email}</div>
-              </div>
-            </ProfileImgWrapper>
-            <EditButton onClick={() => setIsEdit(true)} style={{ top: 14, right: 18 }}>✏️ 수정하기</EditButton>
-          </InfoCard>
-        </div>
-        <Divider />
-        <SectionTitle style={{ marginBottom: 12, marginLeft: 0, textAlign: 'left' }}>나의 포트폴리오</SectionTitle>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 220 }}>
-          {portfolios.length === 0 ? (
-            <EmptyPortfolioCard>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem', userSelect: 'none' }}>+</div>
-              <div style={{ fontSize: '1.08rem', color: '#b0b8c1', userSelect: 'none' }}>포트폴리오 작성하기</div>
-            </EmptyPortfolioCard>
-          ) : (
-            <PortfolioList>
-              {portfolios.map(p => (
-                <PortfolioItem key={p.id}>{p.title}</PortfolioItem>
-              ))}
-            </PortfolioList>
-          )}
-        </div>
-      </CenteredContainer>
->>>>>>> Stashed changes
     </PageBg>
   );
 };

@@ -52,15 +52,7 @@ const Header: React.FC = () => {
                   로그아웃
                 </button>
               </li>
-<<<<<<< Updated upstream
-              {user?.name && (
-                <li style={{ color: '#333', fontWeight: 500, fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
-                  {user.name} 님
-                </li>
-              )}
-=======
               <li style={{ color: '#fff' }}>{user?.name} 님</li>
->>>>>>> Stashed changes
             </>
           )}
         </ul>
