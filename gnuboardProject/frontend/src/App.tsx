@@ -5,7 +5,6 @@ import Register from './components/Auth/Register';
 import PortfolioDetail from './components/Portfolio/PortfolioDetail';
 import PortfolioForm from './components/Portfolio/PortfolioForm';
 import Profile from './components/Profile/Profile';
-import AdminDashboard from './components/Admin/AdminDashboard';
 import { useAuth } from './contexts/AuthContext';
 import PortfolioCreate from './components/Portfolio/PortfolioCreate';
 import Main from './components/Portfolio/Main';
@@ -13,11 +12,6 @@ import Main from './components/Portfolio/Main';
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
-
-const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
-  return isAuthenticated && user?.isAdmin ? <>{children}</> : <Navigate to="/" />;
 };
 
 const App: React.FC = () => {
@@ -48,9 +42,9 @@ const App: React.FC = () => {
         <Route
           path="/admin"
           element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
           }
         />
       </Routes>

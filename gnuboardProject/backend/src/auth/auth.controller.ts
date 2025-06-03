@@ -7,6 +7,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile, UseInterceptors } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { instanceToPlain } from 'class-transformer';
 
 @Controller('auth')
 export class AuthController {
@@ -92,8 +93,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findOne(req.user.id);
+    return instanceToPlain(user);
   }
 
   @Get('check-username')

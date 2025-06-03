@@ -42,4 +42,12 @@ export interface PortfolioData {
     title: string;
     description: string;
   }>;
-} 
+}
+
+export type SectionDto = {
+  type: string;
+  content?: string;
+  skills?: number[];
+  keywords?: number[];
+  job?: number;
+}; 

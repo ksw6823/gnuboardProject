@@ -253,40 +253,6 @@ const CardTag = styled.span`
   font-weight: 500;
 `;
 
-const CreateButton = styled(Link)`
-  position: fixed;
-  right: 2rem;
-  bottom: 2rem;
-  background: #4B89DC;
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 30px;
-  text-decoration: none;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  
-  &:hover {
-    background: #3B79CC;
-    transform: translateY(-2px);
-    transition: all 0.2s;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const NoResults = styled.div`
-  text-align: center;
-  padding: 3rem;
-  color: #868E96;
-  font-size: 1.1rem;
-`;
-
 const CodeIcon = FaIcons.FaCode;
 const TagIcon = FaIcons.FaTag;
 
@@ -296,6 +262,13 @@ const SearchIcon = styled.div`
   top: 50%;
   transform: translateY(-50%);
   color: #ADB5BD;
+`;
+
+const NoResults = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: #868E96;
+  font-size: 1.1rem;
 `;
 
 const PortfolioList: React.FC = () => {
@@ -551,15 +524,6 @@ const PortfolioList: React.FC = () => {
             </NoResults>
           )}
         </PortfolioGrid>
-
-        {isLoggedIn && (
-          <CreateButton to="#" onClick={e => { e.preventDefault(); navigate('/portfolio/create'); }}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            포트폴리오 작성
-          </CreateButton>
-        )}
       </MainContainer>
       <Footer />
     </>

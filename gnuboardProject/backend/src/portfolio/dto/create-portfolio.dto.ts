@@ -1,8 +1,15 @@
+export type SectionDto = {
+  type: 'experience' | 'project' | 'certificate' | 'language' | 'activity';
+  content: string;
+};
+
 export class CreatePortfolioDto {
   title: string;
-  summary: string;
   photo?: Express.Multer.File;
-  isPrivate: boolean;
-  content?: string;
-  sections: any[];
+  is_private: boolean;
+  intro: string;
+  userId: number;
+  views?: number;
+  likes_count?: number;
+  sections: SectionDto[];
 } 

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import styled from 'styled-components';
+import { SectionDto } from '../../types/portfolio';
 
 interface Comment {
   id: number;
@@ -14,12 +15,7 @@ interface Comment {
   };
 }
 
-interface Section {
-  id: number;
-  title: string;
-  content: string;
-  order: number;
-}
+type Section = SectionDto & { id: number };
 
 interface Portfolio {
   id: number;
@@ -222,12 +218,11 @@ const PortfolioDetail: React.FC = () => {
             </div>
           )}
           {(() => {
-            const sortedSections = portfolio.sections.sort((a, b) => a.order - b.order);
             const renderSections = (Template: React.ComponentType<any>) => (
               <Template>
-                {sortedSections.map(section => (
+                {portfolio.sections.map(section => (
                   <div key={section.id} className="section">
-                    <h4>{section.title}</h4>
+                    <h4>{section.type}</h4>
                     <div style={{ whiteSpace: 'pre-line', color: '#444' }}>{section.content}</div>
                   </div>
                 ))}

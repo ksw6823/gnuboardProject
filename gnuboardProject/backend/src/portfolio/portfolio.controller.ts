@@ -37,7 +37,7 @@ export class PortfolioController {
       const parsedData = {
         ...data,
         sections: typeof data.sections === 'string' ? JSON.parse(data.sections || '[]') : data.sections,
-        isPrivate: typeof data.isPrivate === 'string' ? data.isPrivate === 'true' : data.isPrivate,
+        is_private: typeof data.is_private === 'string' ? data.is_private === 'true' : data.is_private,
         photo,
       };
       return this.portfolioService.create(req.user.id, parsedData);
@@ -58,7 +58,7 @@ export class PortfolioController {
     return this.portfolioService.update(+id, req.user.id, {
       ...data,
       sections: typeof data.sections === 'string' ? JSON.parse(data.sections) : data.sections,
-      isPrivate: typeof data.isPrivate === 'string' ? data.isPrivate === 'true' : data.isPrivate,
+      is_private: typeof data.is_private === 'string' ? data.is_private === 'true' : data.is_private,
       photo,
     });
   }

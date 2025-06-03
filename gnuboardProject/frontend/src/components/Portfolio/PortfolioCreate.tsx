@@ -1,9 +1,58 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+<<<<<<< Updated upstream
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Bg = styled.div`
+=======
+import { PortfolioData, SectionDto } from '../../types/portfolio';
+import DefaultTemplate from './templates/DefaultTemplate';
+import CardTemplate from './templates/CardTemplate';
+import SplitTemplate from './templates/SplitTemplate';
+import DarkTemplate from './templates/DarkTemplate';
+import TabTemplate from './templates/TabTemplate';
+import ArtTemplate from './templates/ArtTemplate';
+import ClassicTemplate from './templates/ClassicTemplate';
+import BrutalTemplate from './templates/BrutalTemplate';
+import GradientTemplate from './templates/GradientTemplate';
+import MinimalTemplate from './templates/MinimalTemplate';
+
+// 드래그&드롭용 태그 카테고리
+const TAG_CATEGORIES = [
+  { id: 'basic', label: '기본 정보' },
+  { id: 'tech', label: '기술 스택' },
+  { id: 'exp', label: '수행경험' },
+  { id: 'career', label: '이력' },
+  { id: 'cert', label: '자격증' },
+  { id: 'intro', label: '자기소개서' },
+  { id: 'lang', label: '언어' },
+];
+
+interface Skill { id: number; name: string; }
+interface Keyword { id: number; name: string; }
+type Section = SectionDto & { id: string };
+
+const TemplateSelector = styled.select`
+  padding: 8px 16px;
+  margin: 1rem 0;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  background-color: white;
+`;
+
+const TemplateContainer = styled.div`
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+`;
+
+const MainContainer = styled.div`
+  display: flex;
+>>>>>>> Stashed changes
   min-height: 100vh;
   background: #f4f6fa;
   overflow-x: hidden;

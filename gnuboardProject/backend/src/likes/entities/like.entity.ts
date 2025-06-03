@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, ManyToOne, CreateDateColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, ManyToOne, CreateDateColumn, Column, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Portfolio } from '../../portfolio/entities/portfolio.entity';
 
@@ -11,9 +11,11 @@ export class Like {
   portfolioId: number;
 
   @ManyToOne(() => User, user => user.likes)
+  @JoinColumn({ name: 'userId' })
   user!: User;
 
   @ManyToOne(() => Portfolio, portfolio => portfolio.likes)
+  @JoinColumn({ name: 'portfolioId' })
   portfolio!: Portfolio;
 
   @Column({ default: true })

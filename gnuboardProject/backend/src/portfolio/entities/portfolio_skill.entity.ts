@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { PortfolioSection } from './portfolio-section.entity';
+import { PortfolioSection } from './portfolio_section.entity';
 import { Skill } from '../../skill/entities/skill.entity';
 
 @Entity()
