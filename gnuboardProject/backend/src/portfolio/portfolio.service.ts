@@ -50,18 +50,37 @@ export class PortfolioService {
     private jobRepository: Repository<Job>,
   ) {}
 
-  async findAll(): Promise<Portfolio[]> {
-    return this.portfolioRepository.find({
-      relations: [
-        'user',
-        'comments',
-        'sections',
-        'sections.portfolioSkills',
-        'sections.portfolioKeywords',
-        'sections.portfolioJob',
-      ],
-      order: { id: 'DESC' },
-    });
+  async findAll(filters?: {
+    categories?: string[];
+    skills?: string[];
+    keywords?: string[];
+  }): Promise<Portfolio[]> {
+    const queryBuilder = this.portfolioRepository
+      .createQueryBuilder('portfolio')
+      .leftJoinAndSelect('portfolio.user', 'user')
+      .leftJoinAndSelect('portfolio.comments', 'comments')
+      .leftJoinAndSelect('portfolio.sections', 'sections')
+      .leftJoinAndSelect('sections.portfolioSkills', 'portfolioSkills')
+      .leftJoinAndSelect('portfolioSkills.skill', 'skill')
+      .leftJoinAndSelect('sections.portfolioKeywords', 'portfolioKeywords')
+      .leftJoinAndSelect('portfolioKeywords.keyword', 'keyword')
+      .leftJoinAndSelect('sections.portfolioJob', 'portfolioJob')
+      .leftJoinAndSelect('portfolioJob.job', 'job')
+      .orderBy('portfolio.id', 'DESC');
+
+    if (filters?.categories?.length) {
+      queryBuilder.andWhere('job.name IN (:...categories)', { categories: filters.categories });
+    }
+
+    if (filters?.skills?.length) {
+      queryBuilder.andWhere('skill.name IN (:...skills)', { skills: filters.skills });
+    }
+
+    if (filters?.keywords?.length) {
+      queryBuilder.andWhere('keyword.name IN (:...keywords)', { keywords: filters.keywords });
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Portfolio> {

@@ -43,6 +43,11 @@ const Header: React.FC = () => {
                   로그아웃
                 </button>
               </li>
+              {user?.name && (
+                <li style={{ color: '#333', fontWeight: 500, fontSize: '1rem', display: 'flex', alignItems: 'center' }}>
+                  {user.name} 님
+                </li>
+              )}
             </>
           )}
         </ul>

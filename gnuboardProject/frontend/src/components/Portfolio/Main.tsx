@@ -48,10 +48,16 @@ const MainContainer = styled.div`
   background: #e3f0ff;
 `;
 
+const TopSpacer = styled.div`
+  width: 100%;
+  height: 2.5rem;
+  background: #e3f0ff;
+`;
+
 const SearchFilterWrapper = styled.div`
   width: 100%;
   max-width: 1200px;
-  margin: 2.5rem auto 0 auto;
+  margin: 0 auto;
   padding: 2.5rem 2rem 2rem 2rem;
   background: #fff;
   border-radius: 18px;
@@ -442,12 +448,14 @@ const PortfolioList: React.FC = () => {
       portfolio.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       portfolio.summary.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesJob = !selectedFilters.직무 || portfolio.user.role === selectedFilters.직무;
+    const matchesJob = !selectedFilters.직무 || 
+      (portfolio.user?.role && portfolio.user.role === selectedFilters.직무);
+    
     const matchesTech = !selectedFilters.기술스택 || 
-      portfolio.skills.some(skill => skill.name === selectedFilters.기술스택);
+      (portfolio.skills && portfolio.skills.some(skill => skill.name === selectedFilters.기술스택));
+    
     const matchesKeyword = !selectedFilters.키워드 ||
-      portfolio.skills.some(skill => skill.name === selectedFilters.키워드) ||
-      (portfolio.keywords && portfolio.keywords.some((kw: any) => kw.name === selectedFilters.키워드));
+      (portfolio.keywords && portfolio.keywords.some(keyword => keyword.name === selectedFilters.키워드));
 
     return matchesSearch && matchesJob && matchesTech && matchesKeyword;
   });
@@ -475,6 +483,7 @@ const PortfolioList: React.FC = () => {
   return (
     <>
       <Header />
+      <TopSpacer />
       <MainContainer>
         <SearchFilterWrapper>
           <SearchBar>

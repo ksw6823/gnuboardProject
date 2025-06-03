@@ -1,18 +1,23 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, UseInterceptors, UploadedFile, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PortfolioService } from './portfolio.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
+import { FindPortfolioDto } from './dto/find-portfolio.dto';
 
 @Controller('portfolios')
 export class PortfolioController {
   constructor(private readonly portfolioService: PortfolioService) {}
 
   @Get()
-  findAll() {
-    return this.portfolioService.findAll();
+  findAll(@Query() findPortfolioDto: FindPortfolioDto) {
+    return this.portfolioService.findAll({
+      categories: findPortfolioDto.categories,
+      skills: findPortfolioDto.skills,
+      keywords: findPortfolioDto.keywords,
+    });
   }
 
   @Get(':id')
