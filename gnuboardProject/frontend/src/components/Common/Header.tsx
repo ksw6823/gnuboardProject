@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const navigate = useNavigate();
+
 
   const handleLogout = () => {
     logout();
@@ -12,14 +12,14 @@ const Header: React.FC = () => {
 
   return (
     <header style={{
-      background: '#86b6ff', // 파란 배경
+      background: '#ffffff', // 파란 배경
       position: 'sticky',
       top: 0,
       zIndex: 1000,
       width: '100%',
       minHeight: '60px',
       border: 'none',
-      boxShadow: 'none',
+      boxShadow: '0px 2px 2px 0px rgba(0, 0, 0, 0.25)',
     }}>
       <nav style={{
         display: 'flex',
@@ -31,28 +31,28 @@ const Header: React.FC = () => {
         position: 'relative',
       }}>
         {/* 좌측 PortFlow */}
-        <Link to="/" style={{ fontSize: '2rem', fontWeight: 300, color: '#fff', textDecoration: 'none', letterSpacing: '0.5px' }}>
+        <Link to="/" style={{ fontSize: '2rem', fontWeight: 300, color: '#7DA9FF', textDecoration: 'none', letterSpacing: '0.5px' , textShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)'}}>
           PortFlow
         </Link>
         {/* 우측 메뉴 */}
-        <ul style={{ display: 'flex', alignItems: 'center', listStyle: 'none', gap: '2.2rem', margin: 0, color: '#fff', fontWeight: 300, fontSize: '1rem' }}>
+        <ul style={{ display: 'flex', alignItems: 'center', listStyle: 'none', gap: '2.2rem', margin: 0, color: '#000000', fontWeight: 300, fontSize: '1rem' }}>
           {!isAuthenticated ? (
             <>
-              <li style={{ color: '#fff', opacity: 0.9 }}>환영합니다!</li>
-              <li><Link to="/login" style={{ textDecoration: 'none', color: '#fff' }}>로그인</Link></li>
-              <li><Link to="/register" style={{ textDecoration: 'none', color: '#fff' }}>회원가입</Link></li>
+              <li style={{ color: '#000000', opacity: 0.9 }}>환영합니다!</li>
+              <li><Link to="/login" style={{ textDecoration: 'none', color: '#000000' }}>로그인</Link></li>
+              <li><Link to="/register" style={{ textDecoration: 'none', color: '#000000' }}>회원가입</Link></li>
             </>
           ) : (
             <>
-              <li><Link to="/admin" style={{ textDecoration: 'none', color: '#fff' }}>관리 페이지</Link></li>
+              <li><Link to="/mypage" style={{ textDecoration: 'none', color: '#000000' }}>마이 페이지</Link></li>
               <li>
                 <button onClick={handleLogout} style={{
-                  background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1rem', fontWeight: 300, padding: 0
+                  background: 'none', border: 'none', color: '#000000', cursor: 'pointer', fontSize: '1rem', fontWeight: 300, padding: 0
                 }}>
                   로그아웃
                 </button>
               </li>
-              <li style={{ color: '#fff' }}>{user?.name} 님</li>
+              <li style={{ color: '#000000' }}>{user?.name} 님</li>
             </>
           )}
         </ul>

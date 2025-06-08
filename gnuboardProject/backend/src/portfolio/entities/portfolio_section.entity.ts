@@ -1,7 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Portfolio } from './portfolio.entity';
+import { PortfolioSkill } from './portfolio_skill.entity';
+import { PortfolioKeyword } from './portfolio_keyword.entity';
+import { PortfolioJob } from './portfolio_job.entity';
 
 export enum SectionType {
+  Education = 'education',
   Experience = 'experience',
   Project = 'project',
   Certificate = 'certificate',
@@ -26,4 +30,13 @@ export class PortfolioSection {
 
   @Column('text')
   content: string;
+
+  @OneToMany(() => PortfolioSkill, (portfolioSkill) => portfolioSkill.section)
+  portfolioSkills: PortfolioSkill[];
+
+  @OneToMany(() => PortfolioKeyword, (portfolioKeyword) => portfolioKeyword.section)
+  portfolioKeywords: PortfolioKeyword[];
+
+  @OneToMany(() => PortfolioJob, (portfolioJob) => portfolioJob.section)
+  portfolioJob: PortfolioJob[];
 } 

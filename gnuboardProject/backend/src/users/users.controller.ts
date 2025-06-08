@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards, Request, Delete, Param, ForbiddenException, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Request, Delete, Param, ForbiddenException, UseInterceptors, UploadedFile, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,12 +15,6 @@ export class UsersController {
   @Get('me')
   async getMyProfile(@Request() req) {
     return this.usersService.findOne(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('me/portfolios')
-  async getMyPortfolios(@Request() req) {
-    return this.usersService.findUserPortfolios(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -45,7 +39,7 @@ export class UsersController {
   @Put('profile')
   @UseInterceptors(FileInterceptor('profileImg', {
     storage: diskStorage({
-      destination: './uploads/profile',
+      destination: './uploads',
       filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);
         const basename = path.basename(file.originalname, ext);
@@ -69,7 +63,7 @@ export class UsersController {
     console.log('file:', file);
     console.log('updateProfileDto:', updateProfileDto);
     if (file) {
-      updateProfileDto.profileImage = `uploads/profile/${file.filename}`;
+      updateProfileDto.profileImage = `uploads/${file.filename}`;
     }
     return this.usersService.updateProfile(req.user.id, updateProfileDto || {});
   }

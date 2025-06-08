@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
+import PortfolioCard from '../Portfolio/PortfolioCard';
+
+import PortfolioList from '../Portfolio/PortfolioList';
 
 interface User {
   id: number;
@@ -12,9 +15,24 @@ interface User {
 interface Portfolio {
   id: number;
   title: string;
-  summary: string;
-  photo?: string;
+  intro: string;
+  likes_count: number;
+  created_at: string;
+  user: {
+    name: string;
+    role: string;
+    profileImage?: string;
+  };
+  sections?: Array<{
+    portfolioSkills?: Array<{ skill?: { name: string } }>;
+    portfolioKeywords?: Array<{ keyword?: { name: string } }>;
+    portfolioJob?: Array<{ job?: { name: string } }>;
+  }>;
 }
+
+interface Skill { id: number; name: string; }
+interface Keyword { id: number; name: string; }
+interface Job { id: number; name: string; }
 
 const MyPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,10 +46,14 @@ const MyPage: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
 
   useEffect(() => {
     fetchUserData();
     fetchUserPortfolios();
+    fetchOptions();
   }, []);
 
   const fetchUserData = async () => {
@@ -50,10 +72,36 @@ const MyPage: React.FC = () => {
 
   const fetchUserPortfolios = async () => {
     try {
-      const response = await axios.get('/users/me/portfolios');
-      setPortfolios(response.data);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/portfolios/my`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      });
+      setPortfolios(Array.isArray(response.data)
+        ? response.data.map((p: any) => ({
+            ...p,
+            sections: p.sections && p.sections.length > 0 ? p.sections : [{
+              portfolioSkills: (p.skills || []).map((id: number) => ({ skillId: id })),
+              portfolioKeywords: (p.keywords || []).map((id: number) => ({ keywordId: id })),
+              portfolioJob: (p.jobs || []).map((id: number) => ({ jobId: id })),
+            }]
+          }))
+        : []);
     } catch (error) {
       console.error('포트폴리오를 불러오는데 실패했습니다:', error);
+    }
+  };
+
+  const fetchOptions = async () => {
+    try {
+      const [jobsRes, skillsRes, keywordsRes] = await Promise.all([
+        axios.get('/jobs'),
+        axios.get('/skills'),
+        axios.get('/keywords'),
+      ]);
+      setJobs(jobsRes.data);
+      setSkills(skillsRes.data);
+      setKeywords(keywordsRes.data);
+    } catch (e) {
+      // 에러 핸들링
     }
   };
 
@@ -118,7 +166,39 @@ const MyPage: React.FC = () => {
     }
   };
 
-  if (!user) return <div>로딩 중...</div>;
+  const isDataReady = skills.length > 0 && jobs.length > 0 && keywords.length > 0;
+
+  const mappedPortfolios = useMemo(() => {
+    if (!isDataReady) return [];
+    return portfolios.map(portfolio => {
+      const sections = (portfolio.sections || []).map(section => ({
+        ...section,
+        portfolioSkills: (section.portfolioSkills || []).map((ps: any) => ({
+          skill: skills.find(s => s.id === ps.skillId) || { name: '스킬 없음' }
+        })),
+        portfolioKeywords: (section.portfolioKeywords || []).map((pk: any) => ({
+          keyword: keywords.find(k => k.id === pk.keywordId) || { name: '키워드 없음' }
+        })),
+        portfolioJob: (section.portfolioJob || []).map((pj: any) => ({
+          job: jobs.find(j => j.id === pj.jobId) || { name: '직무 없음' }
+        })),
+      }));
+      return {
+        ...portfolio,
+        sections,
+        user: {
+          name: portfolio.user?.name || '이름 없음',
+          role: (
+            (sections[0]?.portfolioJob?.[0]?.job?.name) || '직무 없음'
+          ),
+          profileImage: portfolio.user?.profileImage,
+        },
+        likes_count: portfolio.likes_count ?? 0,
+      };
+    });
+  }, [portfolios, skills, jobs, keywords]);
+
+  if (!user || !isDataReady) return <div>로딩 중...</div>;
 
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
@@ -207,41 +287,13 @@ const MyPage: React.FC = () => {
 
       <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', marginBottom: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
         <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>내 포트폴리오</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
-          {portfolios.map(portfolio => (
-            <div key={portfolio.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1rem' }}>
-              {portfolio.photo && (
-                <img
-                  src={`${process.env.REACT_APP_API_URL}/${portfolio.photo.replace('\\', '/')}`}
-                  alt={portfolio.title}
-                  style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 4, marginBottom: '0.5rem' }}
-                />
-              )}
-              <h3 style={{ marginBottom: '0.5rem' }}>{portfolio.title}</h3>
-              <p style={{ color: '#666', fontSize: '0.9rem' }}>{portfolio.summary}</p>
-              <button
-                onClick={() => navigate(`/portfolio/${portfolio.id}`)}
-                style={{ background: '#007bff', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer', marginTop: '0.5rem' }}
-              >
-                보기
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#dc3545' }}>계정 삭제</h2>
-        <p style={{ marginBottom: '1rem' }}>계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.</p>
-        <button
-          onClick={handleDeleteAccount}
-          style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}
-        >
-          계정 삭제
-        </button>
+        <PortfolioList
+          portfolios={mappedPortfolios}
+          onCardClick={id => navigate(`/portfolio/${id}`)}
+        />
       </div>
     </div>
   );
 };
 
-export default MyPage; 
+export default MyPage;

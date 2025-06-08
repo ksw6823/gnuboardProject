@@ -8,6 +8,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   
+  // 글로벌 요청 로깅 미들웨어
+  app.use((req, res, next) => {
+    console.log('Request:', req.method, req.url, req.headers.authorization);
+    next();
+  });
+
   // CORS 설정
   app.enableCors({
     origin: configService.get('FRONTEND_URL'),

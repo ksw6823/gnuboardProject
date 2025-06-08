@@ -12,9 +12,6 @@ export class Portfolio {
   @Column()
   title: string;
 
-  @Column()
-  photo: string;
-
   @Column({ default: false })
   is_private: boolean;
 

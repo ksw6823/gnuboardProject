@@ -1,369 +1,34 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-<<<<<<< Updated upstream
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../api/axios';
+import Header from '../Common/Header';
+import { useAuth } from '../../contexts/AuthContext';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-const Bg = styled.div`
-=======
-import { PortfolioData, SectionDto } from '../../types/portfolio';
-import DefaultTemplate from './templates/DefaultTemplate';
-import CardTemplate from './templates/CardTemplate';
-import SplitTemplate from './templates/SplitTemplate';
-import DarkTemplate from './templates/DarkTemplate';
-import TabTemplate from './templates/TabTemplate';
-import ArtTemplate from './templates/ArtTemplate';
-import ClassicTemplate from './templates/ClassicTemplate';
-import BrutalTemplate from './templates/BrutalTemplate';
-import GradientTemplate from './templates/GradientTemplate';
-import MinimalTemplate from './templates/MinimalTemplate';
-
-// 드래그&드롭용 태그 카테고리
-const TAG_CATEGORIES = [
-  { id: 'basic', label: '기본 정보' },
-  { id: 'tech', label: '기술 스택' },
-  { id: 'exp', label: '수행경험' },
-  { id: 'career', label: '이력' },
-  { id: 'cert', label: '자격증' },
-  { id: 'intro', label: '자기소개서' },
-  { id: 'lang', label: '언어' },
-];
-
-interface Skill { id: number; name: string; }
-interface Keyword { id: number; name: string; }
-type Section = SectionDto & { id: string };
-
-const TemplateSelector = styled.select`
-  padding: 8px 16px;
-  margin: 1rem 0;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  font-size: 1rem;
-  background-color: white;
-`;
-
-const TemplateContainer = styled.div`
-  margin-top: 2rem;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-`;
-
-const MainContainer = styled.div`
-  display: flex;
->>>>>>> Stashed changes
-  min-height: 100vh;
-  background: #f4f6fa;
-  overflow-x: hidden;
-`;
-
-const TopBar = styled.div`
-  width: 100vw;
-  background: #90b8f8;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 3.5rem 0 3.5rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10;
-`;
-
-const Logo = styled.div`
-  font-size: 1.7rem;
-  font-weight: 700;
-  color: #1976d2;
-  letter-spacing: -1px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-`;
-
-const TopMenu = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2.2rem;
-`;
-
-const TopBtnGroup = styled.div`
-  display: flex;
-  gap: 1.2rem;
-  margin-right: 0;
-`;
-
-const TopUserMenu = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2.2rem;
-  font-size: 1.18rem;
-`;
-
-const TopUserName = styled.span`
-  font-weight: 500;
-  color: #fff;
-  font-size: 1.18rem;
-`;
-
-const TopLink = styled.button`
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.18rem;
-  cursor: pointer;
-  padding: 0 0.5rem;
-  transition: color 0.15s;
-  &:hover { color: #346bb3; }
-`;
-
-const MainContent = styled.div`
-  width: 100%;
-  max-width: 1400px;
-  margin: 2.5rem auto;
-  padding: 0 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-  margin-top: 56px;
-`;
-
-const ProfileSection = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 3.5rem;
-  margin-bottom: 1.5rem;
-  margin-left: 0;
-`;
-
-const ProfileDetail = styled.div`
-  font-size: 1.45rem;
-  color: #444;
-  margin-bottom: 0.18rem;
-`;
-
-const ProfileImgInner = styled.img`
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-`;
-
-const ProfileImg = styled.div`
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  color: #adb5bd;
-`;
-
-const ProfileInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
-const ProfileName = styled.div`
-  font-size: 2.8rem;
-  font-weight: 700;
-  margin-bottom: 0.4rem;
-`;
-
-const ProfileEmail = styled.div`
-  font-size: 1.2rem;
-  color: #868e96;
-`;
-
-const SectionLabel = styled.div`
-  font-size: 2rem;
-  font-weight: 600;
-  color: #346bb3;
-  margin-bottom: 0.3rem;
-  display: flex;
-  align-items: center;
-`;
-
-const BlueBar = styled.div`
-  width: 7px;
-  height: 32px;
-  background: #4B89DC;
-  display: inline-block;
-  margin-right: 0.7rem;
-  border-radius: 2px;
-  vertical-align: middle;
-`;
-
-const TagRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.7rem;
-  margin-bottom: 1.5rem;
-`;
-
-const AddBtn = styled.button`
-  background: #f4f6fa;
-  color: #4B89DC;
-  border: 1.5px solid #4B89DC;
-  border-radius: 24px;
-  padding: 0.5rem 2rem;
-  font-size: 1.5rem;
-  font-weight: 500;
-  cursor: pointer;
-  &:hover {
-    background: #e3eafc;
-  }
-`;
-
-const TagInput = styled.input`
-  width: 220px;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: #f8fafd;
-`;
-
-const Select = styled.select`
-  width: 220px;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: #f8fafd;
-`;
-
-const TextArea = styled.textarea`
-  width: 100%;
-  min-height: 120px;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  resize: vertical;
-  background: #f8fafd;
-`;
-
-const SectionTitle = styled.div`
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #346bb3;
-  margin-bottom: 0.7rem;
-`;
-
-const Row = styled.div`
-  display: flex;
-  gap: 0.7rem;
-  margin-bottom: 0.6rem;
-`;
-
-const Input = styled.input`
-  flex: 1;
-  padding: 0.6rem 1rem;
-  border: 1.5px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: #f8fafd;
-`;
-
-const AddButton = styled.button`
-  background: #4B89DC;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.4rem 1.2rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  width: 100%;
-  &:hover {
-    background: #346bb3;
-  }
-`;
-
-const CardSection = styled.div`
-  background: #f5f6fa;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  padding: 1.5rem 2.5rem 1.2rem 2.5rem;
-  margin-bottom: 0.3rem;
-  width: 100%;
-`;
-
-const CardAddButton = styled.button`
-  background: #3a5fc8;
-  color: #fff;
-  border: none;
-  border-radius: 0 0 8px 8px;
-  width: 100%;
-  padding: 0.6rem 0;
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-  &:hover {
-    background: #2b4fa2;
-  }
-`;
-
-const CardRow = styled.div`
-  display: flex;
-  gap: 1.2rem;
-  margin-bottom: 0.7rem;
-  width: 100%;
-`;
-
-const CardInput = styled.input`
-  flex: 1;
-  min-width: 0;
-  padding: 0.7rem 1.2rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.08rem;
-  background: #e9ecef;
-`;
-
-const CardTextArea = styled.textarea`
-  width: 100%;
-  min-height: 240px;
-  padding: 0.7rem 1.2rem;
-  padding-right: 2.4rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.08rem;
-  background: #e9ecef;
-  resize: vertical;
-  margin-right: 0;
-  box-sizing: border-box;
-`;
-
-const TallCardSection = styled(CardSection)`
-  min-height: 240px;
-`;
-
-const SmallCardSection = styled(CardSection)`
+const Wrapper = styled.div`
   max-width: 730px;
-  margin-left: 0;
-  margin-right: auto;
+  margin: 0 auto;
+  padding: 2rem 0;
 `;
-
-const RemoveTagBtn = styled.button`
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-left: 0.5rem;
+const Section = styled.div`
+  margin-bottom: 2.5rem;
 `;
-
+const SectionLabel = styled.div`
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+`;
+const TagList = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+`;
 const Tag = styled.span`
   background: #1976d2;
   color: #fff;
@@ -372,65 +37,105 @@ const Tag = styled.span`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 `;
-
-const DropdownContainer = styled.div`
-  position: relative;
-`;
-
-const DropdownButton = styled.button`
-  width: 220px;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #e9ecef;
-  border-radius: 8px;
+const RemoveTagBtn = styled.button`
+  background: none;
+  border: none;
+  color: #fff;
   font-size: 1rem;
-  background: #f8fafd;
-  text-align: left;
   cursor: pointer;
 `;
-
-const DropdownMenu = styled.div`
+const AddBtn = styled.button`
+  background: #f4f6fa;
+  color: #1976d2;
+  border: 1.5px solid #1976d2;
+  border-radius: 24px;
+  padding: 0.2rem 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 0.5rem;
+`;
+const Dropdown = styled.div`
   position: absolute;
-  top: 110%;
-  left: 0;
-  width: 220px;
   background: #fff;
   border: 1.5px solid #e9ecef;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   z-index: 100;
-  padding: 1rem 0;
+  padding: 1rem 0.5rem;
+  min-width: 200px;
+  margin-top: 0.5rem;
 `;
-
 const DropdownOption = styled.label`
   display: flex;
   align-items: center;
-  padding: 0.8rem 1.5rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
-  font-size: 1.3rem;
-  &:hover {
-    background: #f4f6fa;
-  }
+  font-size: 1.1rem;
+  &:hover { background: #f4f6fa; }
 `;
 
-const TagList = styled.div`
+const SectionWrapper = styled.div`
+  max-width: 730px;
+  width: 100%;
+  margin: 0 auto 2.5rem auto;
+  background: #f7f9fc;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+`;
+const CardRow = styled.div`
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
 `;
-
-const keywordOptions = ['책임감', '소통', '리더십', '창의성', '성실함'];
-const stackOptions = ['React', 'Node.js', 'Python', 'Java', 'TypeScript'];
-const jobOptions = ['프론트엔드', '백엔드', '풀스택', '디자이너', '기획자'];
-
+const CardInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 1.2rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #fff;
+`;
+const CardTextArea = styled.textarea`
+  width: 100%;
+  min-height: 80px;
+  padding: 0.7rem 1.2rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #fff;
+  resize: vertical;
+  margin-right: 0;
+  box-sizing: border-box;
+`;
 const CardButtonRow = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 0.7rem;
+  margin-bottom: 1.2rem;
 `;
-
+const CardAddButton = styled.button`
+  background: #3a5fc8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.6rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: #2b4fa2;
+  }
+  margin-top: 0.7rem;
+`;
 const ConfirmButton = styled.button`
   background: #1976d2;
   color: #fff;
@@ -442,7 +147,6 @@ const ConfirmButton = styled.button`
   cursor: pointer;
   &:hover { background: #1251a3; }
 `;
-
 const DeleteButton = styled.button`
   background: #2196f3;
   color: #fff;
@@ -456,93 +160,111 @@ const DeleteButton = styled.button`
   &:hover { background: #1769aa; }
 `;
 
-const TopButton = styled.button`
-  background: #4B89DC;
+const ProfilePreviewWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2.2rem;
+  margin: 2.5rem auto 2.5rem auto;
+  max-width: 730px;
+  background: #f7f9fc;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2.2rem 2.5rem;
+`;
+const ProfileImg = styled.img`
+  width: 120px;
+  height: 160px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #e0e0e0;
+`;
+const ProfileInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+`;
+const ProfileName = styled.div`
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1976d2;
+`;
+const ProfileEmail = styled.div`
+  font-size: 1.1rem;
+  color: #444;
+`;
+
+const FixedSaveButton = styled.button`
+  position: fixed;
+  top: 110px;
+  right: 4vw;
+  z-index: 2000;
+  background: #3a5fc8;
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 0.6rem 1.3rem;
-  font-size: 1rem;
-  font-weight: 500;
+  padding: 0.9rem 2.2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(80,120,255,0.10);
   cursor: pointer;
-  &:hover {
-    background: #346bb3;
-  }
-`;
-
-const FixedSaveButton = styled.div`
-  position: fixed;
-  top: 90px;
-  right: 2.2rem;
-  z-index: 100;
+  transition: background 0.15s;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  gap: 0.7rem;
+  &:hover { background: #2b4fa2; }
 `;
 
-// 직무 직군, 기술 스택, 키워드 고정 리스트
-const JOB_LIST = [
-  'AI 엔지니어',
-  'DevOps 엔지니어',
-  '기획자',
-  '데이터 엔지니어',
-  '디자이너',
-  '모바일 개발자',
-  '백엔드 개발자',
-  '프론트엔드 개발자',
-];
-const STACK_LIST = [
-  'AWS',
-  'Django',
-  'Docker',
-  'JavaScript',
-  'Kubernetes',
-  'MongoDB',
-  'MySQL',
-  'NestJS',
-  'Node.js',
-  'Python',
-  'React',
-  'Spring Boot',
-  'TypeScript',
-  'Vue.js',
-];
-const KEYWORD_LIST = [
-  '리더십',
-  '문제해결',
-  '분석력',
-  '성실함',
-  '적응력',
-  '창의성',
-  '책임감',
-  '커뮤니케이션',
-  '팀워크',
-  '학습능력',
-];
+const TitleInput = styled.input`
+  width: 100%;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 1.2rem 1.2rem;
+  border: 1.5px solid #b0b0b0;
+  border-radius: 10px;
+  margin-bottom: 2.2rem;
+  margin-top: 1.2rem;
+  background: #fff;
+`;
+
+// 생년월일 포맷 변환 함수 추가
+const formatBirth = (birth: string | undefined) => {
+  if (!birth) return '-';
+  // YYYY-MM-DD → YY. MM. DD
+  const [y, m, d] = birth.split('-');
+  return `${y?.slice(2)}. ${m}. ${d}`;
+};
 
 const PortfolioCreate: React.FC = () => {
   const navigate = useNavigate();
-
-  // 멀티셀렉트 드롭다운 상태
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  const [keywordOpen, setKeywordOpen] = useState(false);
-  const keywordRef = useRef<HTMLDivElement>(null);
-
-  const [selectedStacks, setSelectedStacks] = useState<string[]>([]);
-  const [stackOpen, setStackOpen] = useState(false);
-  const stackRef = useRef<HTMLDivElement>(null);
-
-  // 직무/직군 상태
-  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const { user } = useAuth();
+  // 선택값
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
+  const [selectedKeywordIds, setSelectedKeywordIds] = useState<number[]>([]);
+  // 옵션
+  const [jobOptions, setJobOptions] = useState<{id: number, name: string}[]>([]);
+  const [skillOptions, setSkillOptions] = useState<{id: number, name: string}[]>([]);
+  const [keywordOptions, setKeywordOptions] = useState<{id: number, name: string}[]>([]);
+  // 드롭다운 오픈 상태
   const [jobOpen, setJobOpen] = useState(false);
-  const jobRef = useRef<HTMLDivElement>(null);
-
-  // 경력, 프로젝트, 자격증, 외국어, 대외활동 상태
-  const [experiences, setExperiences] = useState([
-    { company: '', position: '', period: '', description: '', isConfirmed: false }
+  const [skillOpen, setSkillOpen] = useState(false);
+  const [keywordOpen, setKeywordOpen] = useState(false);
+  // 임시 선택값
+  const [tempSelectedJobId, setTempSelectedJobId] = useState<number | null>(null);
+  const [tempSelectedSkillIds, setTempSelectedSkillIds] = useState<number[]>([]);
+  const [tempSelectedKeywordIds, setTempSelectedKeywordIds] = useState<number[]>([]);
+  // 기타 입력값
+  const [intro, setIntro] = useState('');
+  // Section별 입력 상태
+  type Period = { startDate: Date | null, endDate: Date | null };
+  type Experience = { company: string, position: string, period: Period, description: string, isConfirmed: boolean };
+  type Project = { name: string, period: Period, description: string, isConfirmed: boolean };
+  type Activity = { name: string, org: string, period: Period, description: string, isConfirmed: boolean };
+  const [experiences, setExperiences] = useState<Experience[]>([
+    { company: '', position: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }
   ]);
-  const [projects, setProjects] = useState([
-    { name: '', period: '', description: '', isConfirmed: false }
+  const [projects, setProjects] = useState<Project[]>([
+    { name: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }
   ]);
   const [certificates, setCertificates] = useState([
     { name: '', level: '', issuer: '', isConfirmed: false }
@@ -550,317 +272,458 @@ const PortfolioCreate: React.FC = () => {
   const [languages, setLanguages] = useState([
     { name: '', level: '', isConfirmed: false }
   ]);
-  const [activities, setActivities] = useState([
-    { name: '', org: '', period: '', description: '', isConfirmed: false }
+  const [activities, setActivities] = useState<Activity[]>([
+    { name: '', org: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }
   ]);
+  // 제목
+  const [title, setTitle] = useState('');
+  // 학력
+  const [educations, setEducations] = useState([
+    { school: '', major: '', startDate: null as Date | null, endDate: null as Date | null, degree: '재학중', isConfirmed: false }
+  ]);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // 바깥 클릭 시 드롭다운 닫기
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (keywordRef.current && !keywordRef.current.contains(e.target as Node)) setKeywordOpen(false);
-      if (stackRef.current && !stackRef.current.contains(e.target as Node)) setStackOpen(false);
-      if (jobRef.current && !jobRef.current.contains(e.target as Node)) setJobOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    axios.get('/jobs').then(res => setJobOptions(res.data));
+    axios.get('/skills').then(res => setSkillOptions(res.data));
+    axios.get('/keywords').then(res => setKeywordOptions(res.data));
   }, []);
 
-  // 키워드 선택/해제
-  const handleKeywordChange = (option: string) => {
-    setSelectedKeywords(prev =>
-      prev.includes(option)
-        ? prev.filter(k => k !== option)
-        : [...prev, option]
-    );
+  // 드롭다운 열기 시 임시값 초기화
+  const openKeywordDropdown = () => {
+    setTempSelectedKeywordIds(selectedKeywordIds);
+    setKeywordOpen(true);
   };
-  // 키워드 개별 삭제
-  const handleRemoveKeyword = (option: string) => {
-    setSelectedKeywords(prev => prev.filter(k => k !== option));
+  const openJobDropdown = () => {
+    setTempSelectedJobId(selectedJobId);
+    setJobOpen(true);
   };
-
-  // 스택 선택/해제
-  const handleStackChange = (option: string) => {
-    setSelectedStacks(prev =>
-      prev.includes(option)
-        ? prev.filter(s => s !== option)
-        : [...prev, option]
-    );
-  };
-  // 스택 개별 삭제
-  const handleRemoveStack = (option: string) => {
-    setSelectedStacks(prev => prev.filter(s => s !== option));
+  const openSkillDropdown = () => {
+    setTempSelectedSkillIds(selectedSkillIds);
+    setSkillOpen(true);
   };
 
-  // 직무/직군 선택/해제
-  const handleJobChange = (option: string) => {
-    setSelectedJobs(prev =>
-      prev.includes(option)
-        ? prev.filter(j => j !== option)
-        : [...prev, option]
-    );
+  // 임시 선택 핸들러
+  const handleTempJobChange = (id: number) => setTempSelectedJobId(id);
+  const handleTempSkillChange = (id: number) => setTempSelectedSkillIds(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  const handleTempKeywordChange = (id: number) => setTempSelectedKeywordIds(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id]);
+
+  // 추가 버튼 클릭 시 실제 선택값에 반영
+  const applyKeywordSelection = () => {
+    setSelectedKeywordIds(tempSelectedKeywordIds);
+    setKeywordOpen(false);
   };
-  // 직무/직군 개별 삭제
-  const handleRemoveJob = (option: string) => {
-    setSelectedJobs(prev => prev.filter(j => j !== option));
+  const applyJobSelection = () => {
+    setSelectedJobId(tempSelectedJobId);
+    setJobOpen(false);
+  };
+  const applySkillSelection = () => {
+    setSelectedSkillIds(tempSelectedSkillIds);
+    setSkillOpen(false);
   };
 
-  // 추가 핸들러
-  const handleAddExperience = () => setExperiences([...experiences, { company: '', position: '', period: '', description: '', isConfirmed: false }]);
-  const handleAddProject = () => setProjects([...projects, { name: '', period: '', description: '', isConfirmed: false }]);
+  // 드롭다운 닫기 시 임시값 초기화
+  const closeKeywordDropdown = () => {
+    setKeywordOpen(false);
+    setTempSelectedKeywordIds([]);
+  };
+  const closeJobDropdown = () => {
+    setJobOpen(false);
+    setTempSelectedJobId(null);
+  };
+  const closeSkillDropdown = () => {
+    setSkillOpen(false);
+    setTempSelectedSkillIds([]);
+  };
+
+  // 태그 X 버튼
+  const removeKeyword = (id: number) => setSelectedKeywordIds(prev => prev.filter(k => k !== id));
+  const removeSkill = (id: number) => setSelectedSkillIds(prev => prev.filter(s => s !== id));
+  const removeJob = () => setSelectedJobId(null);
+
+  // Section별 핸들러
+  // 추가
+  const handleAddExperience = () => setExperiences([...experiences, { company: '', position: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }]);
+  const handleAddProject = () => setProjects([...projects, { name: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }]);
   const handleAddCertificate = () => setCertificates([...certificates, { name: '', level: '', issuer: '', isConfirmed: false }]);
   const handleAddLanguage = () => setLanguages([...languages, { name: '', level: '', isConfirmed: false }]);
-  const handleAddActivity = () => setActivities([...activities, { name: '', org: '', period: '', description: '', isConfirmed: false }]);
+  const handleAddActivity = () => setActivities([...activities, { name: '', org: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }]);
+  const handleAddEducation = () => setEducations([...educations, { school: '', major: '', startDate: null, endDate: null, degree: '재학중', isConfirmed: false }]);
+  // 값 변경
+  const handleExperienceChange = (idx: number, field: string, value: any) => setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
+  const handleProjectChange = (idx: number, field: string, value: any) => setProjects(projects.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  const handleCertificateChange = (idx: number, field: string, value: string) => setCertificates(certificates.map((c, i) => i === idx ? { ...c, [field]: value } : c));
+  const handleLanguageChange = (idx: number, field: string, value: string) => setLanguages(languages.map((l, i) => i === idx ? { ...l, [field]: value } : l));
+  const handleActivityChange = (idx: number, field: string, value: any) => setActivities(activities.map((a, i) => i === idx ? { ...a, [field]: value } : a));
+  const handleEducationChange = (idx: number, field: string, value: any) => setEducations(educations.map((edu, i) => i === idx ? { ...edu, [field]: value } : edu));
+  // 삭제
+  const handleRemoveExperience = (idx: number) => setExperiences(experiences.filter((_, i) => i !== idx));
+  const handleRemoveProject = (idx: number) => setProjects(projects.filter((_, i) => i !== idx));
+  const handleRemoveCertificate = (idx: number) => setCertificates(certificates.filter((_, i) => i !== idx));
+  const handleRemoveLanguage = (idx: number) => setLanguages(languages.filter((_, i) => i !== idx));
+  const handleRemoveActivity = (idx: number) => setActivities(activities.filter((_, i) => i !== idx));
+  const handleRemoveEducation = (idx: number) => setEducations(educations.filter((_, i) => i !== idx));
+  // 확인/수정
+  const handleConfirmExperience = (idx: number) => setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: true } : exp));
+  const handleEditExperience = (idx: number) => setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: false } : exp));
+  const handleConfirmProject = (idx: number) => setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: true } : p));
+  const handleEditProject = (idx: number) => setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: false } : p));
+  const handleConfirmCertificate = (idx: number) => setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: true } : c));
+  const handleEditCertificate = (idx: number) => setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: false } : c));
+  const handleConfirmLanguage = (idx: number) => setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: true } : l));
+  const handleEditLanguage = (idx: number) => setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: false } : l));
+  const handleConfirmActivity = (idx: number) => setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: true } : a));
+  const handleEditActivity = (idx: number) => setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: false } : a));
+  const handleConfirmEducation = (idx: number) => setEducations(educations.map((edu, i) => i === idx ? { ...edu, isConfirmed: true } : edu));
+  const handleEditEducation = (idx: number) => setEducations(educations.map((edu, i) => i === idx ? { ...edu, isConfirmed: false } : edu));
 
-  // 값 변경 핸들러
-  const handleExperienceChange = (idx: number, field: string, value: string) => {
-    setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
-  };
-  const handleProjectChange = (idx: number, field: string, value: string) => {
-    setProjects(projects.map((p, i) => i === idx ? { ...p, [field]: value } : p));
-  };
-  const handleCertificateChange = (idx: number, field: string, value: string) => {
-    setCertificates(certificates.map((c, i) => i === idx ? { ...c, [field]: value } : c));
-  };
-  const handleLanguageChange = (idx: number, field: string, value: string) => {
-    setLanguages(languages.map((l, i) => i === idx ? { ...l, [field]: value } : l));
-  };
-  const handleActivityChange = (idx: number, field: string, value: string) => {
-    setActivities(activities.map((a, i) => i === idx ? { ...a, [field]: value } : a));
-  };
-
-  // 삭제 핸들러
-  const handleRemoveExperience = (idx: number) => {
-    setExperiences(experiences.filter((_, i) => i !== idx));
-  };
-  const handleRemoveProject = (idx: number) => {
-    setProjects(projects.filter((_, i) => i !== idx));
-  };
-  const handleRemoveCertificate = (idx: number) => {
-    setCertificates(certificates.filter((_, i) => i !== idx));
-  };
-  const handleRemoveLanguage = (idx: number) => {
-    setLanguages(languages.filter((_, i) => i !== idx));
-  };
-  const handleRemoveActivity = (idx: number) => {
-    setActivities(activities.filter((_, i) => i !== idx));
-  };
-
-  // 확인/수정 핸들러
-  const handleConfirmExperience = (idx: number) => {
-    setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: true } : exp));
-  };
-  const handleEditExperience = (idx: number) => {
-    setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: false } : exp));
-  };
-  const handleConfirmProject = (idx: number) => {
-    setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: true } : p));
-  };
-  const handleEditProject = (idx: number) => {
-    setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: false } : p));
-  };
-  const handleConfirmCertificate = (idx: number) => {
-    setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: true } : c));
-  };
-  const handleEditCertificate = (idx: number) => {
-    setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: false } : c));
-  };
-  const handleConfirmLanguage = (idx: number) => {
-    setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: true } : l));
-  };
-  const handleEditLanguage = (idx: number) => {
-    setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: false } : l));
-  };
-  const handleConfirmActivity = (idx: number) => {
-    setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: true } : a));
-  };
-  const handleEditActivity = (idx: number) => {
-    setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: false } : a));
-  };
-
-  // 프로필 정보 상태 (API 연동)
-  const [profile, setProfile] = useState({
-    name: '',
-    gender: '',
-    birth: '',
-    phone: '',
-    email: '',
-    image: null as string | null,
-  });
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const apiUrl = process.env.REACT_APP_API_URL || '';
-        const res = await axios.get(`${apiUrl}/users/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        // 응답 필드명에 따라 매핑 필요
-        setProfile({
-          name: res.data.name,
-          gender: res.data.gender,
-          birth: res.data.birth,
-          phone: res.data.phone,
-          email: res.data.email,
-          image: res.data.profileImage || null,
-        });
-      } catch (e) {
-        // 에러 시 기본값 유지
+  // 저장
+  const handleSave = async () => {
+    setErrorMsg('');
+    if (!title.trim()) {
+      setErrorMsg('제목을 입력해주세요.');
+      return;
+    }
+    if (!selectedKeywordIds || selectedKeywordIds.length === 0) {
+      setErrorMsg('키워드를 1개 이상 선택해주세요.');
+      return;
+    }
+    if (selectedJobId === null) {
+      setErrorMsg('직무/직군을 선택해주세요.');
+      return;
+    }
+    if (!selectedSkillIds || selectedSkillIds.length === 0) {
+      setErrorMsg('기술스택을 1개 이상 선택해주세요.');
+      return;
+    }
+    if (!intro.trim()) {
+      setErrorMsg('소개를 입력해주세요.');
+      return;
+    }
+    // Section 데이터 준비
+    const sections: any[] = [];
+    educations.filter(e => e.isConfirmed && e.school).forEach(e => {
+      sections.push({
+        type: 'education',
+        content: JSON.stringify({
+          school: e.school || '',
+          major: e.major || '',
+          startDate: e.startDate ? e.startDate.toISOString().slice(0, 10) : '',
+          endDate: e.endDate ? e.endDate.toISOString().slice(0, 10) : '',
+          degree: e.degree || ''
+        })
+      });
+    });
+    experiences.filter(e => e.isConfirmed && e.company && e.position && e.period?.startDate).forEach(e => {
+      sections.push({
+        type: 'experience',
+        content: JSON.stringify({
+          ...e,
+          period: {
+            startDate: e.period && e.period.startDate instanceof Date ? e.period.startDate.toISOString().slice(0, 10) : '',
+            endDate: e.period && e.period.endDate instanceof Date ? e.period.endDate.toISOString().slice(0, 10) : ''
+          }
+        })
+      });
+    });
+    projects.filter(p => p.isConfirmed && p.name && p.period?.startDate).forEach(p => {
+      sections.push({
+        type: 'project',
+        content: JSON.stringify({
+          ...p,
+          period: {
+            startDate: p.period && p.period.startDate instanceof Date ? p.period.startDate.toISOString().slice(0, 10) : '',
+            endDate: p.period && p.period.endDate instanceof Date ? p.period.endDate.toISOString().slice(0, 10) : ''
+          }
+        })
+      });
+    });
+    certificates.filter(c => c.isConfirmed && c.name).forEach(c => {
+      sections.push({ type: 'certificate', content: JSON.stringify(c) });
+    });
+    languages.filter(l => l.isConfirmed && l.name).forEach(l => {
+      sections.push({ type: 'language', content: JSON.stringify(l) });
+    });
+    activities.filter(a => a.isConfirmed && a.name && a.org && a.period?.startDate).forEach(a => {
+      sections.push({
+        type: 'activity',
+        content: JSON.stringify({
+          ...a,
+          period: {
+            startDate: a.period && a.period.startDate instanceof Date ? a.period.startDate.toISOString().slice(0, 10) : '',
+            endDate: a.period && a.period.endDate instanceof Date ? a.period.endDate.toISOString().slice(0, 10) : ''
+          }
+        })
+      });
+    });
+    // 저장 요청 (JSON)
+    await axios.post(
+      '/portfolios',
+      {
+        title,
+        userId: user ? String(user.id) : '',
+        is_private: false,
+        jobs: selectedJobId !== null ? [selectedJobId] : [],
+        skills: selectedSkillIds,
+        keywords: selectedKeywordIds,
+        intro,
+        sections,
+        user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : undefined,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
       }
-    };
-    fetchProfile();
-  }, []);
-
-  // 로그아웃 핸들러
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    );
+    navigate('/');
   };
 
   return (
-    <Bg>
-      <TopBar>
-        <Logo onClick={() => navigate('/')}>산학협력</Logo>
-        <TopUserMenu>
-          <TopLink onClick={() => navigate('/profile')}>내정보</TopLink>
-          <TopLink onClick={handleLogout}>로그아웃</TopLink>
-          <TopUserName>{profile.name ? `${profile.name} 님` : '- 님'}</TopUserName>
-        </TopUserMenu>
-      </TopBar>
-      <MainContent>
-        {/* 프로필 */}
-        <ProfileSection>
-          <ProfileImg>
-            {profile.image ? (
-              <ProfileImgInner src={profile.image.startsWith('http') ? profile.image : `${process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/$/, '') : ''}/${profile.image.replace(/^\//, '')}`}
-                alt="프로필" />
-            ) : null}
+    <>
+      <Header />
+      {user && (
+        <ProfilePreviewWrapper>
+          {user.profileImage ? (
+            <ProfileImg src={user.profileImage.startsWith('http') ? user.profileImage : `${process.env.REACT_APP_API_URL}/${user.profileImage}`} alt="프로필" />
+          ) : (
+            <ProfileImg as="div" style={{background:'#e0e0e0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2.5rem',color:'#aaa',width:120,height:160,borderRadius:16}}>
+              <span role="img" aria-label="user">👤</span>
           </ProfileImg>
+          )}
           <ProfileInfo>
-            <ProfileName>{profile.name}</ProfileName>
-            <ProfileDetail>{profile.gender}</ProfileDetail>
-            <ProfileDetail>{profile.birth}</ProfileDetail>
-            <ProfileDetail>{profile.phone}</ProfileDetail>
-            <ProfileDetail>{profile.email}</ProfileDetail>
+            <ProfileName>{user.name || '-'}</ProfileName>
+            <div style={{ fontSize: '1.15rem', color: '#222', marginBottom: 2 }}>{user.gender || '-'}</div>
+            <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{formatBirth(user.birth)}</div>
+            <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{user.phone || '-'}</div>
+            <ProfileEmail>{user.email || '-'}</ProfileEmail>
           </ProfileInfo>
-        </ProfileSection>
-
-        {/* 나의 키워드 */}
-        <div>
-          <SectionLabel><BlueBar />나의 키워드</SectionLabel>
-          <TagRow>
+        </ProfilePreviewWrapper>
+      )}
+      <FixedSaveButton onClick={handleSave}>저장 및 게시</FixedSaveButton>
+      {errorMsg && <div style={{ color: 'red', margin: '1rem 0', textAlign: 'center' }}>{errorMsg}</div>}
+      <Wrapper>
+        {/* 포트폴리오 제목 */}
+        <TitleInput value={title} onChange={e => setTitle(e.target.value)} placeholder="포트폴리오 제목을 입력하세요" />
+        {/* 키워드 */}
+        <Section>
+          <SectionLabel>나의 키워드</SectionLabel>
             <TagList>
-              {selectedKeywords.map(option => (
-                <Tag key={option}>
-                  {option}
-                  <RemoveTagBtn onClick={() => handleRemoveKeyword(option)}>×</RemoveTagBtn>
-                </Tag>
-              ))}
-            </TagList>
-            <DropdownContainer ref={keywordRef}>
-              <AddBtn onClick={() => setKeywordOpen(v => !v)}>+</AddBtn>
+            {selectedKeywordIds.map(id => {
+              const option = keywordOptions.find(opt => opt.id === id);
+              if (!option) return null;
+              return (
+                <Tag key={id}>{option.name}<RemoveTagBtn onClick={() => removeKeyword(id)}>×</RemoveTagBtn></Tag>
+              );
+            })}
+            <div style={{ position: 'relative' }}>
+              {selectedKeywordIds.length < keywordOptions.length && (
+                <AddBtn onClick={openKeywordDropdown}>+</AddBtn>
+              )}
               {keywordOpen && (
-                <DropdownMenu>
-                  {KEYWORD_LIST.map(option => (
-                    <DropdownOption key={option}>
+                <Dropdown>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>키워드 선택</div>
+                  {keywordOptions.map(option => (
+                    <DropdownOption key={option.id}>
                       <input
                         type="checkbox"
-                        checked={selectedKeywords.includes(option)}
-                        onChange={() => handleKeywordChange(option)}
+                        checked={tempSelectedKeywordIds.includes(option.id)}
+                        onChange={() => handleTempKeywordChange(option.id)}
                         style={{ marginRight: '0.6rem' }}
                       />
-                      {option}
+                      {option.name}
                     </DropdownOption>
                   ))}
-                </DropdownMenu>
+                  <AddBtn style={{ marginTop: 8 }} onClick={applyKeywordSelection}>추가</AddBtn>
+                  <AddBtn style={{ marginTop: 8, marginLeft: 8, background: '#eee', color: '#1976d2', borderColor: '#eee' }} onClick={closeKeywordDropdown}>취소</AddBtn>
+                </Dropdown>
               )}
-            </DropdownContainer>
-          </TagRow>
         </div>
-
-        {/* 직군/직무 */}
-        <div>
-          <SectionLabel><BlueBar />직군 / 직무</SectionLabel>
-          <TagRow>
-            <TagList>
-              {selectedJobs.map(option => (
-                <Tag key={option}>
-                  {option}
-                  <RemoveTagBtn onClick={() => handleRemoveJob(option)}>×</RemoveTagBtn>
-                </Tag>
-              ))}
             </TagList>
-            <DropdownContainer ref={jobRef}>
-              <AddBtn onClick={() => setJobOpen(v => !v)}>+</AddBtn>
+        </Section>
+        {/* 직무/직군 */}
+        <Section>
+          <SectionLabel>직무 / 직군</SectionLabel>
+          <TagList>
+            {selectedJobId !== null ? (() => {
+              const option = jobOptions.find(opt => opt.id === selectedJobId);
+              if (!option) return null;
+              return (
+                <Tag key={selectedJobId}>{option.name}<RemoveTagBtn onClick={removeJob}>×</RemoveTagBtn></Tag>
+              );
+            })() : null}
+            <div style={{ position: 'relative' }}>
+              {selectedJobId === null && jobOptions.length > 0 && (
+                <AddBtn onClick={openJobDropdown}>+</AddBtn>
+              )}
               {jobOpen && (
-                <DropdownMenu>
-                  {JOB_LIST.map(option => (
-                    <DropdownOption key={option}>
+                <Dropdown>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>직무 선택</div>
+                  {jobOptions.map(option => (
+                    <DropdownOption key={option.id}>
                       <input
-                        type="checkbox"
-                        checked={selectedJobs.includes(option)}
-                        onChange={() => handleJobChange(option)}
+                        type="radio"
+                        name="jobRadio"
+                        checked={tempSelectedJobId === option.id}
+                        onChange={() => handleTempJobChange(option.id)}
                         style={{ marginRight: '0.6rem' }}
                       />
-                      {option}
+                      {option.name}
                     </DropdownOption>
                   ))}
-                </DropdownMenu>
+                  <AddBtn style={{ marginTop: 8 }} onClick={applyJobSelection}>추가</AddBtn>
+                  <AddBtn style={{ marginTop: 8, marginLeft: 8, background: '#eee', color: '#1976d2', borderColor: '#eee' }} onClick={closeJobDropdown}>취소</AddBtn>
+                </Dropdown>
               )}
-            </DropdownContainer>
-          </TagRow>
         </div>
-
+          </TagList>
+        </Section>
         {/* 기술 스택 */}
-        <div>
-          <SectionLabel><BlueBar />기술 스택</SectionLabel>
-          <TagRow>
+        <Section>
+          <SectionLabel>기술 스택</SectionLabel>
             <TagList>
-              {selectedStacks.map(option => (
-                <Tag key={option}>
-                  {option}
-                  <RemoveTagBtn onClick={() => handleRemoveStack(option)}>×</RemoveTagBtn>
-                </Tag>
-              ))}
-            </TagList>
-            <DropdownContainer ref={stackRef}>
-              <AddBtn onClick={() => setStackOpen(v => !v)}>+</AddBtn>
-              {stackOpen && (
-                <DropdownMenu>
-                  {STACK_LIST.map(option => (
-                    <DropdownOption key={option}>
+            {selectedSkillIds.map(id => {
+              const option = skillOptions.find(opt => opt.id === id);
+              if (!option) return null;
+              return (
+                <Tag key={id}>{option.name}<RemoveTagBtn onClick={() => removeSkill(id)}>×</RemoveTagBtn></Tag>
+              );
+            })}
+            <div style={{ position: 'relative' }}>
+              {selectedSkillIds.length < skillOptions.length && (
+                <AddBtn onClick={openSkillDropdown}>+</AddBtn>
+              )}
+              {skillOpen && (
+                <Dropdown>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>기술스택 선택</div>
+                  {skillOptions.map(option => (
+                    <DropdownOption key={option.id}>
                       <input
                         type="checkbox"
-                        checked={selectedStacks.includes(option)}
-                        onChange={() => handleStackChange(option)}
+                        checked={tempSelectedSkillIds.includes(option.id)}
+                        onChange={() => handleTempSkillChange(option.id)}
                         style={{ marginRight: '0.6rem' }}
                       />
-                      {option}
+                      {option.name}
                     </DropdownOption>
                   ))}
-                </DropdownMenu>
+                  <AddBtn style={{ marginTop: 8 }} onClick={applySkillSelection}>추가</AddBtn>
+                  <AddBtn style={{ marginTop: 8, marginLeft: 8, background: '#eee', color: '#1976d2', borderColor: '#eee' }} onClick={closeSkillDropdown}>취소</AddBtn>
+                </Dropdown>
               )}
-            </DropdownContainer>
-          </TagRow>
             </div>
-
-        {/* 나의 소개 */}
+          </TagList>
+        </Section>
+        {/* 소개 */}
+        <Section>
+          <SectionLabel>나의 소개</SectionLabel>
+          <textarea style={{ width: '100%', minHeight: 120, fontSize: '1.1rem', borderRadius: 8, border: '1.5px solid #b0b0b0', padding: '1rem', resize: 'vertical' }}
+            value={intro} onChange={e => setIntro(e.target.value)} placeholder="자기소개를 입력하세요" />
+        </Section>
+        {/* 학력 */}
+        <SectionWrapper>
+          <SectionLabel>학력</SectionLabel>
+          {educations.filter(edu => edu.isConfirmed).map((edu, idx, arr) => (
+            <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{edu.school}
+                {(edu.startDate || edu.endDate) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {edu.startDate ? (typeof edu.startDate === 'string' ? edu.startDate : edu.startDate.toLocaleDateString()) : ''}
+                    ~
+                    {edu.endDate ? (typeof edu.endDate === 'string' ? edu.endDate : edu.endDate.toLocaleDateString()) : ''}
+                  </span>
+                )}
+              </div>
+              <div style={{ color: '#444', fontSize: '1.05rem', marginBottom: '0.1rem' }}>{edu.major} {edu.degree && `(${edu.degree})`}</div>
+              <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditEducation(educations.findIndex(e => e === edu))}>수정</ConfirmButton>
+                <DeleteButton onClick={() => handleRemoveEducation(educations.findIndex(e => e === edu))}>삭제</DeleteButton>
+              </div>
+            </div>
+          ))}
+          {/* 입력폼(확인 안 된 항목) */}
+          {educations.filter(edu => !edu.isConfirmed).map((edu, idx) => {
+            const realIdx = educations.findIndex((e, i) => !e.isConfirmed && educations.slice(0, i+1).filter(x => !x.isConfirmed).length-1 === idx);
+            return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+                <CardRow>
+                  <CardInput value={edu.school} onChange={e => handleEducationChange(realIdx, 'school', e.target.value)} placeholder="학교명" />
+                  <CardInput value={edu.major} onChange={e => handleEducationChange(realIdx, 'major', e.target.value)} placeholder="전공" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={edu.startDate}
+                      onChange={(date: Date | null) => handleEducationChange(realIdx, 'startDate', date)}
+                      selectsStart
+                      startDate={edu.startDate ? edu.startDate : undefined}
+                      endDate={edu.endDate ? edu.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={edu.endDate}
+                      onChange={(date: Date | null) => handleEducationChange(realIdx, 'endDate', date)}
+                      selectsEnd
+                      startDate={edu.startDate ? edu.startDate : undefined}
+                      endDate={edu.endDate ? edu.endDate : undefined}
+                      minDate={edu.startDate ? edu.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      disabled={edu.degree === '재학중'}
+                      customInput={<CardInput />}
+                    />
+                  </div>
+                </CardRow>
+                <CardRow>
+                  <select
+                    value={edu.degree}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setEducations(educations.map((item, i) =>
+                        i === realIdx
+                          ? {
+                              ...item,
+                              degree: value,
+                              endDate: value === '재학중' ? null : item.endDate
+                            }
+                          : item
+                      ));
+                    }}
+                    style={{ flex: 1, padding: '0.7rem 1.2rem', border: '1.5px solid #e9ecef', borderRadius: 8, fontSize: '1.08rem', background: '#fff' }}
+                  >
+                    <option value="재학중">재학중</option>
+                    <option value="졸업">졸업</option>
+                  </select>
+                </CardRow>
+                <CardButtonRow>
+                  <div />
               <div>
-          <SectionLabel><BlueBar />나의 소개</SectionLabel>
-          <TextArea placeholder="자기소개를 입력하세요" />
+                    <ConfirmButton onClick={() => handleConfirmEducation(realIdx)}>확인</ConfirmButton>
+                    <DeleteButton onClick={() => handleRemoveEducation(realIdx)}>삭제</DeleteButton>
         </div>
-
+                </CardButtonRow>
+              </div>
+            );
+          })}
+          <CardAddButton onClick={handleAddEducation}>+ 추가</CardAddButton>
+        </SectionWrapper>
         {/* 경력 */}
-        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '100%' }}><BlueBar />경력</SectionLabel>
-        {/* 리스트(확인된 항목) */}
-        {experiences.filter(exp => exp.isConfirmed).length > 0 && (
-          <TallCardSection style={{ marginBottom: '1.5rem' }}>
+        <SectionWrapper>
+          <SectionLabel>경력</SectionLabel>
             {experiences.filter(exp => exp.isConfirmed).map((exp, idx, arr) => (
               <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
                 <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>
                   {exp.company}
-                  {exp.period && (
-                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{exp.period}</span>
+                {(exp.period && (exp.period.startDate || exp.period.endDate)) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {exp.period.startDate ? (exp.period.startDate instanceof Date ? exp.period.startDate.toISOString().slice(0, 10) : '') : ''}
+                    {exp.period.startDate || exp.period.endDate ? ' ~ ' : ''}
+                    {exp.period.endDate ? (exp.period.endDate instanceof Date ? exp.period.endDate.toISOString().slice(0, 10) : '') : ''}
+                  </span>
                   )}
               </div>
                 <div style={{ color: '#444', fontSize: '1.05rem', marginBottom: '0.1rem' }}>{exp.position}</div>
@@ -873,18 +736,41 @@ const PortfolioCreate: React.FC = () => {
             </div>
               </div>
             ))}
-          </TallCardSection>
-        )}
         {/* 입력폼(확인 안 된 항목) */}
         {experiences.filter(exp => !exp.isConfirmed).map((exp, idx) => {
           // experiences에서 isConfirmed가 false인 항목의 실제 인덱스
           const realIdx = experiences.findIndex((e, i) => !e.isConfirmed && experiences.slice(0, i+1).filter(x => !x.isConfirmed).length-1 === idx);
           return (
-            <TallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <div key={realIdx} style={{ marginBottom: '0' }}>
               <CardRow>
                 <CardInput value={exp.company} onChange={e => handleExperienceChange(realIdx, 'company', e.target.value)} placeholder="기업명" />
                 <CardInput value={exp.position} onChange={e => handleExperienceChange(realIdx, 'position', e.target.value)} placeholder="직위/직급" />
-                <CardInput value={exp.period} onChange={e => handleExperienceChange(realIdx, 'period', e.target.value)} placeholder="재직기간" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={exp.period.startDate}
+                      onChange={(date: Date | null) => handleExperienceChange(realIdx, 'period', { ...exp.period, startDate: date })}
+                      selectsStart
+                      startDate={exp.period.startDate ? exp.period.startDate : undefined}
+                      endDate={exp.period.endDate ? exp.period.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={exp.period.endDate}
+                      onChange={(date: Date | null) => handleExperienceChange(realIdx, 'period', { ...exp.period, endDate: date })}
+                      selectsEnd
+                      startDate={exp.period.startDate ? exp.period.startDate : undefined}
+                      endDate={exp.period.endDate ? exp.period.endDate : undefined}
+                      minDate={exp.period.startDate ? exp.period.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      customInput={<CardInput />}
+                    />
+                  </div>
               </CardRow>
               <CardTextArea value={exp.description} onChange={e => handleExperienceChange(realIdx, 'description', e.target.value)} placeholder="주요 업무 및 성과(선택)" />
               <CardButtonRow>
@@ -894,23 +780,23 @@ const PortfolioCreate: React.FC = () => {
                   <DeleteButton onClick={() => handleRemoveExperience(realIdx)}>삭제</DeleteButton>
                 </div>
               </CardButtonRow>
-            </TallCardSection>
+              </div>
           );
         })}
-        <TallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
-          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddExperience}>+ 추가</CardAddButton>
-        </TallCardSection>
-
+          <CardAddButton onClick={handleAddExperience}>+ 추가</CardAddButton>
+        </SectionWrapper>
         {/* 프로젝트 */}
-        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '100%' }}><BlueBar />프로젝트</SectionLabel>
-        {/* 리스트(확인된 항목) */}
-        {projects.filter(p => p.isConfirmed).length > 0 && (
-          <TallCardSection style={{ marginBottom: '1.5rem' }}>
+        <SectionWrapper>
+          <SectionLabel>프로젝트</SectionLabel>
             {projects.filter(p => p.isConfirmed).map((p, idx, arr) => (
               <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
                 <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{p.name}
-                  {p.period && (
-                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{p.period}</span>
+                {(p.period && (p.period.startDate || p.period.endDate)) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {p.period.startDate ? (p.period.startDate instanceof Date ? p.period.startDate.toISOString().slice(0, 10) : '') : ''}
+                    {p.period.startDate || p.period.endDate ? ' ~ ' : ''}
+                    {p.period.endDate ? (p.period.endDate instanceof Date ? p.period.endDate.toISOString().slice(0, 10) : '') : ''}
+                  </span>
                   )}
             </div>
                 {p.description && (
@@ -922,16 +808,39 @@ const PortfolioCreate: React.FC = () => {
             </div>
               </div>
             ))}
-          </TallCardSection>
-        )}
         {/* 입력폼(확인 안 된 항목) */}
         {projects.filter(p => !p.isConfirmed).map((p, idx) => {
           const realIdx = projects.findIndex((x, i) => !x.isConfirmed && projects.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
           return (
-            <TallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <div key={realIdx} style={{ marginBottom: '0' }}>
               <CardRow>
                 <CardInput value={p.name} onChange={e => handleProjectChange(realIdx, 'name', e.target.value)} placeholder="프로젝트명" />
-                <CardInput value={p.period} onChange={e => handleProjectChange(realIdx, 'period', e.target.value)} placeholder="프로젝트 기간" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={p.period.startDate}
+                      onChange={(date: Date | null) => handleProjectChange(realIdx, 'period', { ...p.period, startDate: date })}
+                      selectsStart
+                      startDate={p.period.startDate ? p.period.startDate : undefined}
+                      endDate={p.period.endDate ? p.period.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={p.period.endDate}
+                      onChange={(date: Date | null) => handleProjectChange(realIdx, 'period', { ...p.period, endDate: date })}
+                      selectsEnd
+                      startDate={p.period.startDate ? p.period.startDate : undefined}
+                      endDate={p.period.endDate ? p.period.endDate : undefined}
+                      minDate={p.period.startDate ? p.period.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      customInput={<CardInput />}
+                    />
+                  </div>
               </CardRow>
               <CardTextArea value={p.description} onChange={e => handleProjectChange(realIdx, 'description', e.target.value)} placeholder="프로젝트 내용" />
               <CardButtonRow>
@@ -941,17 +850,14 @@ const PortfolioCreate: React.FC = () => {
                   <DeleteButton onClick={() => handleRemoveProject(realIdx)}>삭제</DeleteButton>
                 </div>
               </CardButtonRow>
-            </TallCardSection>
+              </div>
           );
         })}
-        <TallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
-          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddProject}>+ 추가</CardAddButton>
-        </TallCardSection>
-
+          <CardAddButton onClick={handleAddProject}>+ 추가</CardAddButton>
+        </SectionWrapper>
         {/* 자격증 */}
-        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '730px' }}><BlueBar />자격증</SectionLabel>
-        {certificates.filter(c => c.isConfirmed).length > 0 && (
-          <SmallCardSection style={{ marginBottom: '1.5rem' }}>
+        <SectionWrapper>
+          <SectionLabel>자격증</SectionLabel>
             {certificates.filter(c => c.isConfirmed).map((c, idx, arr) => (
               <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
                 <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: '0.2rem' }}>{c.name}
@@ -968,12 +874,10 @@ const PortfolioCreate: React.FC = () => {
             </div>
               </div>
             ))}
-          </SmallCardSection>
-        )}
         {certificates.filter(c => !c.isConfirmed).map((c, idx) => {
           const realIdx = certificates.findIndex((x, i) => !x.isConfirmed && certificates.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
           return (
-            <SmallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <div key={realIdx} style={{ marginBottom: '0' }}>
               <CardRow>
                 <CardInput value={c.name} onChange={e => handleCertificateChange(realIdx, 'name', e.target.value)} placeholder="자격증명" />
                 <CardInput value={c.level} onChange={e => handleCertificateChange(realIdx, 'level', e.target.value)} placeholder="급수" />
@@ -986,17 +890,14 @@ const PortfolioCreate: React.FC = () => {
                   <DeleteButton onClick={() => handleRemoveCertificate(realIdx)}>삭제</DeleteButton>
               </div>
               </CardButtonRow>
-            </SmallCardSection>
+              </div>
           );
         })}
-        <SmallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
-          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddCertificate}>+ 추가</CardAddButton>
-        </SmallCardSection>
-
+          <CardAddButton onClick={handleAddCertificate}>+ 추가</CardAddButton>
+        </SectionWrapper>
         {/* 외국어 */}
-        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '730px' }}><BlueBar />외국어</SectionLabel>
-        {languages.filter(l => l.isConfirmed).length > 0 && (
-          <SmallCardSection style={{ marginBottom: '1.5rem' }}>
+        <SectionWrapper>
+          <SectionLabel>외국어</SectionLabel>
             {languages.filter(l => l.isConfirmed).map((l, idx, arr) => (
               <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
                 <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: '0.2rem' }}>{l.name}
@@ -1010,12 +911,10 @@ const PortfolioCreate: React.FC = () => {
                   </div>
               </div>
             ))}
-          </SmallCardSection>
-        )}
         {languages.filter(l => !l.isConfirmed).map((l, idx) => {
           const realIdx = languages.findIndex((x, i) => !x.isConfirmed && languages.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
           return (
-            <SmallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <div key={realIdx} style={{ marginBottom: '0' }}>
               <CardRow>
                 <CardInput value={l.name} onChange={e => handleLanguageChange(realIdx, 'name', e.target.value)} placeholder="언어명" />
                 <CardInput value={l.level} onChange={e => handleLanguageChange(realIdx, 'level', e.target.value)} placeholder="수준" />
@@ -1027,25 +926,26 @@ const PortfolioCreate: React.FC = () => {
                   <DeleteButton onClick={() => handleRemoveLanguage(realIdx)}>삭제</DeleteButton>
             </div>
               </CardButtonRow>
-            </SmallCardSection>
+              </div>
           );
         })}
-        <SmallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
-          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddLanguage}>+ 추가</CardAddButton>
-        </SmallCardSection>
-
+          <CardAddButton onClick={handleAddLanguage}>+ 추가</CardAddButton>
+        </SectionWrapper>
         {/* 대외 활동 */}
-        <SectionLabel style={{ marginBottom: '1rem', maxWidth: '100%' }}><BlueBar />대외 활동</SectionLabel>
-        {activities.filter(a => a.isConfirmed).length > 0 && (
-          <TallCardSection style={{ marginBottom: '1.5rem' }}>
+        <SectionWrapper>
+          <SectionLabel>대외 활동</SectionLabel>
             {activities.filter(a => a.isConfirmed).map((a, idx, arr) => (
               <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
                 <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{a.name}
                   {a.org && (
                     <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{a.org}</span>
                   )}
-                  {a.period && (
-                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{a.period}</span>
+                {(a.period && (a.period.startDate || a.period.endDate)) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {a.period.startDate ? (a.period.startDate instanceof Date ? a.period.startDate.toISOString().slice(0, 10) : '') : ''}
+                    {a.period.startDate || a.period.endDate ? ' ~ ' : ''}
+                    {a.period.endDate ? (a.period.endDate instanceof Date ? a.period.endDate.toISOString().slice(0, 10) : '') : ''}
+                  </span>
                   )}
           </div>
                 {a.description && (
@@ -1057,16 +957,39 @@ const PortfolioCreate: React.FC = () => {
         </div>
       </div>
             ))}
-          </TallCardSection>
-        )}
         {activities.filter(a => !a.isConfirmed).map((a, idx) => {
           const realIdx = activities.findIndex((x, i) => !x.isConfirmed && activities.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
           return (
-            <TallCardSection key={realIdx} style={{ marginBottom: '0' }}>
+              <div key={realIdx} style={{ marginBottom: '0' }}>
               <CardRow>
                 <CardInput value={a.name} onChange={e => handleActivityChange(realIdx, 'name', e.target.value)} placeholder="활동명" />
                 <CardInput value={a.org} onChange={e => handleActivityChange(realIdx, 'org', e.target.value)} placeholder="활동기관" />
-                <CardInput value={a.period} onChange={e => handleActivityChange(realIdx, 'period', e.target.value)} placeholder="활동 기간" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={a.period.startDate}
+                      onChange={(date: Date | null) => handleActivityChange(realIdx, 'period', { ...a.period, startDate: date })}
+                      selectsStart
+                      startDate={a.period.startDate ? a.period.startDate : undefined}
+                      endDate={a.period.endDate ? a.period.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={a.period.endDate}
+                      onChange={(date: Date | null) => handleActivityChange(realIdx, 'period', { ...a.period, endDate: date })}
+                      selectsEnd
+                      startDate={a.period.startDate ? a.period.startDate : undefined}
+                      endDate={a.period.endDate ? a.period.endDate : undefined}
+                      minDate={a.period.startDate ? a.period.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      customInput={<CardInput />}
+                    />
+                  </div>
               </CardRow>
               <CardTextArea value={a.description} onChange={e => handleActivityChange(realIdx, 'description', e.target.value)} placeholder="활동 설명" />
               <CardButtonRow>
@@ -1076,17 +999,13 @@ const PortfolioCreate: React.FC = () => {
                   <DeleteButton onClick={() => handleRemoveActivity(realIdx)}>삭제</DeleteButton>
             </div>
               </CardButtonRow>
-            </TallCardSection>
+              </div>
           );
         })}
-        <TallCardSection style={{ boxShadow: 'none', background: 'none', padding: 0, marginBottom: '2.5rem' }}>
-          <CardAddButton style={{ width: '100%', minWidth: 'unset', margin: 0 }} onClick={handleAddActivity}>+ 추가</CardAddButton>
-        </TallCardSection>
-      </MainContent>
-      <FixedSaveButton>
-        <TopButton>저장</TopButton>
-      </FixedSaveButton>
-    </Bg>
+          <CardAddButton onClick={handleAddActivity}>+ 추가</CardAddButton>
+        </SectionWrapper>
+      </Wrapper>
+    </>
   );
 };
 

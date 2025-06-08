@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../api/axios';
+import Header from '../Common/Header';
+import { useAuth } from '../../contexts/AuthContext';
+import PortfolioList from '../Portfolio/PortfolioList';
+import Pagination from '../Common/Pagination';
 
 const LogoContainer = styled.div`
   text-align: center;
@@ -128,11 +132,10 @@ const SectionTitle = styled.h3`
   margin-bottom: 2.2rem;
 `;
 
-const PortfolioList = styled.ul`
+const PortfolioGrid = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
-  width: 100%;
 `;
 
 const PortfolioItem = styled.li`
@@ -148,9 +151,9 @@ const ProfileImgWrapper = styled.div`
 `;
 
 const ProfileImg = styled.img`
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
+  width: 120px;
+  height: 160px;
+  border-radius: 16px;
   object-fit: cover;
   margin-right: 2.5rem;
   background: #f0f0f0;
@@ -178,7 +181,7 @@ const EMAIL_DOMAINS = ['gmail.com', 'naver.com', 'daum.net', '직접입력'];
 
 const PageBg = styled.div`
   min-height: 100vh;
-  background: #e5e5e5;
+  background:rgb(255, 255, 255);
   padding: 4rem 0 6rem 0;
 `;
 
@@ -293,7 +296,73 @@ const ModalButton = styled.button`
   }
 `;
 
+const PortfolioCard = styled.div`
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: box-shadow 0.18s, transform 0.18s;
+  &:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+    transform: translateY(-2px) scale(1.01);
+  }
+`;
+
+const CardThumbnail = styled.img`
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #e0e0e0;
+  margin-bottom: 1rem;
+`;
+
+const CardTitle = styled.div`
+  font-size: 1.18rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1976d2;
+`;
+
+const CardIntro = styled.div`
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 0.7rem;
+  min-height: 2.2em;
+`;
+
+const CardTags = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.2rem;
+`;
+
+const CardTag = styled.span`
+  background: #E7F5FF;
+  color: #4B89DC;
+  padding: 0.25rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 500;
+`;
+
+const getProfileImgUrl = (img: string | File | undefined) => {
+  if (!img) return null;
+  if (typeof img === 'string') {
+    if (img.startsWith('http')) return img;
+    const path = img.startsWith('/') ? img : `/${img}`;
+    return `${process.env.REACT_APP_API_URL}${path}`;
+  }
+  return null;
+};
+
 const Profile: React.FC = () => {
+  const { user, isAuthenticated, loading } = useAuth();
   const [profile, setProfile] = useState<ProfileType>({
     username: '',
     name: '',
@@ -310,8 +379,7 @@ const Profile: React.FC = () => {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [portfolios, setPortfolios] = useState<{ id: number; title: string }[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
   const navigate = useNavigate();
   const [isEdit, setIsEdit] = useState(false);
   const [editProfile, setEditProfile] = useState<ProfileType>(profile);
@@ -325,63 +393,83 @@ const Profile: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordCheck, setNewPasswordCheck] = useState('');
   const [validationError, setValidationError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  const totalPages = Math.ceil(portfolios.length / itemsPerPage);
+  const pagedPortfolios = portfolios.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const [skills, setSkills] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [keywords, setKeywords] = useState([]);
 
   useEffect(() => {
-    const initializeProfile = async () => {
-    try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/profile`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-      });
-        const profileData = response.data;
-        setProfile(profileData);
-        setFormData(prev => ({ ...prev, name: profileData.name }));
-        
-        // 초기 데이터 설정
-        setEditProfile({
-          ...profileData,
-          profileImage: profileData.profileImage
-        });
-        setImgPreview(profileData.profileImage ? 
-          (typeof profileData.profileImage === 'string' ? 
-            (profileData.profileImage.startsWith('http') ? 
-              profileData.profileImage : 
-              `${process.env.REACT_APP_API_URL}/${profileData.profileImage}`) : 
-            '') : 
-          null
-        );
+    if (loading) return; // 로딩 중에는 아무것도 하지 않음
+    if (!user && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [user, isAuthenticated, loading, navigate]);
 
-        if (profileData.email) {
-          const [id, domain] = profileData.email.split('@');
-          setEmailId(id || '');
-          setEmailDomain(EMAIL_DOMAINS.includes(domain) ? domain : '직접입력');
-          setCustomDomain(!EMAIL_DOMAINS.includes(domain) ? domain : '');
+  useEffect(() => {
+    if (user && user.id && isAuthenticated) {
+      const initializeProfile = async () => {
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/users/profile`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          });
+          const profileData = response.data;
+          setProfile(profileData);
+          setFormData(prev => ({ ...prev, name: profileData.name }));
+          setEditProfile({
+            ...profileData,
+            profileImage: profileData.profileImage
+          });
+          setImgPreview(profileData.profileImage ? 
+            (typeof profileData.profileImage === 'string' ? 
+              (profileData.profileImage.startsWith('http') ? 
+                profileData.profileImage : 
+                `${process.env.REACT_APP_API_URL}/${profileData.profileImage}`) : 
+              '') : 
+            null
+          );
+          if (profileData.email) {
+            const [id, domain] = profileData.email.split('@');
+            setEmailId(id || '');
+            setEmailDomain(EMAIL_DOMAINS.includes(domain) ? domain : '직접입력');
+            setCustomDomain(!EMAIL_DOMAINS.includes(domain) ? domain : '');
+          }
+          if (profileData.birth) {
+            const [y, m, d] = profileData.birth.split('-');
+            setBirthYear(y || '');
+            setBirthMonth(m || '');
+            setBirthDay(d || '');
+          }
+        } catch (e) {
+          setError('프로필을 불러오는데 실패했습니다.');
         }
-
-        if (profileData.birth) {
-          const [y, m, d] = profileData.birth.split('-');
-          setBirthYear(y || '');
-          setBirthMonth(m || '');
-          setBirthDay(d || '');
-        }
-      } catch (e) {
-      setError('프로필을 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
-      }
-    };
-
-    initializeProfile();
-    fetchPortfolios();
-  }, []);
+      };
+      initializeProfile();
+      fetchPortfolios();
+    }
+  }, [user, isAuthenticated]);
 
   const fetchPortfolios = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/portfolios/my`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });
-      setPortfolios(response.data.map((p: any) => ({ id: p.id, title: p.title })));
+      if (Array.isArray(response.data)) {
+        setPortfolios(response.data.map((p: any) => ({
+          ...p,
+          sections: p.sections && p.sections.length > 0 ? p.sections : [{
+            portfolioSkills: (p.skills || []).map((id: number) => ({ skillId: id })),
+            portfolioKeywords: (p.keywords || []).map((id: number) => ({ keywordId: id })),
+            portfolioJob: (p.jobs || []).map((id: number) => ({ jobId: id })),
+          }]
+        })));
+      } else {
+        console.error('포트폴리오 응답이 배열이 아님:', response.data);
+      }
     } catch (e) {
-      // 에러 무시(없을 수 있음)
+      console.error('포트폴리오 불러오기 실패:', e);
     }
   };
 
@@ -597,109 +685,159 @@ const Profile: React.FC = () => {
     setIsEdit(true);
   };
 
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [jobsRes, skillsRes, keywordsRes] = await Promise.all([
+          axios.get('/jobs'),
+          axios.get('/skills'),
+          axios.get('/keywords'),
+        ]);
+        setJobs(jobsRes.data);
+        setSkills(skillsRes.data);
+        setKeywords(keywordsRes.data);
+      } catch (e) {
+        console.error('옵션 불러오기 실패', e);
+      }
+    };
+    fetchOptions();
+  }, []);
+
+  const mappedPortfolios = useMemo(() => {
+    return pagedPortfolios.map((portfolio: any) => {
+      const sections = (portfolio.sections || []).map((section: any) => ({
+        ...section,
+        portfolioSkills: (section.portfolioSkills || []).map((ps: any) => ({
+          skill: skills.find((s: any) => s.id === ps.skillId) || { name: '스킬 없음' }
+        })),
+        portfolioKeywords: (section.portfolioKeywords || []).map((pk: any) => ({
+          keyword: keywords.find((k: any) => k.id === pk.keywordId) || { name: '키워드 없음' }
+        })),
+        portfolioJob: (section.portfolioJob || []).map((pj: any) => ({
+          job: jobs.find((j: any) => j.id === pj.jobId) || { name: '직무 없음' }
+        })),
+      }));
+      return {
+        ...portfolio,
+        sections,
+        user: {
+          name: portfolio.user?.name || '이름 없음',
+          role: (
+            (sections[0]?.portfolioJob?.[0]?.job?.name) || '직무 없음'
+          ),
+          profileImage: portfolio.user?.profileImage,
+        },
+        likes_count: portfolio.likes_count ?? 0,
+      };
+    });
+  }, [pagedPortfolios, skills, jobs, keywords]);
+
+  if (!user) {
+    return null;
+  }
+
   if (loading) {
     return <div>로딩 중...</div>;
   }
 
   return (
-    <PageBg>
-      <LogoContainer onClick={() => navigate('/')}>
-        <Logo>산학협력</Logo>
-      </LogoContainer>
-      <CardRow>
-        <div style={{width: '100%', maxWidth: 1000}}>
-          <SectionTitle style={{marginBottom: '1.2rem'}}>나의 정보</SectionTitle>
-          <InfoCard>
-            <EditButton onClick={handleEditClick}>✏️ 수정하기</EditButton>
-            {isEdit ? (
-              <ModalCard>
-                <ModalTitle>내정보 수정</ModalTitle>
-                <ModalForm onSubmit={e => { e.preventDefault(); handleEditSave(); }}>
-                  <ModalRow>
-                    <div style={{display:'flex',flexDirection:'column',alignItems:'center',flex:1}}>
-                      <ProfileImgSquare>
-                        {imgPreview ? (
-                          <img src={imgPreview} alt="프로필 미리보기" style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                        ) : (
-                          <span style={{ color: '#aaa', fontSize: 15 }}>(이미지 삽입)</span>
-                        )}
-                        <input type="file" accept="image/*" onChange={handleImgChange} style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, left: 0, top: 0, cursor: 'pointer' }} />
-                      </ProfileImgSquare>
-                      <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>프로필 사진</div>
-                    </div>
-                    <div style={{flex:2,display:'flex',flexDirection:'column',alignItems:'flex-start',justifyContent:'center'}}>
-                      <span style={{fontSize:'1.1rem',color:'#888',marginBottom:4}}>아이디</span>
-                      <IdBox>{profile.username}</IdBox>
-                    </div>
-                  </ModalRow>
-                  <ModalInput name="name" value={editProfile.name} onChange={handleEditChange} placeholder="이름" required />
-                  <ModalRow>
-                    <ModalInput type="text" placeholder="년" value={birthYear} onChange={handleBirthYearChange} maxLength={4} style={{width:90}} />
-                    <ModalInput type="text" placeholder="월" value={birthMonth} onChange={handleBirthMonthChange} maxLength={2} style={{width:60}} />
-                    <ModalInput type="text" placeholder="일" value={birthDay} onChange={handleBirthDayChange} maxLength={2} style={{width:60}} />
-                  </ModalRow>
-                  <ModalInput name="phone" value={editProfile.phone} onChange={handlePhoneEditChange} placeholder="전화번호" maxLength={13} />
-                  <ModalRow>
-                    <ModalInput style={{width:150}} value={emailId} onChange={handleEmailIdChange} placeholder="이메일 아이디" />
-                    <span>@</span>
-                    {emailDomain !== '직접입력' ? (
-                      <ModalSelect value={emailDomain} onChange={handleEmailDomainChange} style={{width:150}}>
-                        {EMAIL_DOMAINS.map(domain => (
-                          <option key={domain} value={domain}>{domain}</option>
-                        ))}
-                      </ModalSelect>
-                    ) : (
-                      <ModalInput style={{width:150}} value={customDomain} onChange={handleCustomDomainChange} placeholder="도메인 입력" />
+    <>
+      <Header />
+      <PageBg>
+        <LogoContainer onClick={() => navigate('/')}>
+          <Logo>산학협력</Logo>
+        </LogoContainer>
+        <CardRow>
+          <div style={{width: '100%', maxWidth: 1000}}>
+            <SectionTitle style={{marginBottom: '1.2rem'}}>나의 정보</SectionTitle>
+            <InfoCard>
+              <EditButton onClick={handleEditClick}>✏️ 수정하기</EditButton>
+              {isEdit ? (
+                <ModalCard>
+                  <ModalTitle>내정보 수정</ModalTitle>
+                  <ModalForm onSubmit={e => { e.preventDefault(); handleEditSave(); }}>
+                    <ModalRow>
+                      <div style={{display:'flex',flexDirection:'column',alignItems:'center',flex:1}}>
+                        <ProfileImgSquare>
+                          {imgPreview ? (
+                            <img src={imgPreview} alt="프로필 미리보기" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                          ) : (
+                            <span style={{ color: '#aaa', fontSize: 15 }}>(이미지 삽입)</span>
+                          )}
+                          <input type="file" accept="image/*" onChange={handleImgChange} style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, left: 0, top: 0, cursor: 'pointer' }} />
+                        </ProfileImgSquare>
+                        <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>프로필 사진</div>
+                      </div>
+                      <div style={{flex:2,display:'flex',flexDirection:'column',alignItems:'flex-start',justifyContent:'center'}}>
+                        <span style={{fontSize:'1.1rem',color:'#888',marginBottom:4}}>아이디</span>
+                        <IdBox>{profile.username}</IdBox>
+                      </div>
+                    </ModalRow>
+                    <ModalInput name="name" value={editProfile.name} onChange={handleEditChange} placeholder="이름" required />
+                    <ModalRow>
+                      <ModalInput type="text" placeholder="년" value={birthYear} onChange={handleBirthYearChange} maxLength={4} style={{width:90}} />
+                      <ModalInput type="text" placeholder="월" value={birthMonth} onChange={handleBirthMonthChange} maxLength={2} style={{width:60}} />
+                      <ModalInput type="text" placeholder="일" value={birthDay} onChange={handleBirthDayChange} maxLength={2} style={{width:60}} />
+                    </ModalRow>
+                    <ModalInput name="phone" value={editProfile.phone} onChange={handlePhoneEditChange} placeholder="전화번호" maxLength={13} />
+                    <ModalRow>
+                      <ModalInput style={{width:150}} value={emailId} onChange={handleEmailIdChange} placeholder="이메일 아이디" />
+                      <span>@</span>
+                      {emailDomain !== '직접입력' ? (
+                        <ModalSelect value={emailDomain} onChange={handleEmailDomainChange} style={{width:150}}>
+                          {EMAIL_DOMAINS.map(domain => (
+                            <option key={domain} value={domain}>{domain}</option>
+                          ))}
+                        </ModalSelect>
+                      ) : (
+                        <ModalInput style={{width:150}} value={customDomain} onChange={handleCustomDomainChange} placeholder="도메인 입력" />
+                      )}
+                    </ModalRow>
+                    <ModalInput type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="비밀번호 변경 (8자 이상 입력하세요)" minLength={8} />
+                    <ModalInput type="password" value={newPasswordCheck} onChange={e => setNewPasswordCheck(e.target.value)} placeholder="비밀번호 확인 (비밀번호를 다시 입력하세요)" minLength={8} />
+                    {validationError && (
+                      <div style={{ color: 'red', marginTop: '0.5rem', fontSize: '1rem', textAlign: 'center' }}>{validationError}</div>
                     )}
-                  </ModalRow>
-                  <ModalInput type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="비밀번호 변경 (8자 이상 입력하세요)" minLength={8} />
-                  <ModalInput type="password" value={newPasswordCheck} onChange={e => setNewPasswordCheck(e.target.value)} placeholder="비밀번호 확인 (비밀번호를 다시 입력하세요)" minLength={8} />
-                  {validationError && (
-                    <div style={{ color: 'red', marginTop: '0.5rem', fontSize: '1rem', textAlign: 'center' }}>{validationError}</div>
-                  )}
-                  <ModalBtnRow>
-                    <ModalButton type="button" onClick={() => { setIsEdit(false); setEditProfile(profile); setImgPreview(profile.profileImage ? `${process.env.REACT_APP_API_URL}/${profile.profileImage}` : null); setValidationError(''); }}>취소</ModalButton>
-                    <ModalButton type="submit"><span role="img" aria-label="저장">💾</span> 변경 및 저장</ModalButton>
-                  </ModalBtnRow>
-                </ModalForm>
-              </ModalCard>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <ProfileImgWrapper>
-                  {profile.profileImage ? (
-                    <ProfileImg src={typeof profile.profileImage === 'string' ? (profile.profileImage.startsWith('http') ? profile.profileImage : `${process.env.REACT_APP_API_URL}/${profile.profileImage}`) : ''} alt="프로필" />
-                  ) : (
-                    <div style={{background:'#ddd',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',color:'#aaa',width:130,height:130,borderRadius:'50%'}}>●</div>
-                  )}
-                </ProfileImgWrapper>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '2.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>{profile.name}</div>
-                  <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.gender}</div>
-                  <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.birth}</div>
-                  <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.phone}</div>
-                  <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.email}</div>
-                </div>
-              </div>
-            )}
-          </InfoCard>
-        </div>
-        <div style={{width: '100%', maxWidth: 1000}}>
-          <SectionTitle style={{marginBottom: '1.2rem'}}>나의 포트폴리오</SectionTitle>
-          <InfoCard>
-            <EditButton onClick={() => alert('포트폴리오 관리 기능 준비중')}>✏️ 수정하기</EditButton>
-            <PortfolioList>
-              {portfolios.length === 0 ? (
-                <PortfolioItem>작성한 포트폴리오가 없습니다.</PortfolioItem>
+                    <ModalBtnRow>
+                      <ModalButton type="button" onClick={() => { setIsEdit(false); setEditProfile(profile); setImgPreview(profile.profileImage ? `${process.env.REACT_APP_API_URL}/${profile.profileImage}` : null); setValidationError(''); }}>취소</ModalButton>
+                      <ModalButton type="submit"><span role="img" aria-label="저장">💾</span> 변경 및 저장</ModalButton>
+                    </ModalBtnRow>
+                  </ModalForm>
+                </ModalCard>
               ) : (
-                portfolios.map(p => (
-                  <PortfolioItem key={p.id}>{p.title}</PortfolioItem>
-                ))
+                <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                  <ProfileImgWrapper>
+                    {getProfileImgUrl(profile.profileImage) ? (
+                      <ProfileImg src={getProfileImgUrl(profile.profileImage) as string} alt="프로필" />
+                    ) : (
+                      <div style={{background:'#ddd',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',color:'#aaa',width:120,height:160,borderRadius:16}}>
+                        <span role="img" aria-label="user">👤</span>
+                      </div>
+                    )}
+                  </ProfileImgWrapper>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '2.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>{profile.name}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.gender}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.birth}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.phone}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.email}</div>
+                  </div>
+                </div>
               )}
-            </PortfolioList>
-          </InfoCard>
-        </div>
-      </CardRow>
-    </PageBg>
+            </InfoCard>
+          </div>
+          <div style={{width: '100%', maxWidth: 1400, marginTop: '2rem'}}>
+            <SectionTitle style={{marginBottom: '1.2rem', textAlign:'center'}}>나의 포트폴리오</SectionTitle>
+            <PortfolioList portfolios={mappedPortfolios} onCardClick={id => navigate(`/portfolios/${id}`)} />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={page => setCurrentPage(page)}
+            />
+          </div>
+        </CardRow>
+      </PageBg>
+    </>
   );
 };
 

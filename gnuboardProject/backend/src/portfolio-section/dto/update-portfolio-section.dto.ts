@@ -1,5 +1,5 @@
 export class UpdatePortfolioSectionDto {
   portfolioId?: number;
-  type?: 'experience' | 'project' | 'certificate' | 'language' | 'activity';
+  type?: 'education' | 'experience' | 'project' | 'certificate' | 'language' | 'activity';
   content?: string;
 } 

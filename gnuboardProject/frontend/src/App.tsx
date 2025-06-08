@@ -2,17 +2,14 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
-import PortfolioDetail from './components/Portfolio/PortfolioDetail';
+import PortfolioDetail from './components/Portfolio/PortfolioView';
 import PortfolioForm from './components/Portfolio/PortfolioForm';
 import Profile from './components/Profile/Profile';
 import { useAuth } from './contexts/AuthContext';
 import PortfolioCreate from './components/Portfolio/PortfolioCreate';
 import Main from './components/Portfolio/Main';
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
+
 
 const App: React.FC = () => {
   return (
@@ -23,30 +20,8 @@ const App: React.FC = () => {
         <Route path="/" element={<Main />} />
         <Route path="/portfolios/:id" element={<PortfolioDetail />} />
         <Route path="/portfolio/create" element={<PortfolioCreate />} />
-        <Route
-          path="/portfolios/:id/edit"
-          element={
-            <PrivateRoute>
-              <PortfolioForm />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
-          }
-        />
+        <Route path="/portfolios/:id/edit" element={<PortfolioForm />} />
+        <Route path="/mypage" element={<Profile />} />
       </Routes>
     </Router>
   );

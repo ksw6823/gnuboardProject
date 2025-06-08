@@ -10,13 +10,15 @@ import { PortfolioJob } from './entities/portfolio_job.entity';
 import { Skill } from '../skill/entities/skill.entity';
 import { Keyword } from '../keyword/entities/keyword.entity';
 import { Job } from '../job/entities/job.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Portfolio, PortfolioSection, PortfolioSkill, PortfolioKeyword, PortfolioJob,
       Skill, Keyword, Job
-    ])
+    ]),
+    AuthModule,
   ],
   controllers: [PortfolioController],
   providers: [PortfolioService],
