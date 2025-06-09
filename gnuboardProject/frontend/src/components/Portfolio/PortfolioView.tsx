@@ -421,9 +421,10 @@ const PDFItemDescription = styled.div`
 
 // 프로필 이미지 URL 생성 함수
 const getProfileImageUrl = (profileImage: string | undefined) => {
-  if (!profileImage) return '/default-profile.png';
+  if (!profileImage || profileImage === '') return null; // 빈 문자열도 null 반환
   if (profileImage.startsWith('http')) return profileImage;
-  return `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/${profileImage}`;
+  const path = profileImage.startsWith('/') ? profileImage : `/${profileImage}`;
+  return `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}${path}`;
 };
 
 const PortfolioView = () => {
@@ -912,7 +913,24 @@ const PortfolioView = () => {
             </>
           )}
           <ProfileRow>
-            <ProfileImg src={getProfileImageUrl(owner?.profileImage)} />
+            {getProfileImageUrl(owner?.profileImage) ? (
+              <ProfileImg src={getProfileImageUrl(owner?.profileImage) as string} />
+            ) : (
+              <div style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                backgroundColor: '#f0f0f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '48px',
+                marginRight: '1rem',
+                flexShrink: 0
+              }}>
+                👤
+              </div>
+            )}
             <UserInfo>
               <div style={{ fontWeight: 700, fontSize: '1.2rem' }}>{owner?.name}</div>
               <div>성별: {owner?.gender || '-'}</div>

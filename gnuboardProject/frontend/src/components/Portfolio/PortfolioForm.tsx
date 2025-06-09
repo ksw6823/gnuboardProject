@@ -620,7 +620,7 @@ const PortfolioForm: React.FC = () => {
       <Header />
       {user && (
         <ProfilePreviewWrapper>
-          {user.profileImage ? (
+          {user.profileImage && user.profileImage !== '' ? (
             <ProfileImg src={user.profileImage.startsWith('http') ? user.profileImage : `${process.env.REACT_APP_API_URL}/${user.profileImage}`} alt="프로필" />
           ) : (
             <ProfileImg as="div" style={{background:'#e0e0e0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2.5rem',color:'#aaa',width:120,height:160,borderRadius:16}}>
