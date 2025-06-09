@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Header from '../Common/Header';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { formatPhone } from '../../utils/phoneFormat';
 
 const Layout = styled.div`
   display: flex;
@@ -447,20 +448,48 @@ const PortfolioView = () => {
 
   useEffect(() => {
     const fetchPortfolio = async () => {
-      const res = await api.get(`/portfolios/${id}`);
-      setPortfolio(res.data);
+      try {
+        const res = await api.get(`/portfolios/${id}`);
+        setPortfolio(res.data);
+      } catch (error) {
+        console.error('포트폴리오 불러오기 실패:', error);
+      }
     };
     fetchPortfolio();
-    api.get('/skills').then(res => setSkillOptions(res.data));
-    api.get('/keywords').then(res => setKeywordOptions(res.data));
-    api.get('/jobs').then(res => setJobOptions(res.data));
+    
+    api.get('/skills')
+      .then(res => setSkillOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(error => {
+        console.error('기술 옵션 불러오기 실패:', error);
+        setSkillOptions([]);
+      });
+      
+    api.get('/keywords')
+      .then(res => setKeywordOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(error => {
+        console.error('키워드 옵션 불러오기 실패:', error);
+        setKeywordOptions([]);
+      });
+      
+    api.get('/jobs')
+      .then(res => setJobOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(error => {
+        console.error('직무 옵션 불러오기 실패:', error);
+        setJobOptions([]);
+      });
   }, [id]);
 
   const fetchComments = useCallback(async (pageToFetch = page) => {
     if (!id) return;
-    const res = await api.get(`/portfolios/${id}/comments?page=${pageToFetch}&pageSize=${pageSize}`);
-    setComments(res.data.data);
-    setTotal(res.data.total);
+    try {
+      const res = await api.get(`/portfolios/${id}/comments?page=${pageToFetch}&pageSize=${pageSize}`);
+      setComments(Array.isArray(res.data?.data) ? res.data.data : []);
+      setTotal(res.data?.total || 0);
+    } catch (error) {
+      console.error('댓글 불러오기 실패:', error);
+      setComments([]);
+      setTotal(0);
+    }
   }, [id, page, pageSize]);
 
   useEffect(() => {
@@ -605,17 +634,17 @@ const PortfolioView = () => {
     const owner = portfolio.user as any;
     const sections = portfolio.sections || [];
     
-    const educations = sections.filter((s: any) => s.type === 'education').map((s: any) => JSON.parse(s.content));
-    const careers = sections.filter((s: any) => s.type === 'experience').map((s: any) => JSON.parse(s.content));
-    const projects = sections.filter((s: any) => s.type === 'project').map((s: any) => JSON.parse(s.content));
-    const certificates = sections.filter((s: any) => s.type === 'certificate').map((s: any) => JSON.parse(s.content));
-    const languages = sections.filter((s: any) => s.type === 'language').map((s: any) => JSON.parse(s.content));
-    const activities = sections.filter((s: any) => s.type === 'activity').map((s: any) => JSON.parse(s.content));
+    const educations = (sections || []).filter((s: any) => s.type === 'education').map((s: any) => JSON.parse(s.content));
+    const careers = (sections || []).filter((s: any) => s.type === 'experience').map((s: any) => JSON.parse(s.content));
+    const projects = (sections || []).filter((s: any) => s.type === 'project').map((s: any) => JSON.parse(s.content));
+    const certificates = (sections || []).filter((s: any) => s.type === 'certificate').map((s: any) => JSON.parse(s.content));
+    const languages = (sections || []).filter((s: any) => s.type === 'language').map((s: any) => JSON.parse(s.content));
+    const activities = (sections || []).filter((s: any) => s.type === 'activity').map((s: any) => JSON.parse(s.content));
     
-    const allSkillIds = sections.flatMap((s: any) => (s.portfolioSkills || []).map((ps: any) => ps.skillId));
-    const allJobIds = sections.flatMap((s: any) => (s.portfolioJob || []).map((pj: any) => pj.jobId));
-    const allSkills = skillOptions.filter((opt: any) => allSkillIds.includes(opt.id));
-    const allJobs = jobOptions.filter((opt: any) => allJobIds.includes(opt.id));
+    const allSkillIds = (sections || []).flatMap((s: any) => (s.portfolioSkills || []).map((ps: any) => ps.skillId));
+    const allJobIds = (sections || []).flatMap((s: any) => (s.portfolioJob || []).map((pj: any) => pj.jobId));
+    const allSkills = (skillOptions || []).filter((opt: any) => allSkillIds.includes(opt.id));
+    const allJobs = (jobOptions || []).filter((opt: any) => allJobIds.includes(opt.id));
 
     return (
       <PDFTemplate ref={pdfTemplateRef}>
@@ -634,7 +663,7 @@ const PortfolioView = () => {
               </PDFInfoItem>
               <PDFInfoItem>
                 <PDFInfoLabel>전화번호:</PDFInfoLabel>
-                <PDFInfoValue>{owner?.phone || '-'}</PDFInfoValue>
+                <PDFInfoValue>{owner?.phone ? formatPhone(owner.phone) : '-'}</PDFInfoValue>
               </PDFInfoItem>
               <PDFInfoItem>
                 <PDFInfoLabel>이메일:</PDFInfoLabel>
@@ -674,11 +703,11 @@ const PortfolioView = () => {
           </PDFHeaderSection>
 
           {/* 희망 직무 */}
-          {allJobs.length > 0 && (
+          {(allJobs || []).length > 0 && (
             <PDFSection>
               <PDFSectionTitle>희망 직무</PDFSectionTitle>
               <PDFTagList>
-                {allJobs.map((job: any, idx: number) => (
+                {(allJobs || []).map((job: any, idx: number) => (
                   <PDFTag key={idx}>{job.name}</PDFTag>
                 ))}
               </PDFTagList>
@@ -686,11 +715,11 @@ const PortfolioView = () => {
           )}
 
           {/* 보유 기술 */}
-          {allSkills.length > 0 && (
+          {(allSkills || []).length > 0 && (
             <PDFSection>
               <PDFSectionTitle>보유 기술</PDFSectionTitle>
               <PDFTagList>
-                {allSkills.map((skill: any, idx: number) => (
+                {(allSkills || []).map((skill: any, idx: number) => (
                   <PDFTag key={idx}>{skill.name}</PDFTag>
                 ))}
               </PDFTagList>
@@ -706,11 +735,11 @@ const PortfolioView = () => {
           )}
 
           {/* 학력 */}
-          {educations.length > 0 && (
+          {(educations || []).length > 0 && (
             <PDFSection>
               <PDFSectionTitle>학력</PDFSectionTitle>
               <PDFList>
-                {educations.map((edu: any, idx: number) => (
+                {(educations || []).map((edu: any, idx: number) => (
                   <PDFListItem key={idx}>
                     <PDFItemTitle>
                       {edu.school}
@@ -857,18 +886,18 @@ const PortfolioView = () => {
   const owner = portfolio.user as any;
   const intro = portfolio.intro;
   const sections = portfolio.sections || [];
-  const educations = sections.filter((s: any) => s.type === 'education').map((s: any) => JSON.parse(s.content));
-  const careers = sections.filter((s: any) => s.type === 'experience').map((s: any) => JSON.parse(s.content));
-  const projects = sections.filter((s: any) => s.type === 'project').map((s: any) => JSON.parse(s.content));
-  const certificates = sections.filter((s: any) => s.type === 'certificate').map((s: any) => JSON.parse(s.content));
-  const languages = sections.filter((s: any) => s.type === 'language').map((s: any) => JSON.parse(s.content));
-  const activities = sections.filter((s: any) => s.type === 'activity').map((s: any) => JSON.parse(s.content));
-  const allSkillIds = sections.flatMap((s: any) => (s.portfolioSkills || []).map((ps: any) => ps.skillId));
-  const allKeywordIds = sections.flatMap((s: any) => (s.portfolioKeywords || []).map((pk: any) => pk.keywordId));
-  const allJobIds = sections.flatMap((s: any) => (s.portfolioJob || []).map((pj: any) => pj.jobId));
-  const allSkills = skillOptions.filter((opt: any) => allSkillIds.includes(opt.id));
-  const allKeywords = keywordOptions.filter((opt: any) => allKeywordIds.includes(opt.id));
-  const allJobs = jobOptions.filter((opt: any) => allJobIds.includes(opt.id));
+  const educations = (sections || []).filter((s: any) => s.type === 'education').map((s: any) => JSON.parse(s.content));
+  const careers = (sections || []).filter((s: any) => s.type === 'experience').map((s: any) => JSON.parse(s.content));
+  const projects = (sections || []).filter((s: any) => s.type === 'project').map((s: any) => JSON.parse(s.content));
+  const certificates = (sections || []).filter((s: any) => s.type === 'certificate').map((s: any) => JSON.parse(s.content));
+  const languages = (sections || []).filter((s: any) => s.type === 'language').map((s: any) => JSON.parse(s.content));
+  const activities = (sections || []).filter((s: any) => s.type === 'activity').map((s: any) => JSON.parse(s.content));
+  const allSkillIds = (sections || []).flatMap((s: any) => (s.portfolioSkills || []).map((ps: any) => ps.skillId));
+  const allKeywordIds = (sections || []).flatMap((s: any) => (s.portfolioKeywords || []).map((pk: any) => pk.keywordId));
+  const allJobIds = (sections || []).flatMap((s: any) => (s.portfolioJob || []).map((pj: any) => pj.jobId));
+  const allSkills = (skillOptions || []).filter((opt: any) => allSkillIds.includes(opt.id));
+  const allKeywords = (keywordOptions || []).filter((opt: any) => allKeywordIds.includes(opt.id));
+  const allJobs = (jobOptions || []).filter((opt: any) => allJobIds.includes(opt.id));
 
   return (
     <>
@@ -888,21 +917,21 @@ const PortfolioView = () => {
               <div style={{ fontWeight: 700, fontSize: '1.2rem' }}>{owner?.name}</div>
               <div>성별: {owner?.gender || '-'}</div>
               <div>생년월일: {owner?.birth || '-'}</div>
-              <div>전화번호: {owner?.phone || '-'}</div>
+                              <div>전화번호: {owner?.phone ? formatPhone(owner.phone) : '-'}</div>
               <div>이메일: {owner?.email || '-'}</div>
             </UserInfo>
           </ProfileRow>
           <SectionTitle>나의 키워드</SectionTitle>
           <TagRow>
-            {allKeywords.map((kw) => <Tag key={kw.id}>{kw.name}</Tag>)}
+            {(allKeywords || []).map((kw) => <Tag key={kw.id}>{kw.name}</Tag>)}
           </TagRow>
           <SectionTitle>직무/직군</SectionTitle>
           <TagRow>
-            {allJobs.map((job) => <Tag key={job.id}>{job.name}</Tag>)}
+            {(allJobs || []).map((job) => <Tag key={job.id}>{job.name}</Tag>)}
           </TagRow>
           <SectionTitle>기술 스택</SectionTitle>
           <TagRow>
-            {allSkills.map((skill) => <Tag key={skill.id}>{skill.name}</Tag>)}
+            {(allSkills || []).map((skill) => <Tag key={skill.id}>{skill.name}</Tag>)}
           </TagRow>
           <SectionTitle>나의 소개</SectionTitle>
           <IntroBox>{intro}</IntroBox>
@@ -965,7 +994,7 @@ const PortfolioView = () => {
         <SideCard>
           <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 12 }}>댓글</div>
           <div style={{ flex: 1, overflowY: 'auto', marginBottom: 16 }}>
-            {comments.map((c, i) => (
+            {(comments || []).map((c, i) => (
               <div key={i} style={{ border: '1px solid #eee', borderRadius: 8, padding: '1rem', marginBottom: 10 }}>
                 <div style={{ fontWeight: 600 }}>{c.user?.name} <span style={{ color: '#4B89DC', fontSize: '0.95em' }}>{c.user?.id === owner?.id && '(작성자)'}</span></div>
                 <div style={{ color: '#888', fontSize: '0.95em', marginBottom: 4 }}>

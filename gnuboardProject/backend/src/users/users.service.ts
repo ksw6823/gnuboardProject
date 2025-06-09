@@ -65,7 +65,15 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
-    Object.assign(user, updateUserDto);
+    
+    // 각 필드를 안전하게 업데이트
+    if (updateUserDto.name) user.name = updateUserDto.name;
+    if (updateUserDto.email) user.email = updateUserDto.email;
+    if (updateUserDto.profileImage) user.profileImage = updateUserDto.profileImage;
+    if (updateUserDto.birth) user.birth = new Date(updateUserDto.birth);
+    if (updateUserDto.gender) user.gender = updateUserDto.gender;
+    if (updateUserDto.phone) user.phone = updateUserDto.phone;
+    
     return this.usersRepository.save(user);
   }
 
@@ -74,15 +82,19 @@ export class UsersService {
     data: {
       name?: string;
       email?: string;
-      profileImage?: string;
+      profileImage?: string | null;
       gender?: 'Male' | 'Female';
       phone?: string;
+      birth?: string;
       currentPassword?: string;
       newPassword?: string;
     } = {},
   ): Promise<User> {
     // data가 undefined나 null인 경우 빈 객체로 초기화
     const safeData = data || {};
+    console.log('updateProfile - received data:', data);
+    console.log('updateProfile - safeData:', safeData);
+    console.log('updateProfile - safeData.profileImage:', safeData.profileImage);
     
     const user = await this.findOne(id);
 
@@ -98,9 +110,15 @@ export class UsersService {
     // 다른 필드 업데이트
     if (safeData.name) user.name = safeData.name;
     if (safeData.email) user.email = safeData.email;
-    if (safeData.profileImage) user.profileImage = safeData.profileImage;
+    if (safeData.profileImage !== undefined) {
+      user.profileImage = safeData.profileImage === '' ? null : safeData.profileImage;
+    }
     if (safeData.gender) user.gender = safeData.gender as 'Male' | 'Female';
     if (safeData.phone) user.phone = safeData.phone;
+    if (safeData.birth) {
+      // YYYY-MM-DD 형식으로 저장 (시간 정보 제거)
+      user.birth = new Date(safeData.birth + 'T00:00:00.000Z');
+    }
 
     return this.usersRepository.save(user);
   }

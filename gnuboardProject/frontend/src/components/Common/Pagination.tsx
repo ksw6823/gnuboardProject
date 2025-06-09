@@ -29,7 +29,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
             }}
           >이전</button>
         </li>
-        {[...Array(totalPages)].map((_, idx) => (
+        {[...Array(Math.max(0, totalPages || 0))].map((_, idx) => (
           <li key={idx + 1}>
             <button
               onClick={() => onPageChange(idx + 1)}

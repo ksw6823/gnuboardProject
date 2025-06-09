@@ -55,6 +55,7 @@ export class UsersController {
       email?: string;
       gender?: 'Male' | 'Female';
       phone?: string;
+      birth?: string;
       profileImage?: string;
       currentPassword?: string;
       newPassword?: string;

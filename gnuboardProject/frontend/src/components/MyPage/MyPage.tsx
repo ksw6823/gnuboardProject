@@ -76,7 +76,7 @@ const MyPage: React.FC = () => {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });
       setPortfolios(Array.isArray(response.data)
-        ? response.data.map((p: any) => ({
+        ? (response.data || []).map((p: any) => ({
             ...p,
             sections: p.sections && p.sections.length > 0 ? p.sections : [{
               portfolioSkills: (p.skills || []).map((id: number) => ({ skillId: id })),
@@ -87,6 +87,7 @@ const MyPage: React.FC = () => {
         : []);
     } catch (error) {
       console.error('포트폴리오를 불러오는데 실패했습니다:', error);
+      setPortfolios([]);
     }
   };
 
@@ -97,11 +98,14 @@ const MyPage: React.FC = () => {
         axios.get('/skills'),
         axios.get('/keywords'),
       ]);
-      setJobs(jobsRes.data);
-      setSkills(skillsRes.data);
-      setKeywords(keywordsRes.data);
+      setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
+      setSkills(Array.isArray(skillsRes.data) ? skillsRes.data : []);
+      setKeywords(Array.isArray(keywordsRes.data) ? keywordsRes.data : []);
     } catch (e) {
-      // 에러 핸들링
+      console.error('옵션 불러오기 실패:', e);
+      setJobs([]);
+      setSkills([]);
+      setKeywords([]);
     }
   };
 
@@ -115,11 +119,19 @@ const MyPage: React.FC = () => {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('프로필 업데이트 formData:', formData);
     try {
-      await axios.put('/users/me', {
+      console.log('전송할 데이터:', {
         name: formData.name,
         email: formData.email,
       });
+      
+      const response = await axios.put('/users/me', {
+        name: formData.name,
+        email: formData.email,
+      });
+      console.log('업데이트 응답:', response.data);
+      
       setIsEditing(false);
       fetchUserData();
       alert('프로필이 업데이트되었습니다.');
@@ -166,21 +178,21 @@ const MyPage: React.FC = () => {
     }
   };
 
-  const isDataReady = skills.length > 0 && jobs.length > 0 && keywords.length > 0;
+  const isDataReady = (skills || []).length > 0 && (jobs || []).length > 0 && (keywords || []).length > 0;
 
   const mappedPortfolios = useMemo(() => {
     if (!isDataReady) return [];
-    return portfolios.map(portfolio => {
+    return (portfolios || []).map(portfolio => {
       const sections = (portfolio.sections || []).map(section => ({
         ...section,
         portfolioSkills: (section.portfolioSkills || []).map((ps: any) => ({
-          skill: skills.find(s => s.id === ps.skillId) || { name: '스킬 없음' }
+          skill: (skills || []).find(s => s.id === ps.skillId) || { name: '스킬 없음' }
         })),
         portfolioKeywords: (section.portfolioKeywords || []).map((pk: any) => ({
-          keyword: keywords.find(k => k.id === pk.keywordId) || { name: '키워드 없음' }
+          keyword: (keywords || []).find(k => k.id === pk.keywordId) || { name: '키워드 없음' }
         })),
         portfolioJob: (section.portfolioJob || []).map((pj: any) => ({
-          job: jobs.find(j => j.id === pj.jobId) || { name: '직무 없음' }
+          job: (jobs || []).find(j => j.id === pj.jobId) || { name: '직무 없음' }
         })),
       }));
       return {
@@ -210,7 +222,14 @@ const MyPage: React.FC = () => {
           <div>
             <p><strong>이름:</strong> {user.name}</p>
             <p><strong>이메일:</strong> {user.email}</p>
-            <button onClick={() => setIsEditing(true)} style={{ background: '#007bff', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}>
+            <button onClick={() => {
+              setFormData({
+                ...formData,
+                name: user.name,
+                email: user.email,
+              });
+              setIsEditing(true);
+            }} style={{ background: '#007bff', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}>
               수정하기
             </button>
           </div>
@@ -239,7 +258,14 @@ const MyPage: React.FC = () => {
             <button type="submit" style={{ background: '#28a745', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer', marginRight: '0.5rem' }}>
               저장
             </button>
-            <button type="button" onClick={() => setIsEditing(false)} style={{ background: '#6c757d', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}>
+            <button type="button" onClick={() => {
+              setFormData({
+                ...formData,
+                name: user.name,
+                email: user.email,
+              });
+              setIsEditing(false);
+            }} style={{ background: '#6c757d', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' }}>
               취소
             </button>
           </form>

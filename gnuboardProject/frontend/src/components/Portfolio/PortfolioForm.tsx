@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { SectionDto } from '../../types/portfolio';
+import { formatPhone } from '../../utils/phoneFormat';
 
 const Wrapper = styled.div`
   max-width: 730px;
@@ -293,9 +294,26 @@ const PortfolioForm: React.FC = () => {
 
   // 옵션 데이터 fetch (직무/스킬/키워드)
   useEffect(() => {
-    axios.get('/jobs').then(res => setJobOptions(res.data));
-    axios.get('/skills').then(res => setSkillOptions(res.data));
-    axios.get('/keywords').then(res => setKeywordOptions(res.data));
+    axios.get('/jobs')
+      .then(res => setJobOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Failed to load jobs:', err);
+        setJobOptions([]);
+      });
+    
+    axios.get('/skills')
+      .then(res => setSkillOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Failed to load skills:', err);
+        setSkillOptions([]);
+      });
+    
+    axios.get('/keywords')
+      .then(res => setKeywordOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Failed to load keywords:', err);
+        setKeywordOptions([]);
+      });
   }, []);
 
   // [수정모드] 기존 포트폴리오 데이터 fetch 및 state 세팅
@@ -394,7 +412,7 @@ const PortfolioForm: React.FC = () => {
 
   // 드롭다운 열기 시 임시값 초기화
   const openKeywordDropdown = () => {
-    setTempSelectedKeywordIds(selectedKeywordIds);
+    setTempSelectedKeywordIds(selectedKeywordIds || []);
     setKeywordOpen(true);
   };
   const openJobDropdown = () => {
@@ -402,18 +420,18 @@ const PortfolioForm: React.FC = () => {
     setJobOpen(true);
   };
   const openSkillDropdown = () => {
-    setTempSelectedSkillIds(selectedSkillIds);
+    setTempSelectedSkillIds(selectedSkillIds || []);
     setSkillOpen(true);
   };
 
   // 임시 선택 핸들러
   const handleTempJobChange = (id: number) => setTempSelectedJobId(id);
-  const handleTempSkillChange = (id: number) => setTempSelectedSkillIds(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
-  const handleTempKeywordChange = (id: number) => setTempSelectedKeywordIds(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id]);
+  const handleTempSkillChange = (id: number) => setTempSelectedSkillIds(prev => (prev || []).includes(id) ? (prev || []).filter(s => s !== id) : [...(prev || []), id]);
+  const handleTempKeywordChange = (id: number) => setTempSelectedKeywordIds(prev => (prev || []).includes(id) ? (prev || []).filter(k => k !== id) : [...(prev || []), id]);
 
   // 추가 버튼 클릭 시 실제 선택값에 반영
   const applyKeywordSelection = () => {
-    setSelectedKeywordIds(tempSelectedKeywordIds);
+    setSelectedKeywordIds(tempSelectedKeywordIds || []);
     setKeywordOpen(false);
   };
   const applyJobSelection = () => {
@@ -421,7 +439,7 @@ const PortfolioForm: React.FC = () => {
     setJobOpen(false);
   };
   const applySkillSelection = () => {
-    setSelectedSkillIds(tempSelectedSkillIds);
+    setSelectedSkillIds(tempSelectedSkillIds || []);
     setSkillOpen(false);
   };
 
@@ -440,8 +458,8 @@ const PortfolioForm: React.FC = () => {
   };
 
   // 태그 X 버튼
-  const removeKeyword = (id: number) => setSelectedKeywordIds(prev => prev.filter(k => k !== id));
-  const removeSkill = (id: number) => setSelectedSkillIds(prev => prev.filter(s => s !== id));
+  const removeKeyword = (id: number) => setSelectedKeywordIds(prev => (prev || []).filter(k => k !== id));
+  const removeSkill = (id: number) => setSelectedSkillIds(prev => (prev || []).filter(s => s !== id));
   const removeJob = () => setSelectedJobId(null);
 
   // [수정모드] 저장 버튼 클릭 시 PATCH/PUT 요청
@@ -613,7 +631,7 @@ const PortfolioForm: React.FC = () => {
             <ProfileName>{user.name || '-'}</ProfileName>
             <div style={{ fontSize: '1.15rem', color: '#222', marginBottom: 2 }}>{user.gender || '-'}</div>
             <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{formatBirth(user.birth)}</div>
-            <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{user.phone || '-'}</div>
+                            <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{user.phone ? formatPhone(user.phone) : '-'}</div>
             <ProfileEmail>{user.email || '-'}</ProfileEmail>
             </ProfileInfo>
         </ProfilePreviewWrapper>
@@ -627,25 +645,25 @@ const PortfolioForm: React.FC = () => {
         <Section>
           <SectionLabel>나의 키워드</SectionLabel>
             <TagList>
-            {selectedKeywordIds.map(id => {
-              const option = keywordOptions.find(opt => opt.id === id);
+            {(selectedKeywordIds || []).map(id => {
+              const option = (keywordOptions || []).find(opt => opt.id === id);
               if (!option) return null;
               return (
                 <Tag key={id}>{option.name}<RemoveTagBtn onClick={() => removeKeyword(id)}>×</RemoveTagBtn></Tag>
               );
             })}
             <div style={{ position: 'relative' }}>
-              {selectedKeywordIds.length < keywordOptions.length && (
+              {(selectedKeywordIds || []).length < (keywordOptions || []).length && (
                 <AddBtn onClick={openKeywordDropdown}>+</AddBtn>
               )}
               {keywordOpen && (
                 <Dropdown>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>키워드 선택</div>
-                  {keywordOptions.map(option => (
+                  {(keywordOptions || []).map(option => (
                     <DropdownOption key={option.id}>
                       <input
                         type="checkbox"
-                        checked={tempSelectedKeywordIds.includes(option.id)}
+                        checked={(tempSelectedKeywordIds || []).includes(option.id)}
                         onChange={() => handleTempKeywordChange(option.id)}
                         style={{ marginRight: '0.6rem' }}
                       />
@@ -664,20 +682,20 @@ const PortfolioForm: React.FC = () => {
           <SectionLabel>직무 / 직군</SectionLabel>
           <TagList>
             {selectedJobId !== null ? (() => {
-              const option = jobOptions.find(opt => opt.id === selectedJobId);
+              const option = (jobOptions || []).find(opt => opt.id === selectedJobId);
               if (!option) return null;
               return (
                 <Tag key={selectedJobId}>{option.name}<RemoveTagBtn onClick={removeJob}>×</RemoveTagBtn></Tag>
               );
             })() : null}
             <div style={{ position: 'relative' }}>
-              {selectedJobId === null && jobOptions.length > 0 && (
+              {selectedJobId === null && (jobOptions || []).length > 0 && (
                 <AddBtn onClick={openJobDropdown}>+</AddBtn>
               )}
               {jobOpen && (
                 <Dropdown>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>직무 선택</div>
-                  {jobOptions.map(option => (
+                  {(jobOptions || []).map(option => (
                     <DropdownOption key={option.id}>
                       <input
                         type="radio"
@@ -700,25 +718,25 @@ const PortfolioForm: React.FC = () => {
         <Section>
           <SectionLabel>기술 스택</SectionLabel>
             <TagList>
-            {selectedSkillIds.map(id => {
-              const option = skillOptions.find(opt => opt.id === id);
+            {(selectedSkillIds || []).map(id => {
+              const option = (skillOptions || []).find(opt => opt.id === id);
               if (!option) return null;
               return (
                 <Tag key={id}>{option.name}<RemoveTagBtn onClick={() => removeSkill(id)}>×</RemoveTagBtn></Tag>
               );
             })}
             <div style={{ position: 'relative' }}>
-              {selectedSkillIds.length < skillOptions.length && (
+              {(selectedSkillIds || []).length < (skillOptions || []).length && (
                 <AddBtn onClick={openSkillDropdown}>+</AddBtn>
               )}
               {skillOpen && (
                 <Dropdown>
                   <div style={{ fontWeight: 600, marginBottom: 6 }}>기술 선택</div>
-                  {skillOptions.map(option => (
+                  {(skillOptions || []).map(option => (
                     <DropdownOption key={option.id}>
                       <input
                         type="checkbox"
-                        checked={tempSelectedSkillIds.includes(option.id)}
+                        checked={(tempSelectedSkillIds || []).includes(option.id)}
                         onChange={() => handleTempSkillChange(option.id)}
                         style={{ marginRight: '0.6rem' }}
                       />

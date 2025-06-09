@@ -14,6 +14,9 @@ async function bootstrap() {
     next();
   });
 
+  // 글로벌 API 프리픽스 설정
+  // app.setGlobalPrefix('api');
+
   // CORS 설정
   app.enableCors({
     origin: configService.get('FRONTEND_URL'),

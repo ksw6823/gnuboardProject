@@ -6,6 +6,7 @@ import Header from '../Common/Header';
 import { useAuth } from '../../contexts/AuthContext';
 import PortfolioList from '../Portfolio/PortfolioList';
 import Pagination from '../Common/Pagination';
+import { formatPhone, formatPhoneInput, removePhoneFormat } from '../../utils/phoneFormat';
 
 const LogoContainer = styled.div`
   text-align: center;
@@ -148,6 +149,7 @@ const ProfileImgWrapper = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 0;
+  flex-shrink: 0;
 `;
 
 const ProfileImg = styled.img`
@@ -384,12 +386,14 @@ const Profile: React.FC = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [editProfile, setEditProfile] = useState<ProfileType>(profile);
   const [imgPreview, setImgPreview] = useState<string | null>(null);
+  const [isImageDeleted, setIsImageDeleted] = useState(false);
   const [emailId, setEmailId] = useState('');
   const [emailDomain, setEmailDomain] = useState('gmail.com');
   const [customDomain, setCustomDomain] = useState('');
   const [birthYear, setBirthYear] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordCheck, setNewPasswordCheck] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -397,9 +401,9 @@ const Profile: React.FC = () => {
   const itemsPerPage = 6;
   const totalPages = Math.ceil(portfolios.length / itemsPerPage);
   const pagedPortfolios = portfolios.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const [skills, setSkills] = useState([]);
-  const [jobs, setJobs] = useState([]);
-  const [keywords, setKeywords] = useState([]);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [keywords, setKeywords] = useState<any[]>([]);
 
   useEffect(() => {
     if (loading) return; // 로딩 중에는 아무것도 하지 않음
@@ -522,20 +526,19 @@ const Profile: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       setEditProfile(prev => ({ ...prev, profileImage: e.target.files![0] as File }));
       setImgPreview(URL.createObjectURL(e.target.files[0]));
+      setIsImageDeleted(false); // 새 이미지 선택 시 삭제 상태 해제
     }
   };
 
   const handlePhoneEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length <= 11) {
-      if (value.length < 4) {
-        setEditProfile(prev => ({ ...prev, phone: value }));
-      } else if (value.length < 8) {
-        setEditProfile(prev => ({ ...prev, phone: value.slice(0, 3) + '-' + value.slice(3) }));
-      } else {
-        setEditProfile(prev => ({ ...prev, phone: value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11) }));
-      }
-    }
+    const formattedPhone = formatPhoneInput(e.target.value);
+    setEditProfile(prev => ({ ...prev, phone: formattedPhone }));
+  };
+
+  const handleRemoveImg = () => {
+    setImgPreview('default'); // 기본 이미지로 설정
+    setIsImageDeleted(true); // 삭제 상태로 설정
+    setEditProfile(prev => ({ ...prev, profileImage: '' }));
   };
 
   const handleBirthYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -597,12 +600,16 @@ const Profile: React.FC = () => {
       setValidationError('이메일을 모두 입력해주세요.');
       return;
     }
-    if (newPassword && newPassword !== newPasswordCheck) {
-      setValidationError('비밀번호가 일치하지 않습니다.');
+    if (newPassword && !currentPassword) {
+      setValidationError('새 비밀번호를 설정하려면 현재 비밀번호를 입력해주세요.');
       return;
     }
-    if (!newPassword && newPasswordCheck) {
-      setValidationError('비밀번호 변경란을 먼저 입력해주세요.');
+    if (newPassword && newPassword !== newPasswordCheck) {
+      setValidationError('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    if (currentPassword && !newPassword) {
+      setValidationError('현재 비밀번호를 입력했으면 새 비밀번호도 입력해주세요.');
       return;
     }
 
@@ -610,14 +617,31 @@ const Profile: React.FC = () => {
       const formData = new FormData();
       formData.append('name', editProfile.name);
       formData.append('gender', editProfile.gender);
-      formData.append('phone', editProfile.phone);
+      formData.append('phone', removePhoneFormat(editProfile.phone)); // 숫자만 저장
       formData.append('email', `${emailId}@${emailDomain === '직접입력' ? customDomain : emailDomain}`);
-      formData.append('birth', `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`);
-      if (newPassword) {
+      const birthDate = `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`;
+      console.log('birth 전송:', birthDate);
+      formData.append('birth', birthDate);
+      if (newPassword && currentPassword) {
+        formData.append('currentPassword', currentPassword);
         formData.append('newPassword', newPassword);
       }
+      
+      // 이미지 처리: 새 이미지 업로드 또는 삭제
+      console.log('editProfile.profileImage:', editProfile.profileImage);
+      console.log('typeof editProfile.profileImage:', typeof editProfile.profileImage);
+      console.log('isImageDeleted:', isImageDeleted);
+      
       if (editProfile.profileImage && typeof editProfile.profileImage !== 'string') {
+        // 새 이미지가 선택된 경우
+        console.log('새 이미지 업로드');
         formData.append('profileImg', editProfile.profileImage);
+      } else if (isImageDeleted) {
+        // 이미지가 삭제된 경우
+        console.log('이미지 삭제 - 빈 문자열 전송');
+        formData.append('profileImage', '');
+      } else {
+        console.log('이미지 변경 없음');
       }
 
       const response = await axios.put(`${process.env.REACT_APP_API_URL}/users/profile`, formData, {
@@ -626,8 +650,19 @@ const Profile: React.FC = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setProfile(response.data);
+      console.log('서버 응답:', response.data);
+      
+      // 프로필 새로 가져오기
+      const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log('새로 가져온 프로필:', profileResponse.data);
+      
+      setProfile(profileResponse.data);
       setIsEdit(false);
+      setIsImageDeleted(false); // 저장 후 삭제 상태 초기화
       alert('프로필이 성공적으로 수정되었습니다.');
     } catch (e: any) {
       if (e.response) {
@@ -643,7 +678,8 @@ const Profile: React.FC = () => {
     // 기존 프로필 데이터를 수정 폼에 복사
     setEditProfile({
       ...profile,
-      profileImage: profile.profileImage
+      profileImage: profile.profileImage,
+      phone: formatPhone(profile.phone) // 편집 시 포맷팅된 형태로 표시
     });
 
     // 이메일 분리 및 초기화
@@ -661,13 +697,15 @@ const Profile: React.FC = () => {
 
     // 생년월일 분리
     if (profile.birth) {
-      const [y, m, d] = profile.birth.split('-');
+      const birthDateOnly = profile.birth.split('T')[0]; // 시간 부분 제거
+      const [y, m, d] = birthDateOnly.split('-');
       setBirthYear(y || '');
       setBirthMonth(m || '');
       setBirthDay(d || '');
     }
 
     // 비밀번호 필드 초기화
+    setCurrentPassword('');
     setNewPassword('');
     setNewPasswordCheck('');
 
@@ -683,6 +721,7 @@ const Profile: React.FC = () => {
 
     // 수정 모드로 전환
     setIsEdit(true);
+    setIsImageDeleted(false); // 수정 시작할 때 삭제 상태 초기화
   };
 
   useEffect(() => {
@@ -693,28 +732,31 @@ const Profile: React.FC = () => {
           axios.get('/skills'),
           axios.get('/keywords'),
         ]);
-        setJobs(jobsRes.data);
-        setSkills(skillsRes.data);
-        setKeywords(keywordsRes.data);
+        setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
+        setSkills(Array.isArray(skillsRes.data) ? skillsRes.data : []);
+        setKeywords(Array.isArray(keywordsRes.data) ? keywordsRes.data : []);
       } catch (e) {
         console.error('옵션 불러오기 실패', e);
+        setJobs([]);
+        setSkills([]);
+        setKeywords([]);
       }
     };
     fetchOptions();
   }, []);
 
   const mappedPortfolios = useMemo(() => {
-    return pagedPortfolios.map((portfolio: any) => {
+    return (pagedPortfolios || []).map((portfolio: any) => {
       const sections = (portfolio.sections || []).map((section: any) => ({
         ...section,
         portfolioSkills: (section.portfolioSkills || []).map((ps: any) => ({
-          skill: skills.find((s: any) => s.id === ps.skillId) || { name: '스킬 없음' }
+          skill: (skills || []).find((s: any) => s.id === ps.skillId) || { name: '스킬 없음' }
         })),
         portfolioKeywords: (section.portfolioKeywords || []).map((pk: any) => ({
-          keyword: keywords.find((k: any) => k.id === pk.keywordId) || { name: '키워드 없음' }
+          keyword: (keywords || []).find((k: any) => k.id === pk.keywordId) || { name: '키워드 없음' }
         })),
         portfolioJob: (section.portfolioJob || []).map((pj: any) => ({
-          job: jobs.find((j: any) => j.id === pj.jobId) || { name: '직무 없음' }
+          job: (jobs || []).find((j: any) => j.id === pj.jobId) || { name: '직무 없음' }
         })),
       }));
       return {
@@ -759,12 +801,52 @@ const Profile: React.FC = () => {
                     <ModalRow>
                       <div style={{display:'flex',flexDirection:'column',alignItems:'center',flex:1}}>
                         <ProfileImgSquare>
-                          {imgPreview ? (
-                            <img src={imgPreview} alt="프로필 미리보기" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                          {imgPreview && imgPreview !== 'default' ? (
+                            <>
+                              <img src={imgPreview} alt="프로필 미리보기" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                              <button 
+                                type="button"
+                                onClick={handleRemoveImg}
+                                style={{
+                                  position: 'absolute',
+                                  top: '5px',
+                                  right: '5px',
+                                  background: 'rgba(0,0,0,0.7)',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  width: '24px',
+                                  height: '24px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '14px',
+                                  zIndex: 2
+                                }}
+                                title="이미지 삭제"
+                              >
+                                ×
+                              </button>
+                            </>
+                          ) : imgPreview === 'default' ? (
+                            <div style={{
+                              width: '100%',
+                              height: '100%',
+                              background: '#f0f0f0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '2rem',
+                              color: '#aaa',
+                              borderRadius: '12px'
+                            }}>
+                              <span role="img" aria-label="user">👤</span>
+                            </div>
                           ) : (
                             <span style={{ color: '#aaa', fontSize: 15 }}>(이미지 삽입)</span>
                           )}
-                          <input type="file" accept="image/*" onChange={handleImgChange} style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, left: 0, top: 0, cursor: 'pointer' }} />
+                          <input type="file" accept="image/*" onChange={handleImgChange} style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0, left: 0, top: 0, cursor: 'pointer', zIndex: 1 }} />
                         </ProfileImgSquare>
                         <div style={{ fontSize: 13, color: '#888', marginBottom: 8 }}>프로필 사진</div>
                       </div>
@@ -793,34 +875,78 @@ const Profile: React.FC = () => {
                         <ModalInput style={{width:150}} value={customDomain} onChange={handleCustomDomainChange} placeholder="도메인 입력" />
                       )}
                     </ModalRow>
-                    <ModalInput type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="비밀번호 변경 (8자 이상 입력하세요)" minLength={8} />
-                    <ModalInput type="password" value={newPasswordCheck} onChange={e => setNewPasswordCheck(e.target.value)} placeholder="비밀번호 확인 (비밀번호를 다시 입력하세요)" minLength={8} />
+                    <ModalInput type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="현재 비밀번호 (비밀번호 변경시 필수)" />
+                    <ModalInput type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="새 비밀번호 (8자 이상 입력하세요)" minLength={8} />
+                    <ModalInput type="password" value={newPasswordCheck} onChange={e => setNewPasswordCheck(e.target.value)} placeholder="새 비밀번호 확인" minLength={8} />
                     {validationError && (
                       <div style={{ color: 'red', marginTop: '0.5rem', fontSize: '1rem', textAlign: 'center' }}>{validationError}</div>
                     )}
                     <ModalBtnRow>
-                      <ModalButton type="button" onClick={() => { setIsEdit(false); setEditProfile(profile); setImgPreview(profile.profileImage ? `${process.env.REACT_APP_API_URL}/${profile.profileImage}` : null); setValidationError(''); }}>취소</ModalButton>
+                      <ModalButton type="button" onClick={() => { 
+                        setIsEdit(false); 
+                        setEditProfile({...profile, phone: formatPhone(profile.phone)}); 
+                        setImgPreview(profile.profileImage ? 
+                          (typeof profile.profileImage === 'string' ? 
+                            (profile.profileImage.startsWith('http') ? 
+                              profile.profileImage : 
+                              `${process.env.REACT_APP_API_URL}/${profile.profileImage}`) : 
+                            '') : 
+                          null
+                        ); 
+                        setValidationError('');
+                        // 이메일과 생년월일도 초기화
+                        if (profile.email) {
+                          const [id, domain] = profile.email.split('@');
+                          setEmailId(id || '');
+                          const isCustomDomain = !EMAIL_DOMAINS.includes(domain);
+                          setEmailDomain(isCustomDomain ? '직접입력' : domain);
+                          setCustomDomain(isCustomDomain ? domain : '');
+                        }
+                        if (profile.birth) {
+                          const birthDateOnly = profile.birth.split('T')[0];
+                          const [y, m, d] = birthDateOnly.split('-');
+                          setBirthYear(y || '');
+                          setBirthMonth(m || '');
+                          setBirthDay(d || '');
+                        }
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setNewPasswordCheck('');
+                        setIsImageDeleted(false); // 취소 시 삭제 상태 초기화
+                      }}>취소</ModalButton>
                       <ModalButton type="submit"><span role="img" aria-label="저장">💾</span> 변경 및 저장</ModalButton>
                     </ModalBtnRow>
                   </ModalForm>
                 </ModalCard>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '0' }}>
                   <ProfileImgWrapper>
                     {getProfileImgUrl(profile.profileImage) ? (
                       <ProfileImg src={getProfileImgUrl(profile.profileImage) as string} alt="프로필" />
                     ) : (
-                      <div style={{background:'#ddd',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',color:'#aaa',width:120,height:160,borderRadius:16}}>
+                      <div style={{
+                        background:'#f0f0f0',
+                        display:'flex',
+                        alignItems:'center',
+                        justifyContent:'center',
+                        fontSize:'2.5rem',
+                        color:'#aaa',
+                        width:120,
+                        height:160,
+                        borderRadius:16,
+                        marginRight:'2.5rem',
+                        flexShrink: 0
+                      }}>
                         <span role="img" aria-label="user">👤</span>
                       </div>
                     )}
                   </ProfileImgWrapper>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '2.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>{profile.name}</div>
-                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.gender}</div>
-                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.birth}</div>
-                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.phone}</div>
-                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0' }}>{profile.email}</div>
+                  <div style={{ flex: 1, minWidth: 0, paddingLeft: '1rem' }}>
+                    <div style={{ fontSize: '2.1rem', fontWeight: 700, marginBottom: '0.5rem', wordBreak: 'break-word' }}>{profile.name}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0', wordBreak: 'break-word' }}>{profile.gender}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0', wordBreak: 'break-word' }}>{profile.birth ? profile.birth.split('T')[0] : ''}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0', wordBreak: 'break-word' }}>{formatPhone(profile.phone)}</div>
+                    <div style={{ color: '#444', fontSize: '1.2rem', margin: '0.2rem 0', wordBreak: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.email}</div>
                   </div>
                 </div>
               )}

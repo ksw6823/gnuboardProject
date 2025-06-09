@@ -250,34 +250,34 @@ const PortfolioMain: React.FC = () => {
   const [keywords, setKeywords] = useState<{ id: number; name: string }[]>([]);
 
   // 필터링된 포트폴리오 목록
-  const filteredPortfolios = portfolios.filter(portfolio => {
+  const filteredPortfolios = (portfolios || []).filter(portfolio => {
     const matchesSearch = searchQuery === '' || 
-      portfolio.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      portfolio.intro.toLowerCase().includes(searchQuery.toLowerCase());
+      portfolio.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      portfolio.intro?.toLowerCase().includes(searchQuery.toLowerCase());
 
     // 백엔드에서 제공하는 최상위 레벨 데이터 사용
     const matchesJob =
       !selectedFilters.직무 ||
-      portfolio.portfolioJob?.some((job: any) => job.name === selectedFilters.직무);
+      (portfolio.portfolioJob || []).some((job: any) => job.name === selectedFilters.직무);
 
     const matchesTech =
       !selectedFilters.기술스택 ||
-      portfolio.portfolioSkills?.some((skill: any) => skill.name === selectedFilters.기술스택);
+      (portfolio.portfolioSkills || []).some((skill: any) => skill.name === selectedFilters.기술스택);
 
     const matchesKeyword =
       !selectedFilters.키워드 ||
-      portfolio.portfolioKeywords?.some((keyword: any) => keyword.name === selectedFilters.키워드);
+      (portfolio.portfolioKeywords || []).some((keyword: any) => keyword.name === selectedFilters.키워드);
 
     return matchesSearch && matchesJob && matchesTech && matchesKeyword;
   });
 
   // 정렬 적용
-  const sortedPortfolios = [...filteredPortfolios].sort((a, b) => {
+  const sortedPortfolios = [...(filteredPortfolios || [])].sort((a, b) => {
     switch (selectedFilters.정렬기준) {
       case '인기순':
-        return b.likes_count - a.likes_count;
+        return (b.likes_count || 0) - (a.likes_count || 0);
       case '최신순':
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       case '조회순':
         return (b.views || 0) - (a.views || 0);
       default:
@@ -287,11 +287,21 @@ const PortfolioMain: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-  const totalPages = Math.ceil(sortedPortfolios.length / itemsPerPage);
-  const pagedPortfolios = sortedPortfolios.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil((sortedPortfolios || []).length / itemsPerPage);
+  const pagedPortfolios = (sortedPortfolios || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // 디버깅용 로그
+  console.log('포트폴리오 상태:', {
+    portfolios: portfolios.length,
+    filteredPortfolios: filteredPortfolios.length,
+    sortedPortfolios: sortedPortfolios.length,
+    pagedPortfolios: pagedPortfolios.length,
+    isLoggedIn
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('로그인 상태 확인:', { token: !!token, tokenValue: token });
     setIsLoggedIn(!!token);
   }, []);
 
@@ -300,10 +310,14 @@ const PortfolioMain: React.FC = () => {
       try {
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        console.log('포트폴리오 목록 요청 시작:', { token: !!token, headers });
         const response = await customAxios.get('/portfolios', { headers });
+        console.log('포트폴리오 목록 응답:', response.data);
         setPortfolios(Array.isArray(response.data) ? response.data : []);
-      } catch (error) {
-        console.error('Error fetching portfolios:', error);
+      } catch (error: any) {
+        console.error('포트폴리오 목록 불러오기 실패:', error);
+        console.error('에러 상세:', error.response?.status, error.response?.data);
+        setPortfolios([]);
       }
     };
     fetchData();
@@ -317,11 +331,14 @@ const PortfolioMain: React.FC = () => {
           customAxios.get('/skills'),
           customAxios.get('/keywords'),
         ]);
-        setJobs(jobsRes.data);
-        setSkills(skillsRes.data);
-        setKeywords(keywordsRes.data);
+        setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
+        setSkills(Array.isArray(skillsRes.data) ? skillsRes.data : []);
+        setKeywords(Array.isArray(keywordsRes.data) ? keywordsRes.data : []);
       } catch (e) {
-        // 에러 핸들링 (필요시)
+        console.error('옵션 불러오기 실패', e);
+        setJobs([]);
+        setSkills([]);
+        setKeywords([]);
       }
     };
     fetchOptions();

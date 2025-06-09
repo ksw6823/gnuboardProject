@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from '../../api/axios';
+import { formatPhoneInput, removePhoneFormat } from '../../utils/phoneFormat';
 
 const Background = styled.div`
   min-height: 100vh;
@@ -239,7 +240,7 @@ const Register: React.FC = () => {
       formData.append('birthYear', birthYear);
       formData.append('birthMonth', birthMonth);
       formData.append('birthDay', birthDay);
-      formData.append('phone', phone);
+      formData.append('phone', removePhoneFormat(phone)); // 숫자만 저장
       formData.append('email', email);
       if (profileImg) {
         formData.append('profileImg', profileImg);
@@ -428,8 +429,8 @@ const Register: React.FC = () => {
               type="text"
               placeholder="010-1234-5678"
               value={phone}
-              onChange={e => setPhone(e.target.value)}
-              maxLength={11}
+              onChange={e => setPhone(formatPhoneInput(e.target.value))}
+              maxLength={13}
               required
             />
           </InputGroup>
@@ -458,7 +459,7 @@ const Register: React.FC = () => {
                   onChange={e => setEmailDomain(e.target.value)}
                   required
                 >
-                  {domainOptions.map(opt => (
+                  {(domainOptions || []).map(opt => (
                     <option key={opt} value={opt} disabled={opt === ''}>{opt === '' ? '도메인 선택' : opt}</option>
                   ))}
                 </StyledSelect>

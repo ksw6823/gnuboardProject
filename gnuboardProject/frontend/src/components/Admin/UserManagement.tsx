@@ -119,14 +119,16 @@ const UserManagement: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.users);
-        setTotal(data.total);
+        setUsers(Array.isArray(data.users) ? data.users : []);
+        setTotal(data.total || 0);
       } else {
         throw new Error('사용자 목록을 불러오는데 실패했습니다.');
       }
     } catch (error) {
       console.error('사용자 목록 조회 중 오류가 발생했습니다:', error);
       alert('사용자 목록을 불러오는데 실패했습니다.');
+      setUsers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ const UserManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        setUsers(users.map(user =>
+        setUsers((users || []).map(user =>
           user.id === userId ? { ...user, role: newRole } : user
         ));
         alert('사용자 역할이 변경되었습니다.');
@@ -169,7 +171,7 @@ const UserManagement: React.FC = () => {
       });
 
       if (response.ok) {
-        setUsers(users.filter(user => user.id !== userId));
+        setUsers((users || []).filter(user => user.id !== userId));
         alert('사용자가 삭제되었습니다.');
       } else {
         throw new Error('사용자 삭제에 실패했습니다.');
@@ -201,7 +203,7 @@ const UserManagement: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {(users || []).map(user => (
             <tr key={user.id}>
               <td>{user.id}</td>
               <td>{user.username}</td>

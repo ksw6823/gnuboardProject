@@ -31,7 +31,7 @@ export class User {
   @Column()
   phone!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   profileImage?: string;
 
   @Column({ default: false })
