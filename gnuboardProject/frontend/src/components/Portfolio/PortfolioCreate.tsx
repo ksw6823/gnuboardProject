@@ -1,439 +1,1028 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
 import Header from '../Common/Header';
-import Footer from '../Common/Footer';
 import { useAuth } from '../../contexts/AuthContext';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { v4 as uuidv4 } from 'uuid';
-import styled from 'styled-components';
-import { PortfolioData } from '../../types/portfolio';
-import DefaultTemplate from './templates/DefaultTemplate';
-import CardTemplate from './templates/CardTemplate';
-import SplitTemplate from './templates/SplitTemplate';
-import DarkTemplate from './templates/DarkTemplate';
-import TabTemplate from './templates/TabTemplate';
-import ArtTemplate from './templates/ArtTemplate';
-import ClassicTemplate from './templates/ClassicTemplate';
-import BrutalTemplate from './templates/BrutalTemplate';
-import GradientTemplate from './templates/GradientTemplate';
-import MinimalTemplate from './templates/MinimalTemplate';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { formatPhone } from '../../utils/phoneFormat';
 
-// 드래그&드롭용 태그 카테고리
-const TAG_CATEGORIES = [
-  { id: 'basic', label: '기본 정보' },
-  { id: 'tech', label: '기술 스택' },
-  { id: 'exp', label: '수행경험' },
-  { id: 'career', label: '이력' },
-  { id: 'cert', label: '자격증' },
-  { id: 'intro', label: '자기소개서' },
-  { id: 'lang', label: '언어' },
-];
-
-interface Skill { id: number; name: string; }
-interface Keyword { id: number; name: string; }
-interface Section { id: string; type: string; title: string; content: string; order: number; }
-
-const TemplateSelector = styled.select`
-  padding: 8px 16px;
-  margin: 1rem 0;
-  border-radius: 4px;
-  border: 1px solid #ddd;
+const Wrapper = styled.div`
+  max-width: 730px;
+  margin: 0 auto;
+  padding: 2rem 0;
+`;
+const Section = styled.div`
+  margin-bottom: 2.5rem;
+`;
+const SectionLabel = styled.div`
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+`;
+const TagList = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+`;
+const Tag = styled.span`
+  background: #1976d2;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+`;
+const RemoveTagBtn = styled.button`
+  background: none;
+  border: none;
+  color: #fff;
   font-size: 1rem;
-  background-color: white;
+  cursor: pointer;
+`;
+const AddBtn = styled.button`
+  background: #f4f6fa;
+  color: #1976d2;
+  border: 1.5px solid #1976d2;
+  border-radius: 24px;
+  padding: 0.2rem 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 0.5rem;
+`;
+const Dropdown = styled.div`
+  position: absolute;
+  background: #fff;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  z-index: 100;
+  padding: 1rem 0.5rem;
+  min-width: 200px;
+  margin-top: 0.5rem;
+`;
+const DropdownOption = styled.label`
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  &:hover { background: #f4f6fa; }
 `;
 
-const TemplateContainer = styled.div`
-  margin-top: 2rem;
-  padding: 2rem;
-  background: #fff;
+const SectionWrapper = styled.div`
+  max-width: 730px;
+  width: 100%;
+  margin: 0 auto 2.5rem auto;
+  background: #f7f9fc;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.5rem 1.5rem 1.2rem 1.5rem;
 `;
+const CardRow = styled.div`
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+`;
+const CardInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 1.2rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #fff;
+`;
+const CardTextArea = styled.textarea`
+  width: 100%;
+  min-height: 80px;
+  padding: 0.7rem 1.2rem;
+  border: 1.5px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #fff;
+  resize: vertical;
+  margin-right: 0;
+  box-sizing: border-box;
+`;
+const CardButtonRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 0.7rem;
+  margin-bottom: 1.2rem;
+`;
+const CardAddButton = styled.button`
+  background: #3a5fc8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.6rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover {
+    background: #2b4fa2;
+  }
+  margin-top: 0.7rem;
+`;
+const ConfirmButton = styled.button`
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  padding: 0.5rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover { background: #1251a3; }
+`;
+const DeleteButton = styled.button`
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  padding: 0.5rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 2px;
+  &:hover { background: #1769aa; }
+`;
+
+const ProfilePreviewWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2.2rem;
+  margin: 2.5rem auto 2.5rem auto;
+  max-width: 730px;
+  background: #f7f9fc;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2.2rem 2.5rem;
+`;
+const ProfileImg = styled.img`
+  width: 120px;
+  height: 160px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #e0e0e0;
+`;
+const ProfileInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+`;
+const ProfileName = styled.div`
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1976d2;
+`;
+const ProfileEmail = styled.div`
+  font-size: 1.1rem;
+  color: #444;
+`;
+
+const FixedSaveButton = styled.button`
+  position: fixed;
+  top: 110px;
+  right: 4vw;
+  z-index: 2000;
+  background: #3a5fc8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem 2.2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(80,120,255,0.10);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  &:hover { background: #2b4fa2; }
+`;
+
+const TitleInput = styled.input`
+  width: 100%;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 1.2rem 1.2rem;
+  border: 1.5px solid #b0b0b0;
+  border-radius: 10px;
+  margin-bottom: 2.2rem;
+  margin-top: 1.2rem;
+  background: #fff;
+`;
+
+// 생년월일 포맷 변환 함수 추가
+const formatBirth = (birth: string | undefined) => {
+  if (!birth) return '-';
+  // YYYY-MM-DD → YY. MM. DD
+  const [y, m, d] = birth.split('-');
+  return `${y?.slice(2)}. ${m}. ${d}`;
+};
 
 const PortfolioCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  // 프로필/기본정보
-  const [profileImg, setProfileImg] = useState<File | null>(null);
-  const [profilePreview, setProfilePreview] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [summary, setSummary] = useState('');
+  // 선택값
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
+  const [selectedKeywordIds, setSelectedKeywordIds] = useState<number[]>([]);
+  // 옵션
+  const [jobOptions, setJobOptions] = useState<{id: number, name: string}[]>([]);
+  const [skillOptions, setSkillOptions] = useState<{id: number, name: string}[]>([]);
+  const [keywordOptions, setKeywordOptions] = useState<{id: number, name: string}[]>([]);
+  // 드롭다운 오픈 상태
+  const [jobOpen, setJobOpen] = useState(false);
+  const [skillOpen, setSkillOpen] = useState(false);
+  const [keywordOpen, setKeywordOpen] = useState(false);
+  // 임시 선택값
+  const [tempSelectedJobId, setTempSelectedJobId] = useState<number | null>(null);
+  const [tempSelectedSkillIds, setTempSelectedSkillIds] = useState<number[]>([]);
+  const [tempSelectedKeywordIds, setTempSelectedKeywordIds] = useState<number[]>([]);
+  // 기타 입력값
+  const [intro, setIntro] = useState('');
+  // Section별 입력 상태
+  type Period = { startDate: Date | null, endDate: Date | null };
+  type Experience = { company: string, position: string, period: Period, description: string, isConfirmed: boolean };
+  type Project = { name: string, period: Period, description: string, isConfirmed: boolean };
+  type Activity = { name: string, org: string, period: Period, description: string, isConfirmed: boolean };
+  const [experiences, setExperiences] = useState<Experience[]>([
+    { company: '', position: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }
+  ]);
+  const [projects, setProjects] = useState<Project[]>([
+    { name: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }
+  ]);
+  const [certificates, setCertificates] = useState([
+    { name: '', level: '', issuer: '', isConfirmed: false }
+  ]);
+  const [languages, setLanguages] = useState([
+    { name: '', level: '', isConfirmed: false }
+  ]);
+  const [activities, setActivities] = useState<Activity[]>([
+    { name: '', org: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }
+  ]);
+  // 제목
   const [title, setTitle] = useState('');
-  // 키워드/기술스택
-  const [keywords, setKeywords] = useState<Keyword[]>([]);
-  const [selectedKeywords, setSelectedKeywords] = useState<number[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
-  // 섹션(드래그&드롭)
-  const [sections, setSections] = useState<Section[]>([]);
-  // 드래그 상태
-  const [draggedTag, setDraggedTag] = useState<string | null>(null);
-  // 모달 상태
-  const [showKeywordModal, setShowKeywordModal] = useState(false);
-  const [showSkillModal, setShowSkillModal] = useState(false);
-  const [tempKeyword, setTempKeyword] = useState<number[]>([]);
-  const [tempSkill, setTempSkill] = useState<number[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState('default');
+  // 학력
+  const [educations, setEducations] = useState([
+    { school: '', major: '', startDate: null as Date | null, endDate: null as Date | null, degree: '재학중', isConfirmed: false }
+  ]);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // 내 정보 불러오기
-  const loadProfile = () => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      // phone 등 추가 정보 필요시 user에서 불러오기
-    }
-  };
-
-  // 기술스택/키워드 목록 불러오기
   useEffect(() => {
-    axios.get('/skills').then(res => setSkills(res.data));
-    axios.get('/keywords').then(res => setKeywords(res.data));
+    axios.get('/jobs')
+      .then(res => setJobOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Failed to load jobs:', err);
+        setJobOptions([]);
+      });
+    
+    axios.get('/skills')
+      .then(res => setSkillOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Failed to load skills:', err);
+        setSkillOptions([]);
+      });
+    
+    axios.get('/keywords')
+      .then(res => setKeywordOptions(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Failed to load keywords:', err);
+        setKeywordOptions([]);
+      });
   }, []);
 
-  // 프로필 이미지 미리보기
-  const handleProfileImg = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfileImg(e.target.files[0]);
-      setProfilePreview(URL.createObjectURL(e.target.files[0]));
-    }
+  // 드롭다운 열기 시 임시값 초기화
+  const openKeywordDropdown = () => {
+    setTempSelectedKeywordIds(selectedKeywordIds || []);
+    setKeywordOpen(true);
+  };
+  const openJobDropdown = () => {
+    setTempSelectedJobId(selectedJobId);
+    setJobOpen(true);
+  };
+  const openSkillDropdown = () => {
+    setTempSelectedSkillIds(selectedSkillIds || []);
+    setSkillOpen(true);
   };
 
-  // 모달 오픈 시 임시 선택값 초기화
-  const openKeywordModal = () => {
-    setTempKeyword(selectedKeywords);
-    setShowKeywordModal(true);
+  // 임시 선택 핸들러
+  const handleTempJobChange = (id: number) => setTempSelectedJobId(id);
+  const handleTempSkillChange = (id: number) => setTempSelectedSkillIds(prev => (prev || []).includes(id) ? (prev || []).filter(s => s !== id) : [...(prev || []), id]);
+  const handleTempKeywordChange = (id: number) => setTempSelectedKeywordIds(prev => (prev || []).includes(id) ? (prev || []).filter(k => k !== id) : [...(prev || []), id]);
+
+  // 추가 버튼 클릭 시 실제 선택값에 반영
+  const applyKeywordSelection = () => {
+    setSelectedKeywordIds(tempSelectedKeywordIds || []);
+    setKeywordOpen(false);
   };
-  const openSkillModal = () => {
-    setTempSkill(selectedSkills);
-    setShowSkillModal(true);
+  const applyJobSelection = () => {
+    setSelectedJobId(tempSelectedJobId);
+    setJobOpen(false);
+  };
+  const applySkillSelection = () => {
+    setSelectedSkillIds(tempSelectedSkillIds || []);
+    setSkillOpen(false);
   };
 
-  // 모달 체크박스 토글
-  const toggleTempKeyword = (id: number) => {
-    setTempKeyword(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id]);
+  // 드롭다운 닫기 시 임시값 초기화
+  const closeKeywordDropdown = () => {
+    setKeywordOpen(false);
+    setTempSelectedKeywordIds([]);
   };
-  const toggleTempSkill = (id: number) => {
-    setTempSkill(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  const closeJobDropdown = () => {
+    setJobOpen(false);
+    setTempSelectedJobId(null);
   };
-
-  // 모달에서 추가 버튼 클릭 시 반영
-  const applyKeyword = () => {
-    setSelectedKeywords(tempKeyword);
-    setShowKeywordModal(false);
-  };
-  const applySkill = () => {
-    setSelectedSkills(tempSkill);
-    setShowSkillModal(false);
+  const closeSkillDropdown = () => {
+    setSkillOpen(false);
+    setTempSelectedSkillIds([]);
   };
 
-  // 태그 드래그 시작
-  const onDragStart = (type: string) => setDraggedTag(type);
-  // 태그 드롭
-  const onDrop = () => {
-    if (draggedTag) {
-      setSections([...sections, {
-        id: uuidv4(),
-        type: draggedTag,
-        title: '',
-        content: '',
-        order: sections.length,
-      }]);
-      setDraggedTag(null);
-    }
-  };
+  // 태그 X 버튼
+  const removeKeyword = (id: number) => setSelectedKeywordIds(prev => (prev || []).filter(k => k !== id));
+  const removeSkill = (id: number) => setSelectedSkillIds(prev => (prev || []).filter(s => s !== id));
+  const removeJob = () => setSelectedJobId(null);
 
-  // 섹션 내용 변경
-  const updateSection = (id: string, field: 'title' | 'content', value: string) => {
-    setSections(sections.map(section =>
-      section.id === id ? { ...section, [field]: value } : section
-    ));
-  };
-  // 섹션 삭제
-  const removeSection = (id: string) => setSections(sections.filter(s => s.id !== id));
+  // Section별 핸들러
+  // 추가
+  const handleAddExperience = () => setExperiences([...experiences, { company: '', position: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }]);
+  const handleAddProject = () => setProjects([...projects, { name: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }]);
+  const handleAddCertificate = () => setCertificates([...certificates, { name: '', level: '', issuer: '', isConfirmed: false }]);
+  const handleAddLanguage = () => setLanguages([...languages, { name: '', level: '', isConfirmed: false }]);
+  const handleAddActivity = () => setActivities([...activities, { name: '', org: '', period: { startDate: null, endDate: null }, description: '', isConfirmed: false }]);
+  const handleAddEducation = () => setEducations([...educations, { school: '', major: '', startDate: null, endDate: null, degree: '재학중', isConfirmed: false }]);
+  // 값 변경
+  const handleExperienceChange = (idx: number, field: string, value: any) => setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, [field]: value } : exp));
+  const handleProjectChange = (idx: number, field: string, value: any) => setProjects(projects.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  const handleCertificateChange = (idx: number, field: string, value: string) => setCertificates(certificates.map((c, i) => i === idx ? { ...c, [field]: value } : c));
+  const handleLanguageChange = (idx: number, field: string, value: string) => setLanguages(languages.map((l, i) => i === idx ? { ...l, [field]: value } : l));
+  const handleActivityChange = (idx: number, field: string, value: any) => setActivities(activities.map((a, i) => i === idx ? { ...a, [field]: value } : a));
+  const handleEducationChange = (idx: number, field: string, value: any) => setEducations(educations.map((edu, i) => i === idx ? { ...edu, [field]: value } : edu));
+  // 삭제
+  const handleRemoveExperience = (idx: number) => setExperiences(experiences.filter((_, i) => i !== idx));
+  const handleRemoveProject = (idx: number) => setProjects(projects.filter((_, i) => i !== idx));
+  const handleRemoveCertificate = (idx: number) => setCertificates(certificates.filter((_, i) => i !== idx));
+  const handleRemoveLanguage = (idx: number) => setLanguages(languages.filter((_, i) => i !== idx));
+  const handleRemoveActivity = (idx: number) => setActivities(activities.filter((_, i) => i !== idx));
+  const handleRemoveEducation = (idx: number) => setEducations(educations.filter((_, i) => i !== idx));
+  // 확인/수정
+  const handleConfirmExperience = (idx: number) => setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: true } : exp));
+  const handleEditExperience = (idx: number) => setExperiences(experiences.map((exp, i) => i === idx ? { ...exp, isConfirmed: false } : exp));
+  const handleConfirmProject = (idx: number) => setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: true } : p));
+  const handleEditProject = (idx: number) => setProjects(projects.map((p, i) => i === idx ? { ...p, isConfirmed: false } : p));
+  const handleConfirmCertificate = (idx: number) => setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: true } : c));
+  const handleEditCertificate = (idx: number) => setCertificates(certificates.map((c, i) => i === idx ? { ...c, isConfirmed: false } : c));
+  const handleConfirmLanguage = (idx: number) => setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: true } : l));
+  const handleEditLanguage = (idx: number) => setLanguages(languages.map((l, i) => i === idx ? { ...l, isConfirmed: false } : l));
+  const handleConfirmActivity = (idx: number) => setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: true } : a));
+  const handleEditActivity = (idx: number) => setActivities(activities.map((a, i) => i === idx ? { ...a, isConfirmed: false } : a));
+  const handleConfirmEducation = (idx: number) => setEducations(educations.map((edu, i) => i === idx ? { ...edu, isConfirmed: true } : edu));
+  const handleEditEducation = (idx: number) => setEducations(educations.map((edu, i) => i === idx ? { ...edu, isConfirmed: false } : edu));
 
-  // 저장 함수 추가
+  // 저장
   const handleSave = async () => {
-    const formData = new FormData();
-    // 기본 정보
-    formData.append('name', name);
-    formData.append('phone', phone);
-    formData.append('email', email);
-    formData.append('summary', summary);
-    formData.append('title', title);
-    // 프로필 이미지
-    if (profileImg) {
-      formData.append('profileImg', profileImg);
+    setErrorMsg('');
+    if (!title.trim()) {
+      setErrorMsg('제목을 입력해주세요.');
+      return;
     }
-    // 키워드/기술스택/섹션
-    formData.append('keywords', JSON.stringify(selectedKeywords));
-    formData.append('skills', JSON.stringify(selectedSkills));
-    formData.append('sections', JSON.stringify(sections));
-
-    try {
-      await axios.post('/portfolios', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+    if (!selectedKeywordIds || selectedKeywordIds.length === 0) {
+      setErrorMsg('키워드를 1개 이상 선택해주세요.');
+      return;
+    }
+    if (selectedJobId === null) {
+      setErrorMsg('직무/직군을 선택해주세요.');
+      return;
+    }
+    if (!selectedSkillIds || selectedSkillIds.length === 0) {
+      setErrorMsg('기술스택을 1개 이상 선택해주세요.');
+      return;
+    }
+    if (!intro.trim()) {
+      setErrorMsg('소개를 입력해주세요.');
+      return;
+    }
+    // Section 데이터 준비
+    const sections: any[] = [];
+    educations.filter(e => e.isConfirmed && e.school).forEach(e => {
+      sections.push({
+        type: 'education',
+        content: JSON.stringify({
+          school: e.school || '',
+          major: e.major || '',
+          startDate: e.startDate ? e.startDate.toISOString().slice(0, 10) : '',
+          endDate: e.endDate ? e.endDate.toISOString().slice(0, 10) : '',
+          degree: e.degree || ''
+        })
       });
-      alert('저장되었습니다.');
-      navigate('/');
-    } catch (err) {
-      alert('저장 실패');
-    }
-  };
-
-  // 템플릿 데이터 변환 함수
-  const convertToTemplateData = (): PortfolioData => {
-    return {
-      personalInfo: {
-        name,
+    });
+    experiences.filter(e => e.isConfirmed && e.company && e.position && e.period?.startDate).forEach(e => {
+      sections.push({
+        type: 'experience',
+        content: JSON.stringify({
+          ...e,
+          period: {
+            startDate: e.period && e.period.startDate instanceof Date ? e.period.startDate.toISOString().slice(0, 10) : '',
+            endDate: e.period && e.period.endDate instanceof Date ? e.period.endDate.toISOString().slice(0, 10) : ''
+          }
+        })
+      });
+    });
+    projects.filter(p => p.isConfirmed && p.name && p.period?.startDate).forEach(p => {
+      sections.push({
+        type: 'project',
+        content: JSON.stringify({
+          ...p,
+          period: {
+            startDate: p.period && p.period.startDate instanceof Date ? p.period.startDate.toISOString().slice(0, 10) : '',
+            endDate: p.period && p.period.endDate instanceof Date ? p.period.endDate.toISOString().slice(0, 10) : ''
+          }
+        })
+      });
+    });
+    certificates.filter(c => c.isConfirmed && c.name).forEach(c => {
+      sections.push({ type: 'certificate', content: JSON.stringify(c) });
+    });
+    languages.filter(l => l.isConfirmed && l.name).forEach(l => {
+      sections.push({ type: 'language', content: JSON.stringify(l) });
+    });
+    activities.filter(a => a.isConfirmed && a.name && a.org && a.period?.startDate).forEach(a => {
+      sections.push({
+        type: 'activity',
+        content: JSON.stringify({
+          ...a,
+          period: {
+            startDate: a.period && a.period.startDate instanceof Date ? a.period.startDate.toISOString().slice(0, 10) : '',
+            endDate: a.period && a.period.endDate instanceof Date ? a.period.endDate.toISOString().slice(0, 10) : ''
+          }
+        })
+      });
+    });
+    // 저장 요청 (JSON)
+    await axios.post(
+      '/portfolios',
+      {
         title,
-        email,
-        phone,
-        location: '', // 위치 정보가 없는 경우 빈 문자열로 설정
-        introduction: summary,
-        profileImage: profileImg ? URL.createObjectURL(profileImg) : '',
+        userId: user ? String(user.id) : '',
+        is_private: false,
+        jobs: selectedJobId !== null ? [selectedJobId] : [],
+        skills: selectedSkillIds,
+        keywords: selectedKeywordIds,
+        intro,
+        sections,
+        user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : undefined,
       },
-      skills: skills
-        .filter(skill => selectedSkills.includes(skill.id))
-        .map(skill => ({
-          name: skill.name,
-          level: '',
-        })),
-      experiences: sections
-        .filter(section => section.type === 'experience')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            title: content.title,
-            company: content.company,
-            date: content.period,
-            description: content.description,
-          };
-        }),
-      education: sections
-        .filter(section => section.type === 'education')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            school: content.school,
-            degree: content.degree,
-            date: content.period,
-            description: content.description,
-          };
-        }),
-      projects: sections
-        .filter(section => section.type === 'project')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            title: content.title,
-            description: content.description,
-            technologies: content.technologies || [],
-            link: content.link || '',
-          };
-        }),
-      certificates: sections
-        .filter(section => section.type === 'certificate')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            name: content.name,
-            issuer: content.issuer,
-            date: content.date,
-          };
-        }),
-      languages: sections
-        .filter(section => section.type === 'language')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            name: content.name,
-            level: content.level,
-          };
-        }),
-      activities: sections
-        .filter(section => section.type === 'activity')
-        .map(section => {
-          const content = JSON.parse(section.content);
-          return {
-            title: content.title,
-            description: content.description,
-          };
-        }),
-    };
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
+      }
+    );
+    navigate('/');
   };
-
-  const templates = {
-    default: DefaultTemplate,
-    dark: DarkTemplate,
-    gradient: GradientTemplate,
-    minimal: MinimalTemplate,
-    art: ArtTemplate,
-    brutal: BrutalTemplate,
-    tab: TabTemplate,
-    split: SplitTemplate,
-    card: CardTemplate,
-    classic: ClassicTemplate,
-  };
-
-  const SelectedTemplate = templates[selectedTemplate as keyof typeof templates];
 
   return (
     <>
       <Header />
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#f7f8fa' }}>
-        {/* 중앙: 입력 폼 */}
-        <div style={{ flex: 1, padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ width: 520, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: 32 }}>
-            {/* 제목 입력란 */}
-            <div style={{ marginBottom: 16 }}>
-              <input type="text" placeholder="포트폴리오 제목" value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: 12, border: '1px solid #bbb', borderRadius: 8, fontSize: 18, fontWeight: 600 }} />
-            </div>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Logo</div>
-              <div>
-                <label htmlFor="profileImg" style={{ display: 'inline-block', width: 100, height: 100, border: '1px dashed #bbb', borderRadius: 12, background: '#fafbfc', cursor: 'pointer', overflow: 'hidden', marginBottom: 8 }}>
-                  {profilePreview ? (
-                    <img src={profilePreview} alt="프로필" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 14 }}>사진 추가</div>
-                  )}
-                  <input id="profileImg" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleProfileImg} />
-                </label>
-              </div>
-              <button type="button" onClick={loadProfile} style={{ fontSize: 13, color: '#007bff', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 8 }}>내 정보 불러오기</button>
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <input type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6, marginBottom: 8 }} />
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <input type="text" placeholder="국가" value="" disabled style={{ width: 60, padding: 10, border: '1px solid #eee', borderRadius: 6, background: '#f5f5f5' }} />
-                <input type="text" placeholder="01012345678" value={phone} onChange={e => setPhone(e.target.value)} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-              </div>
-              <input type="email" placeholder="이메일" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <textarea placeholder="한줄 소개" value={summary} onChange={e => setSummary(e.target.value)} style={{ width: '100%', minHeight: 60, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-            </div>
-            {/* 키워드 선택 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontWeight: 500 }}>나의 키워드</div>
-                <button type="button" onClick={openKeywordModal} style={{ marginLeft: 8, fontSize: 13, padding: '2px 12px', borderRadius: 16, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>추가</button>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {keywords.filter(k => selectedKeywords.includes(k.id)).map(k => (
-                  <span key={k.id} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #ddd', background: '#007bff', color: '#fff', fontSize: 14 }}>{k.name}</span>
-                ))}
-              </div>
-            </div>
-            {/* 기술스택 선택 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontWeight: 500 }}>기술 스택</div>
-                <button type="button" onClick={openSkillModal} style={{ marginLeft: 8, fontSize: 13, padding: '2px 12px', borderRadius: 16, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>추가</button>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {skills.filter(s => selectedSkills.includes(s.id)).map(s => (
-                  <span key={s.id} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #ddd', background: '#007bff', color: '#fff', fontSize: 14 }}>{s.name}</span>
-                ))}
-              </div>
-            </div>
-            {/* 정보 추가(드래그&드롭) */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 500, marginBottom: 6 }}>정보 추가</div>
-              <div onDragOver={e => e.preventDefault()} onDrop={onDrop} style={{ minHeight: 80, border: '2px dashed #bbb', borderRadius: 8, background: '#f8f9fa', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-                {sections.length === 0 && <div style={{ color: '#bbb', fontSize: 14 }}>오른쪽 태그를 끌어와 작성</div>}
-                {sections.map(section => (
-                  <div key={section.id} style={{ width: '100%', background: '#f9f9fc', border: '1px solid #eee', borderRadius: 8, margin: '8px 0', padding: 12, position: 'relative' }}>
-                    <input type="text" placeholder="제목" value={section.title} onChange={e => updateSection(section.id, 'title', e.target.value)} style={{ width: '100%', marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
-                    <ReactQuill value={section.content} onChange={v => updateSection(section.id, 'content', v)} style={{ height: 120, marginBottom: 8 }} />
-                    <button type="button" onClick={() => removeSection(section.id)} style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', color: '#888', fontSize: 18, cursor: 'pointer' }}>×</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      {user && (
+        <ProfilePreviewWrapper>
+          {user.profileImage && user.profileImage !== '' ? (
+            <ProfileImg src={user.profileImage.startsWith('http') ? user.profileImage : `${process.env.REACT_APP_API_URL}/${user.profileImage}`} alt="프로필" />
+          ) : (
+            <ProfileImg as="div" style={{background:'#e0e0e0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'2.5rem',color:'#aaa',width:120,height:160,borderRadius:16}}>
+              <span role="img" aria-label="user">👤</span>
+          </ProfileImg>
+          )}
+          <ProfileInfo>
+            <ProfileName>{user.name || '-'}</ProfileName>
+            <div style={{ fontSize: '1.15rem', color: '#222', marginBottom: 2 }}>{user.gender || '-'}</div>
+            <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{formatBirth(user.birth)}</div>
+                          <div style={{ fontSize: '1.1rem', color: '#222', marginBottom: 2 }}>{user.phone ? formatPhone(user.phone) : '-'}</div>
+            <ProfileEmail>{user.email || '-'}</ProfileEmail>
+          </ProfileInfo>
+        </ProfilePreviewWrapper>
+      )}
+      <FixedSaveButton onClick={handleSave}>저장 및 게시</FixedSaveButton>
+      {errorMsg && <div style={{ color: 'red', margin: '1rem 0', textAlign: 'center' }}>{errorMsg}</div>}
+      <Wrapper>
+        {/* 포트폴리오 제목 */}
+        <TitleInput value={title} onChange={e => setTitle(e.target.value)} placeholder="포트폴리오 제목을 입력하세요" />
+        {/* 키워드 */}
+        <Section>
+          <SectionLabel>나의 키워드</SectionLabel>
+            <TagList>
+            {(selectedKeywordIds || []).map(id => {
+              const option = (keywordOptions || []).find(opt => opt.id === id);
+              if (!option) return null;
+              return (
+                <Tag key={id}>{option.name}<RemoveTagBtn onClick={() => removeKeyword(id)}>×</RemoveTagBtn></Tag>
+              );
+            })}
+            <div style={{ position: 'relative' }}>
+              {(selectedKeywordIds || []).length < (keywordOptions || []).length && (
+                <AddBtn onClick={openKeywordDropdown}>+</AddBtn>
+              )}
+              {keywordOpen && (
+                <Dropdown>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>키워드 선택</div>
+                  {(keywordOptions || []).map(option => (
+                    <DropdownOption key={option.id}>
+                      <input
+                        type="checkbox"
+                        checked={(tempSelectedKeywordIds || []).includes(option.id)}
+                        onChange={() => handleTempKeywordChange(option.id)}
+                        style={{ marginRight: '0.6rem' }}
+                      />
+                      {option.name}
+                    </DropdownOption>
+                  ))}
+                  <AddBtn style={{ marginTop: 8 }} onClick={applyKeywordSelection}>추가</AddBtn>
+                  <AddBtn style={{ marginTop: 8, marginLeft: 8, background: '#eee', color: '#1976d2', borderColor: '#eee' }} onClick={closeKeywordDropdown}>취소</AddBtn>
+                </Dropdown>
+              )}
         </div>
-        {/* 우측: 태그/테마/저장 등 */}
-        <div style={{ width: 220, background: '#eaf3fa', borderLeft: '1px solid #e0e6ed', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <button style={{ width: '100%', marginBottom: 16, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>테마 설정</button>
-          <div style={{ width: '100%', marginBottom: 24 }}>
-            <div style={{ fontWeight: 500, marginBottom: 8 }}>태그</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {TAG_CATEGORIES.map(tag => (
-                <div key={tag.id} draggable onDragStart={() => onDragStart(tag.id)} style={{ padding: '10px 0', borderRadius: 8, background: '#fff', border: '1px solid #bcd', textAlign: 'center', fontWeight: 500, cursor: 'grab', userSelect: 'none' }}>{tag.label}</div>
-              ))}
+            </TagList>
+        </Section>
+        {/* 직무/직군 */}
+        <Section>
+          <SectionLabel>직무 / 직군</SectionLabel>
+          <TagList>
+            {selectedJobId !== null ? (() => {
+              const option = (jobOptions || []).find(opt => opt.id === selectedJobId);
+              if (!option) return null;
+              return (
+                <Tag key={selectedJobId}>{option.name}<RemoveTagBtn onClick={removeJob}>×</RemoveTagBtn></Tag>
+              );
+            })() : null}
+            <div style={{ position: 'relative' }}>
+              {selectedJobId === null && (jobOptions || []).length > 0 && (
+                <AddBtn onClick={openJobDropdown}>+</AddBtn>
+              )}
+              {jobOpen && (
+                <Dropdown>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>직무 선택</div>
+                  {(jobOptions || []).map(option => (
+                    <DropdownOption key={option.id}>
+                      <input
+                        type="radio"
+                        name="jobRadio"
+                        checked={tempSelectedJobId === option.id}
+                        onChange={() => handleTempJobChange(option.id)}
+                        style={{ marginRight: '0.6rem' }}
+                      />
+                      {option.name}
+                    </DropdownOption>
+                  ))}
+                  <AddBtn style={{ marginTop: 8 }} onClick={applyJobSelection}>추가</AddBtn>
+                  <AddBtn style={{ marginTop: 8, marginLeft: 8, background: '#eee', color: '#1976d2', borderColor: '#eee' }} onClick={closeJobDropdown}>취소</AddBtn>
+                </Dropdown>
+              )}
+        </div>
+          </TagList>
+        </Section>
+        {/* 기술 스택 */}
+        <Section>
+          <SectionLabel>기술 스택</SectionLabel>
+            <TagList>
+            {(selectedSkillIds || []).map(id => {
+              const option = (skillOptions || []).find(opt => opt.id === id);
+              if (!option) return null;
+              return (
+                <Tag key={id}>{option.name}<RemoveTagBtn onClick={() => removeSkill(id)}>×</RemoveTagBtn></Tag>
+              );
+            })}
+            <div style={{ position: 'relative' }}>
+              {(selectedSkillIds || []).length < (skillOptions || []).length && (
+                <AddBtn onClick={openSkillDropdown}>+</AddBtn>
+              )}
+              {skillOpen && (
+                <Dropdown>
+                  <div style={{ fontWeight: 600, marginBottom: 6 }}>기술스택 선택</div>
+                  {(skillOptions || []).map(option => (
+                    <DropdownOption key={option.id}>
+                      <input
+                        type="checkbox"
+                        checked={(tempSelectedSkillIds || []).includes(option.id)}
+                        onChange={() => handleTempSkillChange(option.id)}
+                        style={{ marginRight: '0.6rem' }}
+                      />
+                      {option.name}
+                    </DropdownOption>
+                  ))}
+                  <AddBtn style={{ marginTop: 8 }} onClick={applySkillSelection}>추가</AddBtn>
+                  <AddBtn style={{ marginTop: 8, marginLeft: 8, background: '#eee', color: '#1976d2', borderColor: '#eee' }} onClick={closeSkillDropdown}>취소</AddBtn>
+                </Dropdown>
+              )}
             </div>
+          </TagList>
+        </Section>
+        {/* 소개 */}
+        <Section>
+          <SectionLabel>나의 소개</SectionLabel>
+          <textarea style={{ width: '100%', minHeight: 120, fontSize: '1.1rem', borderRadius: 8, border: '1.5px solid #b0b0b0', padding: '1rem', resize: 'vertical' }}
+            value={intro} onChange={e => setIntro(e.target.value)} placeholder="자기소개를 입력하세요" />
+        </Section>
+        {/* 학력 */}
+        <SectionWrapper>
+          <SectionLabel>학력</SectionLabel>
+          {educations.filter(edu => edu.isConfirmed).map((edu, idx, arr) => (
+            <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{edu.school}
+                {(edu.startDate || edu.endDate) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {edu.startDate ? (typeof edu.startDate === 'string' ? edu.startDate : edu.startDate.toLocaleDateString()) : ''}
+                    ~
+                    {edu.endDate ? (typeof edu.endDate === 'string' ? edu.endDate : edu.endDate.toLocaleDateString()) : ''}
+                  </span>
+                )}
+              </div>
+              <div style={{ color: '#444', fontSize: '1.05rem', marginBottom: '0.1rem' }}>{edu.major} {edu.degree && `(${edu.degree})`}</div>
+              <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditEducation(educations.findIndex(e => e === edu))}>수정</ConfirmButton>
+                <DeleteButton onClick={() => handleRemoveEducation(educations.findIndex(e => e === edu))}>삭제</DeleteButton>
+              </div>
+            </div>
+          ))}
+          {/* 입력폼(확인 안 된 항목) */}
+          {educations.filter(edu => !edu.isConfirmed).map((edu, idx) => {
+            const realIdx = educations.findIndex((e, i) => !e.isConfirmed && educations.slice(0, i+1).filter(x => !x.isConfirmed).length-1 === idx);
+            return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+                <CardRow>
+                  <CardInput value={edu.school} onChange={e => handleEducationChange(realIdx, 'school', e.target.value)} placeholder="학교명" />
+                  <CardInput value={edu.major} onChange={e => handleEducationChange(realIdx, 'major', e.target.value)} placeholder="전공" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={edu.startDate}
+                      onChange={(date: Date | null) => handleEducationChange(realIdx, 'startDate', date)}
+                      selectsStart
+                      startDate={edu.startDate ? edu.startDate : undefined}
+                      endDate={edu.endDate ? edu.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={edu.endDate}
+                      onChange={(date: Date | null) => handleEducationChange(realIdx, 'endDate', date)}
+                      selectsEnd
+                      startDate={edu.startDate ? edu.startDate : undefined}
+                      endDate={edu.endDate ? edu.endDate : undefined}
+                      minDate={edu.startDate ? edu.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      disabled={edu.degree === '재학중'}
+                      customInput={<CardInput />}
+                    />
+                  </div>
+                </CardRow>
+                <CardRow>
+                  <select
+                    value={edu.degree}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setEducations(educations.map((item, i) =>
+                        i === realIdx
+                          ? {
+                              ...item,
+                              degree: value,
+                              endDate: value === '재학중' ? null : item.endDate
+                            }
+                          : item
+                      ));
+                    }}
+                    style={{ flex: 1, padding: '0.7rem 1.2rem', border: '1.5px solid #e9ecef', borderRadius: 8, fontSize: '1.08rem', background: '#fff' }}
+                  >
+                    <option value="재학중">재학중</option>
+                    <option value="졸업">졸업</option>
+                  </select>
+                </CardRow>
+                <CardButtonRow>
+                  <div />
+              <div>
+                    <ConfirmButton onClick={() => handleConfirmEducation(realIdx)}>확인</ConfirmButton>
+                    <DeleteButton onClick={() => handleRemoveEducation(realIdx)}>삭제</DeleteButton>
+        </div>
+                </CardButtonRow>
+              </div>
+            );
+          })}
+          <CardAddButton onClick={handleAddEducation}>+ 추가</CardAddButton>
+        </SectionWrapper>
+        {/* 경력 */}
+        <SectionWrapper>
+          <SectionLabel>경력</SectionLabel>
+            {experiences.filter(exp => exp.isConfirmed).map((exp, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>
+                  {exp.company}
+                {(exp.period && (exp.period.startDate || exp.period.endDate)) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {exp.period.startDate ? (exp.period.startDate instanceof Date ? exp.period.startDate.toISOString().slice(0, 10) : '') : ''}
+                    {exp.period.startDate || exp.period.endDate ? ' ~ ' : ''}
+                    {exp.period.endDate ? (exp.period.endDate instanceof Date ? exp.period.endDate.toISOString().slice(0, 10) : '') : ''}
+                  </span>
+                  )}
+              </div>
+                <div style={{ color: '#444', fontSize: '1.05rem', marginBottom: '0.1rem' }}>{exp.position}</div>
+                {exp.description && (
+                  <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{exp.description}</div>
+                )}
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditExperience(experiences.findIndex(e => e === exp))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveExperience(experiences.findIndex(e => e === exp))}>삭제</DeleteButton>
+            </div>
+              </div>
+            ))}
+        {/* 입력폼(확인 안 된 항목) */}
+        {experiences.filter(exp => !exp.isConfirmed).map((exp, idx) => {
+          // experiences에서 isConfirmed가 false인 항목의 실제 인덱스
+          const realIdx = experiences.findIndex((e, i) => !e.isConfirmed && experiences.slice(0, i+1).filter(x => !x.isConfirmed).length-1 === idx);
+          return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={exp.company} onChange={e => handleExperienceChange(realIdx, 'company', e.target.value)} placeholder="기업명" />
+                <CardInput value={exp.position} onChange={e => handleExperienceChange(realIdx, 'position', e.target.value)} placeholder="직위/직급" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={exp.period.startDate}
+                      onChange={(date: Date | null) => handleExperienceChange(realIdx, 'period', { ...exp.period, startDate: date })}
+                      selectsStart
+                      startDate={exp.period.startDate ? exp.period.startDate : undefined}
+                      endDate={exp.period.endDate ? exp.period.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={exp.period.endDate}
+                      onChange={(date: Date | null) => handleExperienceChange(realIdx, 'period', { ...exp.period, endDate: date })}
+                      selectsEnd
+                      startDate={exp.period.startDate ? exp.period.startDate : undefined}
+                      endDate={exp.period.endDate ? exp.period.endDate : undefined}
+                      minDate={exp.period.startDate ? exp.period.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      customInput={<CardInput />}
+                    />
+                  </div>
+              </CardRow>
+              <CardTextArea value={exp.description} onChange={e => handleExperienceChange(realIdx, 'description', e.target.value)} placeholder="주요 업무 및 성과(선택)" />
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmExperience(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveExperience(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+              </div>
+          );
+        })}
+          <CardAddButton onClick={handleAddExperience}>+ 추가</CardAddButton>
+        </SectionWrapper>
+        {/* 프로젝트 */}
+        <SectionWrapper>
+          <SectionLabel>프로젝트</SectionLabel>
+            {projects.filter(p => p.isConfirmed).map((p, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{p.name}
+                {(p.period && (p.period.startDate || p.period.endDate)) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {p.period.startDate ? (p.period.startDate instanceof Date ? p.period.startDate.toISOString().slice(0, 10) : '') : ''}
+                    {p.period.startDate || p.period.endDate ? ' ~ ' : ''}
+                    {p.period.endDate ? (p.period.endDate instanceof Date ? p.period.endDate.toISOString().slice(0, 10) : '') : ''}
+                  </span>
+                  )}
+            </div>
+                {p.description && (
+                  <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{p.description}</div>
+                )}
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditProject(projects.findIndex(x => x === p))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveProject(projects.findIndex(x => x === p))}>삭제</DeleteButton>
+            </div>
+              </div>
+            ))}
+        {/* 입력폼(확인 안 된 항목) */}
+        {projects.filter(p => !p.isConfirmed).map((p, idx) => {
+          const realIdx = projects.findIndex((x, i) => !x.isConfirmed && projects.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={p.name} onChange={e => handleProjectChange(realIdx, 'name', e.target.value)} placeholder="프로젝트명" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={p.period.startDate}
+                      onChange={(date: Date | null) => handleProjectChange(realIdx, 'period', { ...p.period, startDate: date })}
+                      selectsStart
+                      startDate={p.period.startDate ? p.period.startDate : undefined}
+                      endDate={p.period.endDate ? p.period.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={p.period.endDate}
+                      onChange={(date: Date | null) => handleProjectChange(realIdx, 'period', { ...p.period, endDate: date })}
+                      selectsEnd
+                      startDate={p.period.startDate ? p.period.startDate : undefined}
+                      endDate={p.period.endDate ? p.period.endDate : undefined}
+                      minDate={p.period.startDate ? p.period.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      customInput={<CardInput />}
+                    />
+                  </div>
+              </CardRow>
+              <CardTextArea value={p.description} onChange={e => handleProjectChange(realIdx, 'description', e.target.value)} placeholder="프로젝트 내용" />
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmProject(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveProject(realIdx)}>삭제</DeleteButton>
+                </div>
+              </CardButtonRow>
+              </div>
+          );
+        })}
+          <CardAddButton onClick={handleAddProject}>+ 추가</CardAddButton>
+        </SectionWrapper>
+        {/* 자격증 */}
+        <SectionWrapper>
+          <SectionLabel>자격증</SectionLabel>
+            {certificates.filter(c => c.isConfirmed).map((c, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: '0.2rem' }}>{c.name}
+                  {c.level && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{c.level}</span>
+                  )}
+                  {c.issuer && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{c.issuer}</span>
+                  )}
+              </div>
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditCertificate(certificates.findIndex(x => x === c))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveCertificate(certificates.findIndex(x => x === c))}>삭제</DeleteButton>
+            </div>
+              </div>
+            ))}
+        {certificates.filter(c => !c.isConfirmed).map((c, idx) => {
+          const realIdx = certificates.findIndex((x, i) => !x.isConfirmed && certificates.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={c.name} onChange={e => handleCertificateChange(realIdx, 'name', e.target.value)} placeholder="자격증명" />
+                <CardInput value={c.level} onChange={e => handleCertificateChange(realIdx, 'level', e.target.value)} placeholder="급수" />
+                <CardInput value={c.issuer} onChange={e => handleCertificateChange(realIdx, 'issuer', e.target.value)} placeholder="발급기관" />
+              </CardRow>
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmCertificate(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveCertificate(realIdx)}>삭제</DeleteButton>
+              </div>
+              </CardButtonRow>
+              </div>
+          );
+        })}
+          <CardAddButton onClick={handleAddCertificate}>+ 추가</CardAddButton>
+        </SectionWrapper>
+        {/* 외국어 */}
+        <SectionWrapper>
+          <SectionLabel>외국어</SectionLabel>
+            {languages.filter(l => l.isConfirmed).map((l, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: '0.2rem' }}>{l.name}
+                  {l.level && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{l.level}</span>
+                  )}
+            </div>
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditLanguage(languages.findIndex(x => x === l))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveLanguage(languages.findIndex(x => x === l))}>삭제</DeleteButton>
+                  </div>
+              </div>
+            ))}
+        {languages.filter(l => !l.isConfirmed).map((l, idx) => {
+          const realIdx = languages.findIndex((x, i) => !x.isConfirmed && languages.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={l.name} onChange={e => handleLanguageChange(realIdx, 'name', e.target.value)} placeholder="언어명" />
+                <CardInput value={l.level} onChange={e => handleLanguageChange(realIdx, 'level', e.target.value)} placeholder="수준" />
+              </CardRow>
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmLanguage(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveLanguage(realIdx)}>삭제</DeleteButton>
+            </div>
+              </CardButtonRow>
+              </div>
+          );
+        })}
+          <CardAddButton onClick={handleAddLanguage}>+ 추가</CardAddButton>
+        </SectionWrapper>
+        {/* 대외 활동 */}
+        <SectionWrapper>
+          <SectionLabel>대외 활동</SectionLabel>
+            {activities.filter(a => a.isConfirmed).map((a, idx, arr) => (
+              <div key={idx} style={{ padding: '1.2rem 0.5rem 1.2rem 0.5rem', borderBottom: idx !== arr.length - 1 ? '1px solid #e0e0e0' : 'none', marginBottom: '0.7rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '1.18rem', marginBottom: '0.2rem' }}>{a.name}
+                  {a.org && (
+                    <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>{a.org}</span>
+                  )}
+                {(a.period && (a.period.startDate || a.period.endDate)) && (
+                  <span style={{ color: '#b0b0b0', fontWeight: 400, fontSize: '0.98rem', marginLeft: '0.7rem' }}>
+                    {a.period.startDate ? (a.period.startDate instanceof Date ? a.period.startDate.toISOString().slice(0, 10) : '') : ''}
+                    {a.period.startDate || a.period.endDate ? ' ~ ' : ''}
+                    {a.period.endDate ? (a.period.endDate instanceof Date ? a.period.endDate.toISOString().slice(0, 10) : '') : ''}
+                  </span>
+                  )}
           </div>
-          <button style={{ width: '100%', marginBottom: 8, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }} onClick={handleSave}>저장</button>
-          <button style={{ width: '100%', marginBottom: 8, padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>불러오기</button>
-          <button style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #bcd', background: '#fff', fontWeight: 500, cursor: 'pointer' }}>PDF / 프린트 인쇄</button>
+                {a.description && (
+                  <div style={{ color: '#444', fontSize: '1.05rem', whiteSpace: 'pre-line' }}>{a.description}</div>
+                )}
+                <div style={{ marginTop: '0.7rem', textAlign: 'right' }}>
+                  <ConfirmButton as="button" style={{ background: '#eee', color: '#1976d2' }} onClick={() => handleEditActivity(activities.findIndex(x => x === a))}>수정</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveActivity(activities.findIndex(x => x === a))}>삭제</DeleteButton>
         </div>
       </div>
-      {/* 키워드 모달 */}
-      {showKeywordModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 320 }}>
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>키워드 선택</div>
-            <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
-              {keywords.map(k => (
-                <label key={k.id} style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={tempKeyword.includes(k.id)} onChange={() => toggleTempKeyword(k.id)} style={{ marginRight: 8 }} />
-                  {k.name}
-                </label>
-              ))}
+            ))}
+        {activities.filter(a => !a.isConfirmed).map((a, idx) => {
+          const realIdx = activities.findIndex((x, i) => !x.isConfirmed && activities.slice(0, i+1).filter(y => !y.isConfirmed).length-1 === idx);
+          return (
+              <div key={realIdx} style={{ marginBottom: '0' }}>
+              <CardRow>
+                <CardInput value={a.name} onChange={e => handleActivityChange(realIdx, 'name', e.target.value)} placeholder="활동명" />
+                <CardInput value={a.org} onChange={e => handleActivityChange(realIdx, 'org', e.target.value)} placeholder="활동기관" />
+                </CardRow>
+                <CardRow>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 50, flex: 2 }}>
+                    <DatePicker
+                      selected={a.period.startDate}
+                      onChange={(date: Date | null) => handleActivityChange(realIdx, 'period', { ...a.period, startDate: date })}
+                      selectsStart
+                      startDate={a.period.startDate ? a.period.startDate : undefined}
+                      endDate={a.period.endDate ? a.period.endDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="시작일"
+                      customInput={<CardInput />}
+                    />
+                    <span style={{ margin: '0 4px' }}>~</span>
+                    <DatePicker
+                      selected={a.period.endDate}
+                      onChange={(date: Date | null) => handleActivityChange(realIdx, 'period', { ...a.period, endDate: date })}
+                      selectsEnd
+                      startDate={a.period.startDate ? a.period.startDate : undefined}
+                      endDate={a.period.endDate ? a.period.endDate : undefined}
+                      minDate={a.period.startDate ? a.period.startDate : undefined}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="종료일"
+                      customInput={<CardInput />}
+                    />
+                  </div>
+              </CardRow>
+              <CardTextArea value={a.description} onChange={e => handleActivityChange(realIdx, 'description', e.target.value)} placeholder="활동 설명" />
+              <CardButtonRow>
+                <div />
+                <div>
+                  <ConfirmButton onClick={() => handleConfirmActivity(realIdx)}>확인</ConfirmButton>
+                  <DeleteButton onClick={() => handleRemoveActivity(realIdx)}>삭제</DeleteButton>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowKeywordModal(false)} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>취소</button>
-              <button onClick={applyKeyword} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #007bff', background: '#007bff', color: '#fff', cursor: 'pointer' }}>추가</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* 기술스택 모달 */}
-      {showSkillModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 320 }}>
-            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 16 }}>기술 스택 선택</div>
-            <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
-              {skills.map(s => (
-                <label key={s.id} style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={tempSkill.includes(s.id)} onChange={() => toggleTempSkill(s.id)} style={{ marginRight: 8 }} />
-                  {s.name}
-                </label>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowSkillModal(false)} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #bbb', background: '#f8f9fa', cursor: 'pointer' }}>취소</button>
-              <button onClick={applySkill} style={{ padding: '6px 18px', borderRadius: 6, border: '1px solid #007bff', background: '#007bff', color: '#fff', cursor: 'pointer' }}>추가</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* 템플릿 미리보기 섹션 */}
-      <TemplateContainer>
-        <h2 style={{ marginBottom: '1rem' }}>템플릿 미리보기</h2>
-        <TemplateSelector
-          value={selectedTemplate}
-          onChange={(e) => setSelectedTemplate(e.target.value)}
-        >
-          <option value="default">기본 템플릿</option>
-          <option value="dark">다크 템플릿</option>
-          <option value="gradient">그라데이션 템플릿</option>
-          <option value="minimal">미니멀 템플릿</option>
-          <option value="art">아트 템플릿</option>
-          <option value="brutal">브루탈 템플릿</option>
-          <option value="tab">탭 템플릿</option>
-          <option value="split">스플릿 템플릿</option>
-          <option value="card">카드 템플릿</option>
-          <option value="classic">클래식 템플릿</option>
-        </TemplateSelector>
-        <SelectedTemplate data={convertToTemplateData()} />
-      </TemplateContainer>
-      <Footer />
+              </CardButtonRow>
+              </div>
+          );
+        })}
+          <CardAddButton onClick={handleAddActivity}>+ 추가</CardAddButton>
+        </SectionWrapper>
+      </Wrapper>
     </>
   );
 };

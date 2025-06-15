@@ -1,8 +1,11 @@
-import { Controller, Get, Put, Body, UseGuards, Request, Delete, Param, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Request, Delete, Param, ForbiddenException, UseInterceptors, UploadedFile, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
 
 @Controller('users')
 export class UsersController {
@@ -12,12 +15,6 @@ export class UsersController {
   @Get('me')
   async getMyProfile(@Request() req) {
     return this.usersService.findOne(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('me/portfolios')
-  async getMyPortfolios(@Request() req) {
-    return this.usersService.findUserPortfolios(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -40,17 +37,36 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Put('profile')
+  @UseInterceptors(FileInterceptor('profileImg', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const basename = path.basename(file.originalname, ext);
+        cb(null, `${basename}-${Date.now()}${ext}`);
+      },
+    }),
+  }))
   async updateProfile(
     @Request() req,
+    @UploadedFile() file: Express.Multer.File,
     @Body() updateProfileDto: {
       name?: string;
       email?: string;
+      gender?: 'Male' | 'Female';
+      phone?: string;
+      birth?: string;
       profileImage?: string;
       currentPassword?: string;
       newPassword?: string;
-    },
+    } = {},
   ) {
-    return this.usersService.updateProfile(req.user.id, updateProfileDto);
+    console.log('file:', file);
+    console.log('updateProfileDto:', updateProfileDto);
+    if (file) {
+      updateProfileDto.profileImage = `uploads/${file.filename}`;
+    }
+    return this.usersService.updateProfile(req.user.id, updateProfileDto || {});
   }
 
   @UseGuards(JwtAuthGuard)

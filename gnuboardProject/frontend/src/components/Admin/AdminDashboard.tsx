@@ -46,20 +46,32 @@ const AdminDashboard: React.FC = () => {
       switch (activeTab) {
         case 'users':
           const usersResponse = await axios.get('/admin/users');
-          setUsers(usersResponse.data);
+          setUsers(Array.isArray(usersResponse.data) ? usersResponse.data : []);
           break;
         case 'portfolios':
           const portfoliosResponse = await axios.get('/admin/portfolios');
-          setPortfolios(portfoliosResponse.data);
+          setPortfolios(Array.isArray(portfoliosResponse.data) ? portfoliosResponse.data : []);
           break;
         case 'comments':
           const commentsResponse = await axios.get('/admin/comments');
-          setComments(commentsResponse.data);
+          setComments(Array.isArray(commentsResponse.data) ? commentsResponse.data : []);
           break;
       }
     } catch (error) {
       console.error('데이터를 불러오는데 실패했습니다:', error);
       alert('데이터를 불러오는데 실패했습니다.');
+      // 에러 시 해당 탭의 데이터를 빈 배열로 초기화
+      switch (activeTab) {
+        case 'users':
+          setUsers([]);
+          break;
+        case 'portfolios':
+          setPortfolios([]);
+          break;
+        case 'comments':
+          setComments([]);
+          break;
+      }
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +84,7 @@ const AdminDashboard: React.FC = () => {
   const handleToggleAdmin = async (userId: number) => {
     try {
       await axios.patch(`/admin/users/${userId}/toggle-admin`);
-      setUsers(users.map(user => 
+      setUsers((users || []).map(user => 
         user.id === userId ? { ...user, isAdmin: !user.isAdmin } : user
       ));
     } catch (error) {
@@ -86,7 +98,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       await axios.delete(`/admin/portfolios/${portfolioId}`);
-      setPortfolios(portfolios.filter(p => p.id !== portfolioId));
+      setPortfolios((portfolios || []).filter(p => p.id !== portfolioId));
     } catch (error) {
       console.error('포트폴리오 삭제에 실패했습니다:', error);
       alert('포트폴리오 삭제에 실패했습니다.');
@@ -98,7 +110,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       await axios.delete(`/admin/comments/${commentId}`);
-      setComments(comments.filter(c => c.id !== commentId));
+      setComments((comments || []).filter(c => c.id !== commentId));
     } catch (error) {
       console.error('댓글 삭제에 실패했습니다:', error);
       alert('댓글 삭제에 실패했습니다.');
@@ -159,7 +171,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>사용자 목록</h2>
               <div style={{ display: 'grid', gap: '1rem' }}>
-                {users.map(user => (
+                {(users || []).map(user => (
                   <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #eee', borderRadius: 8 }}>
                     <div>
                       <div style={{ fontWeight: 'bold' }}>{user.name}</div>
@@ -189,7 +201,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>포트폴리오 목록</h2>
               <div style={{ display: 'grid', gap: '1rem' }}>
-                {portfolios.map(portfolio => (
+                {(portfolios || []).map(portfolio => (
                   <div key={portfolio.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid #eee', borderRadius: 8 }}>
                     <div>
                       <div style={{ fontWeight: 'bold' }}>{portfolio.title}</div>
@@ -219,7 +231,7 @@ const AdminDashboard: React.FC = () => {
             <div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>댓글 목록</h2>
               <div style={{ display: 'grid', gap: '1rem' }}>
-                {comments.map(comment => (
+                {(comments || []).map(comment => (
                   <div key={comment.id} style={{ padding: '1rem', border: '1px solid #eee', borderRadius: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                       <div>

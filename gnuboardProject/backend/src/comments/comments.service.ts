@@ -12,12 +12,15 @@ export class CommentsService {
     private commentsRepository: Repository<Comment>,
   ) {}
 
-  async findAllByPortfolio(portfolioId: number): Promise<Comment[]> {
-    return this.commentsRepository.find({
+  async findAllByPortfolio(portfolioId: number, page = 1, pageSize = 5): Promise<{ data: Comment[]; total: number; page: number; pageSize: number }> {
+    const [data, total] = await this.commentsRepository.findAndCount({
       where: { portfolio: { id: portfolioId } },
       relations: ['user'],
       order: { created_at: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
+    return { data, total, page, pageSize };
   }
 
   async create(portfolioId: number, userId: number, createCommentDto: CreateCommentDto): Promise<Comment> {

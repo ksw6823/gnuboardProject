@@ -1,31 +1,54 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import axios from 'axios';
+
+import { useAuth } from '../../contexts/AuthContext';
 
 const Background = styled.div`
   min-height: 100vh;
-  background: #e5e5e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const LoginCard = styled.div`
-  background: #dde6ef;
-  border-radius: 10px;
-  box-shadow: 2px 4px 12px rgba(0,0,0,0.10);
-  padding: 2.5rem 2.5rem 2rem 2.5rem;
-  min-width: 350px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  background-color: #E5E5E5;
+  padding: 2rem;
+`;
+
+const LogoContainer = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+  cursor: pointer;
+`;
+
+const Logo = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4B89DC;
+  display: inline-block;
+  padding: 1rem;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const LoginContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background: #E5E5E5;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border: 1.5px solid #e0e0e0;
 `;
 
 const Title = styled.h2`
-  font-size: 2rem;
-  font-weight: 600;
   margin-bottom: 2rem;
+  color: #333;
 `;
 
 const Form = styled.form`
@@ -36,99 +59,95 @@ const Form = styled.form`
 `;
 
 const Input = styled.input`
-  padding: 0.7rem 1rem;
-  border: 1px solid #bbb;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
-  background: #fff;
-`;
+  font-size: 0.9rem;
 
-const SignInButton = styled.button`
-  padding: 0.7rem 0;
-  background: #8eaefc;
-  color: #222;
-  border: none;
-  border-radius: 7px;
-  font-size: 1.05rem;
-  font-weight: 500;
-  margin-top: 0.5rem;
-  cursor: pointer;
-  transition: background 0.15s;
-  &:hover {
-    background: #6d97f5;
+  &::placeholder {
+    color: #aaa;
   }
 `;
 
-const Divider = styled.hr`
-  width: 100%;
+const Button = styled.button`
+  padding: 0.8rem;
+  background-color: #4B89DC;
+  color: white;
   border: none;
-  border-top: 1.5px solid #bfc9d1;
-  margin: 2rem 0 1.2rem 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: #3B79CC;
+  }
 `;
 
-const SignUpButton = styled.button`
-  width: 100%;
-  padding: 0.7rem 0;
-  background: #fff;
-  color: #222;
-  border: 1.5px solid #bfc9d1;
-  border-radius: 4px;
-  font-size: 1.05rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
+const RegisterLink = styled.div`
+  margin-top: 1rem;
+  text-align: center;
+  color: #666;
+
+  a {
+    color: #4B89DC;
+    text-decoration: none;
+    margin-left: 0.5rem;
+
   &:hover {
-    background: #f3f6fa;
+      text-decoration: underline;
+    }
   }
 `;
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
-        username,
-        password,
-      });
-      localStorage.setItem('token', response.data.access_token);
+      await login(userId, password);
       navigate('/');
     } catch (error) {
       alert('로그인에 실패했습니다.');
     }
   };
 
-  const handleSignUp = () => {
-    navigate('/register');
-  };
-
   return (
     <Background>
-      <LoginCard>
+      <LogoContainer onClick={handleLogoClick}>
+        <Logo>산학협력</Logo>
+      </LogoContainer>
+      <LoginContainer>
         <Title>로그인</Title>
         <Form onSubmit={handleSubmit}>
           <Input
             type="text"
-            placeholder="ID"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder="아이디"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
             required
           />
           <Input
             type="password"
-            placeholder="Password"
+            placeholder="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <SignInButton type="submit">Sign in</SignInButton>
+          <Button type="submit">로그인</Button>
         </Form>
-        <Divider />
-        <SignUpButton type="button" onClick={handleSignUp}>Sign up</SignUpButton>
-      </LoginCard>
+        <RegisterLink>
+          계정이 없으신가요?
+          <a href="/register">회원가입</a>
+        </RegisterLink>
+      </LoginContainer>
     </Background>
   );
 };

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -19,8 +19,16 @@ export class CommentsController {
   }
 
   @Get()
-  findAll(@Param('portfolioId') portfolioId: string) {
-    return this.commentsService.findAllByPortfolio(+portfolioId);
+  findAll(
+    @Param('portfolioId') portfolioId: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.commentsService.findAllByPortfolio(
+      +portfolioId,
+      page ? +page : 1,
+      pageSize ? +pageSize : 5,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

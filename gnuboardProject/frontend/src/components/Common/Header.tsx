@@ -4,46 +4,55 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const navigate = useNavigate();
+
 
   const handleLogout = () => {
     logout();
-    navigate('/');
   };
 
   return (
     <header style={{
-      background: '#fff', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', position: 'sticky', top: 0, zIndex: 1000
+      background: '#ffffff', // 파란 배경
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      width: '100%',
+      minHeight: '60px',
+      border: 'none',
+      boxShadow: '0px 2px 2px 0px rgba(0, 0, 0, 0.25)',
     }}>
       <nav style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        maxWidth: 1200, margin: '0 auto', padding: '1rem 2rem', position: 'relative'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        maxWidth: 1200,
+        margin: '0 auto',
+        padding: '0.7rem 2rem',
+        position: 'relative',
       }}>
-        {/* 로고/홈버튼 */}
-        <Link to="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#007bff', textDecoration: 'none' }}>
-          산학협력 프로젝트
+        {/* 좌측 PortFlow */}
+        <Link to="/" style={{ fontSize: '2rem', fontWeight: 300, color: '#7DA9FF', textDecoration: 'none', letterSpacing: '0.5px' , textShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)'}}>
+          PortFlow
         </Link>
-        {/* 네비게이션 버튼 */}
-        <ul style={{ display: 'flex', listStyle: 'none', gap: '1.5rem', margin: 0 }}>
+        {/* 우측 메뉴 */}
+        <ul style={{ display: 'flex', alignItems: 'center', listStyle: 'none', gap: '2.2rem', margin: 0, color: '#000000', fontWeight: 300, fontSize: '1rem' }}>
           {!isAuthenticated ? (
             <>
-              <li><Link to="/login" style={{ textDecoration: 'none', color: '#333' }}>로그인</Link></li>
-              <li><Link to="/register" style={{ textDecoration: 'none', color: '#333' }}>회원가입</Link></li>
+              <li style={{ color: '#000000', opacity: 0.9 }}>환영합니다!</li>
+              <li><Link to="/login" style={{ textDecoration: 'none', color: '#000000' }}>로그인</Link></li>
+              <li><Link to="/register" style={{ textDecoration: 'none', color: '#000000' }}>회원가입</Link></li>
             </>
           ) : (
             <>
-              <li>
-                <Link to="/profile" style={{ textDecoration: 'none', color: '#333' }}>
-                  {user?.name || '내 정보'}
-                </Link>
-              </li>
+              <li><Link to="/mypage" style={{ textDecoration: 'none', color: '#000000' }}>마이 페이지</Link></li>
               <li>
                 <button onClick={handleLogout} style={{
-                  background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '1rem'
+                  background: 'none', border: 'none', color: '#000000', cursor: 'pointer', fontSize: '1rem', fontWeight: 300, padding: 0
                 }}>
                   로그아웃
                 </button>
               </li>
+              <li style={{ color: '#000000' }}>{user?.name} 님</li>
             </>
           )}
         </ul>

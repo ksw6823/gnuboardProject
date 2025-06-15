@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Like } from '../../likes/entities/like.entity';
 import { Comment } from '../../comments/entities/comment.entity';
-import { PortfolioSection } from './portfolio-section.entity';
+import { PortfolioSection } from './portfolio_section.entity';
 
 @Entity()
 export class Portfolio {
@@ -12,17 +12,11 @@ export class Portfolio {
   @Column()
   title: string;
 
-  @Column()
-  summary: string;
-
-  @Column({ nullable: true })
-  photo: string;
-
   @Column({ default: false })
   is_private: boolean;
 
-  @Column('text', { nullable: true })
-  content: string;
+  @Column('text')
+  intro: string;
 
   @Column({ default: 0 })
   views: number;
@@ -30,7 +24,11 @@ export class Portfolio {
   @Column({ default: 0 })
   likes_count: number;
 
+  @Column()
+  userId: number;
+
   @ManyToOne(() => User, user => user.portfolios)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @OneToMany(() => Like, like => like.portfolio)

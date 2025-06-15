@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 import { Portfolio } from '../../portfolio/entities/portfolio.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Like } from '../../likes/entities/like.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -12,33 +13,34 @@ export class User {
   username!: string;
 
   @Column()
+  @Exclude()
   password!: string;
 
   @Column()
   name!: string;
 
-  @Column({ nullable: false })
+  @Column()
   email!: string;
 
-  @Column({ type: 'date', nullable: true })
-  birth?: Date;
+  @Column({ type: 'date' })
+  birth!: Date;
 
-  @Column({ type: 'enum', enum: ['Male', 'Female'], nullable: false })
+  @Column({ type: 'enum', enum: ['Male', 'Female'] })
   gender!: 'Male' | 'Female';
 
-  @Column({ nullable: true })
+  @Column()
+  phone!: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
   profileImage?: string;
 
   @Column({ default: false })
   isAdmin!: boolean;
 
-  @Column({ nullable: false })
-  phone!: string;
-
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   created_at!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updated_at!: Date;
 
   @OneToMany(() => Portfolio, portfolio => portfolio.user)

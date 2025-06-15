@@ -1,6 +1,5 @@
 export class CreatePortfolioSectionDto {
-  portfolio: number;
-  type: string;
-  order: number;
-  title: string;
+  portfolioId: number;
+  type: 'education' | 'experience' | 'project' | 'certificate' | 'language' | 'activity';
+  content: string;
 } 

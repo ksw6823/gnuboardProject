@@ -7,6 +7,10 @@ interface User {
   name: string;
   email: string;
   isAdmin: boolean;
+  gender?: string;
+  birth?: string;
+  phone?: string;
+  profileImage?: string;
 }
 
 interface AuthContextType {
@@ -15,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,15 +27,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
     try {
       const response = await axios.get('/auth/profile');
       setUser(response.data);
       setIsAuthenticated(true);
+      setLoading(false);
     } catch (error) {
       console.error('사용자 정보를 불러오는데 실패했습니다:', error);
       logout();
+      setLoading(false);
     }
   };
 
@@ -39,6 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -55,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setIsAuthenticated(false);
+    window.location.href = '/';
   };
 
   const register = async (email: string, password: string, name: string) => {
@@ -62,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, register }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, register, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import axios from 'axios';
+import axios from '../../api/axios';
+import { formatPhoneInput, removePhoneFormat } from '../../utils/phoneFormat';
+
+const Background = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #E5E5E5;
+  padding: 1rem;
+`;
+
+const LogoContainer = styled.div`
+  text-align: center;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+`;
+
+const Logo = styled.div`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4B89DC;
+  display: inline-block;
+  padding: 1rem;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
 
 const RegisterContainer = styled.div`
   display: flex;
@@ -210,7 +240,7 @@ const Register: React.FC = () => {
       formData.append('birthYear', birthYear);
       formData.append('birthMonth', birthMonth);
       formData.append('birthDay', birthDay);
-      formData.append('phone', phone);
+      formData.append('phone', removePhoneFormat(phone)); // 숫자만 저장
       formData.append('email', email);
       if (profileImg) {
         formData.append('profileImg', profileImg);
@@ -259,7 +289,15 @@ const Register: React.FC = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   return (
+    <Background>
+      <LogoContainer onClick={handleLogoClick}>
+        <Logo>산학협력</Logo>
+      </LogoContainer>
     <RegisterContainer>
       <Title>회원가입</Title>
       <FormBox>
@@ -391,8 +429,8 @@ const Register: React.FC = () => {
               type="text"
               placeholder="010-1234-5678"
               value={phone}
-              onChange={e => setPhone(e.target.value)}
-              maxLength={11}
+              onChange={e => setPhone(formatPhoneInput(e.target.value))}
+              maxLength={13}
               required
             />
           </InputGroup>
@@ -421,7 +459,7 @@ const Register: React.FC = () => {
                   onChange={e => setEmailDomain(e.target.value)}
                   required
                 >
-                  {domainOptions.map(opt => (
+                  {(domainOptions || []).map(opt => (
                     <option key={opt} value={opt} disabled={opt === ''}>{opt === '' ? '도메인 선택' : opt}</option>
                   ))}
                 </StyledSelect>
@@ -432,6 +470,7 @@ const Register: React.FC = () => {
         </Form>
       </FormBox>
     </RegisterContainer>
+    </Background>
   );
 };
 

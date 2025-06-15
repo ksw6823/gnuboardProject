@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { PortfolioSectionService } from './portfolio-section.service';
-import { PortfolioSection } from '../portfolio/entities/portfolio-section.entity';
-import { User } from '../users/entities/user.entity';
+import { PortfolioSection } from '../portfolio/entities/portfolio_section.entity';
 import { CreatePortfolioSectionDto } from './dto/create-portfolio-section.dto';
 import { UpdatePortfolioSectionDto } from './dto/update-portfolio-section.dto';
 
